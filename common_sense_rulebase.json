@@ -1,0 +1,20 @@
+{
+  "rules": [
+    {
+      "if": "(is_bird AND can_fly)",
+      "then": "has_wings"
+    },
+    {
+      "if": "is_penguin",
+      "then": "is_bird"
+    },
+    {
+      "if": "is_cat",
+      "then": "is_animal"
+    },
+    {
+      "if": "is_dog",
+      "then": "is_animal"
+    }
+  ]
+}

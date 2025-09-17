@@ -1,0 +1,73 @@
+OctaSense:
+  poetic_name: 形彩数座・時層結視
+  pronunciation: けいさいすうざ・じそうけつし
+  description: >
+    OctaSenseとは、「形彩数座・時層結視」で成り立つ。
+    空間と文脈、構造と認識――照合器が意味に誠実に応答するための八つの眼である。
+    形・彩・数・座は外形的構造を、時・層・結・視は文脈的照合を担う。
+    この八軸はSigmaSenseの照合器が意味空間に根を張るための基本座標系である。
+
+  axes:
+    - id: 形
+      name: 形
+      english: Form
+      function: 空間構造の骨格を定義する
+      virtue: 礼
+      dimension_hint: 対称性, 輪郭, 安定性
+      match_method: 幾何的照合（輪郭抽出・構造比較）
+
+    - id: 彩
+      name: 彩
+      english: Color
+      function: 印象・感情・文化的意味を伝える
+      virtue: 智
+      dimension_hint: 色相, 彩度, 明度
+      match_method: 色空間照合（HSV・心理色分布）
+
+    - id: 数
+      name: 数
+      english: Quantity
+      function: 存在の強度と繰り返しの構造を示す
+      virtue: 信
+      dimension_hint: 個数, 密度, 配列
+      match_method: 数量照合（区分照合・群体性評価）
+
+    - id: 座
+      name: 座
+      english: Position
+      function: 空間的な所在と配置関係を定義する
+      virtue: 義
+      dimension_hint: 座標, 中心性, 距離
+      match_method: 空間照合（位置ベクトル・関係マップ）
+
+    - id: 時
+      name: 時
+      english: Time
+      function: 意味の変化・順序・持続性を扱う
+      virtue: 忠
+      dimension_hint: 時系列, 順序, 継続時間
+      match_method: 時間照合（イベント系列・変化率）
+
+    - id: 結
+      name: 結
+      english: Relation
+      function: 対象間の構造的つながりを定義する
+      virtue: 悌
+      dimension_hint: 接触, 包含, 距離, 相互作用
+      match_method: 関係照合（構造グラフ・接続性評価）
+
+    - id: 層
+      name: 層
+      english: Composition
+      function: 意味の階層性・分解性・継承性を扱う
+      virtue: 孝
+      dimension_hint: 階層深度, 部品構成, 継承構造
+      match_method: 階層照合（構成ツリー・継承マップ）
+
+    - id: 視
+      name: 視
+      english: Perception
+      function: 認識可能性・識別性・記憶性を定義する
+      virtue: 仁
+      dimension_hint: 視認性, 識別性, 記憶負荷
+      match_method: 認識照合（視覚モデル・記憶モデル）
