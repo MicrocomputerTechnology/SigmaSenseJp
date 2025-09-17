@@ -99,6 +99,22 @@ SigmaSenseのアーキテクチャは、二つの異なる知性の協調によ�
 
 このワークフローは、以下の手動ステップを通じて実行されます。
 
+**事前にLLMのモデルを用意する必要があります。**
+models
+├── efficientnet_lite0.tflite
+├── mobilenet_v1.tflite
+├── mobilevit-tensorflow2-xxs-1k-256-v1
+│   ├── keras_metadata.pb
+│   ├── saved_model.pb
+│   └── variables
+│       ├── variables.data-00000-of-00001
+│       └── variables.index
+└── resnet_v2_50_saved_model
+    ├── saved_model.pb
+    └── variables
+        ├── variables.data-00000-of-00001
+        └── variables.index
+
 1.  **Step 1: 診断の実行**:
     開発者は `python tools/functor_consistency_checker.py` を実行し、現在のデータベースとベクトル生成ロジックの健康状態を診断します。問題があれば `functor_consistency_failures.jsonl` が生成・更新されます。
 
