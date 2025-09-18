@@ -22,6 +22,35 @@ SigmaSenseのアーキテクチャは、二つの異なる知性の協調によ�
 - **層理論 (Sheaf Theory)**: 意味次元の階層構造を管理するために利用されます。「形状」という大分類（層）と、「頂点数」「円形度」といった具体的な特徴（その層の切断）との関係性を数学的に定義し、異なる抽象度の情報を矛盾なく統合します。
 - **群化理論 (Grouping Theory)**: 画像内に複数のオブジェクトが存在する場合、それらを一つの「群」として認識し、その密度や配置といった集合的な意味を抽出します。
 
+#### 1.1.1. 理論の具体的な実装
+上記の理論は、単なるコンセプトではなく、以下の通りコードとして具体的に実装されています。
+
+- **構造幾何学 (Structural Geometry)**:
+  - **内容**: `cv2.moments`や`cv2.HuMoments`を用いて、画像の形状を回転・スケール不変な特徴量として抽出しています。
+  - **該当ファイル**: `sigma_image_engines/engine_opencv.py`, `shape_descriptor_extractor.py`
+
+- **線形代数 (Linear Algebra)**:
+  - **内容**: `weighted_cosine_similarity`（重み付きコサイン類似度）などの関数を用いて、ベクトル化された意味間の類似度を計算しています。
+  - **該当ファイル**: `sigma_sense.py`, `sigma_local_core.py`
+
+- **情報理論 (Information Theory)**:
+  - **内容**: `compute_entropy`（エントロピー）と`compute_sparsity`（スパース度）を計算し、その結果に基づいて`should_trigger_reconstruction`が意味の再構成が必要かを判断しています。
+  - **該当ファイル**: `information_metrics.py`, `reconstruction_trigger.py`
+
+- **圏論 (Category Theory)**:
+  - **内容**: `FunctorValidator`クラスが、画像への変換（例: 赤色化）が意図しない副作用（例: 形状の変化）を起こさないか（関手性）を自動テストするフレームワークを構築しています。
+  - **該当ファイル**: `sigma_functor.py`, `tools/functor_consistency_checker.py`
+
+- **層理論 (Sheaf Theory)**:
+  - **内容**: 意味次元定義ファイル(`vector_dimensions_custom_ai.json`)内の`"layer"`属性を`DimensionLoader`が解釈し、「形状」や「色彩」といった層（Sheaf）ごとの次元マップを生成しています。
+  - **該当ファイル**: `dimension_loader.py`, `vector_dimensions_custom_ai.json`
+
+- **群化理論 (Grouping Theory)**:
+  - **内容**: `detect_semantic_groups`関数が、画像内の類似したオブジェクトを一つの「群」として検出し、その数や密度を計算しています。
+  - **該当ファイル**: `semantic_group_detector.py`
+
+
+
 ### 1.2. 主要な能力と特徴
 1.  **データ主導の自己拡張**:
     SigmaSenseの進化は、原則としてソースコードの変更ではなく、「データ」の追加によって行われます。新たな概念は新しい「意味次元」として、知識は「意味データベース」のエントリとして追加されます。これにより、オフライン環境のような厳しい制約下でも、新たなデータ（次元定義や観測データ）を取り込むだけで進化を続けることができます。システムの振る舞いを根本的に変える必要がある場合にのみ、ステージ2の「即興」プロセスが作動し、セキュアなサンドボックス環境で新しいコードが実行されます。この「原則データ、例外コード」という設計思想が、システムの安定性と柔軟な拡張性を両立させています。

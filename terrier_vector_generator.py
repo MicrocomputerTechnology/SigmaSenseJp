@@ -228,7 +228,7 @@ def generate_terrier_vector(img_path, dim_path="vector_dimensions_custom_ai_terr
         
         # Load cascades
         # Note: These paths might need to be adjusted depending on the environment
-        face_cascade = cv2.CascadeClassifier('/Users/miyata.fumio/ProjectRealize/haarcascade_dog_face.xml')
+        face_cascade = cv2.CascadeClassifier('haarcascade_dog_face.xml')
         eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
 
         calculation_map = {

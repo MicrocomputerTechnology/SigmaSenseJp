@@ -3,3 +3,10 @@ sigma_logs/
 __pycache__/
 .DS_Store
 models/
+
+# Log files
+*.jsonl
+*.processed
+
+# AI-generated temporary handlers
+temp_handler_*.py
