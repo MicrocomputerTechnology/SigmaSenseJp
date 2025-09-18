@@ -13,6 +13,18 @@ from dimension_generator_local import DimensionGenerator
 from dimension_loader import DimensionLoader
 from correction_applicator import CorrectionApplicator
 
+# --- NumPyデータ型をJSONに変換するためのカスタムエンコーダ ---
+class NumpyEncoder(json.JSONEncoder):
+    """ NumPyのデータ型をJSONシリアライズ可能にするためのカスタムエンコーダ """
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
 # 定数
 IMG_DIR = os.path.join(project_root, "sigma_images")
 DB_PATH = os.path.join(project_root, "sigma_product_database_custom_ai_generated.json")
@@ -50,7 +62,7 @@ def build_database():
 
     # 最新の次元生成器と次元定義ローダーを初期化
     dim_generator = DimensionGenerator()
-    dim_loader = DimensionLoader(selia_path=SELIA_DIMS_PATH, lyra_path=LYRA_DIMS_PATH)
+    dim_loader = DimensionLoader() # 引数なしで初期化し、デフォルトの全次元ファイルを読み込む
 
     database = []
     if not os.path.isdir(IMG_DIR):
@@ -90,7 +102,7 @@ def build_database():
 
     try:
         with open(DB_PATH, 'w', encoding='utf-8') as f:
-            json.dump(stabilized_database, f, indent=2, ensure_ascii=False)
+            json.dump(stabilized_database, f, indent=2, ensure_ascii=False, cls=NumpyEncoder)
         print(f"\n✅ データベースの構築と安定化が完了しました。{len(stabilized_database)}件のデータが {DB_PATH} に保存されました。")
     except IOError as e:
         print(f"\n❗ エラー: データベースファイルの書き込みに失敗しました: {e}")

@@ -1,7 +1,23 @@
 import json
 import numpy as np
 import argparse
-from dimension_loader import dimension_loader
+import os
+import sys
+
+# スクリプトのディレクトリからプロジェクトのルートディレクトリを特定し、sys.pathに追加
+script_dir = os.path.dirname(__file__)
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+from dimension_loader import DimensionLoader # 修正: クラスをインポート
+
+# DimensionLoaderのインスタンスを生成
+try:
+    dimension_loader = DimensionLoader()
+except Exception as e:
+    print(f"❗ DimensionLoaderの初期化に失敗しました: {e}")
+    sys.exit(1)
 
 def diagnose_unrelated(log_entry):
     """

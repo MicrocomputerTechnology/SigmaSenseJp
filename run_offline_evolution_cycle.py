@@ -1,10 +1,10 @@
-
 import os
 import yaml
 import numpy as np
 from sigma_local_core import SigmaLocalCore
-from dimension_generator_local import DimensionGeneratorLocal
+from dimension_generator_local import DimensionGenerator
 from dimension_optimizer import DimensionOptimizer
+from dimension_suggester import DimensionSuggester
 
 def print_header(title):
     bar = "="*60
@@ -45,24 +45,35 @@ if __name__ == '__main__':
     if not result_baseline: exit()
     print(f"  -> Similarity (Circle vs Cat): {result_baseline['similarity_score']:.4f}")
 
-    # === CYCLE 2: DISCOVERING NEW DIMENSION ===
+    # === CYCLE 2: DISCOVERING NEW DIMENSION (via Suggester) ===
     print_header("Cycle 2: Encountering a New Phenomenon")
-    generator = DimensionGeneratorLocal(config_path=CONFIG_PATH)
-    discovered = generator.discover_new_dimension(IMG_NEW_PHENOMENON)
-    if discovered: print(f"Vetra's vocabulary has expanded with the '{discovered}' dimension.")
-    else: print("Vetra did not discover any new dimensions.")
+    generator = DimensionGenerator()
+    suggester = DimensionSuggester()
+    print(f"Analyzing new phenomenon: {os.path.basename(IMG_NEW_PHENOMENON)}")
+    new_phenomenon_dims = generator.generate_dimensions(IMG_NEW_PHENOMENON)
+    suggestions = suggester.suggest(new_phenomenon_dims['features'])
+    if suggestions:
+        print("Vetra has new suggestions based on the phenomenon:")
+        for sug in suggestions:
+            print(f"  - Suggestion: {sug['name']} ({sug['reason']})")
+    else:
+        print("Vetra did not discover any new dimensions.")
 
     # === CYCLE 3: LEARNING FROM FEEDBACK ===
     print_header("Cycle 3: Learning from Feedback")
     optimizer = DimensionOptimizer(config_path=CONFIG_PATH)
-    vec_circle = generator.generate_vector(IMG_CIRCLE)
-    vec_cat = generator.generate_vector(IMG_CAT)
-    # Create a slightly noisy version of the circle vector for the 'match' case
-    vec_circle_noisy = {k: v + np.random.uniform(-0.05, 0.05) for k, v in vec_circle.items()}
+    print("Generating vectors for feedback using current architecture...")
+    vec_circle = generator.generate_dimensions(IMG_CIRCLE)['features']
+    vec_cat = generator.generate_dimensions(IMG_CAT)['features']
+    
+    initial_dims = optimizer.current_weights.keys()
+    vec_circle_filtered = {k: vec_circle.get(k, 0.0) for k in initial_dims}
+    vec_cat_filtered = {k: vec_cat.get(k, 0.0) for k in initial_dims}
+    vec_circle_noisy = {k: v + np.random.uniform(-0.05, 0.05) for k, v in vec_circle_filtered.items()}
 
     feedback_data = [
-        {'vector1': vec_circle, 'vector2': vec_circle_noisy, 'label': 'match'},
-        {'vector1': vec_circle, 'vector2': vec_cat, 'label': 'no_match'}
+        {'vector1': vec_circle_filtered, 'vector2': vec_circle_noisy, 'label': 'match'},
+        {'vector1': vec_circle_filtered, 'vector2': vec_cat_filtered, 'label': 'no_match'}
     ]
     print("Providing feedback: (Circle vs Noisy Circle) -> match, (Circle vs Cat) -> no_match")
     optimized_weights = optimizer.optimize(feedback_data)

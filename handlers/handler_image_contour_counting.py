@@ -1,63 +1,61 @@
 ```python
 class ImageContourCountHandler(BaseHandler):
     """
-    画像を解析し、主要な外部輪郭の数をカウントするハンドラ。
-    主に、画像内の明確なオブジェクト（例：数字や記号）の数を識別するために使用されます。
+    画像をグレースケールに変換し、外部輪郭を検出してその数を数えるハンドラ。
+    SigmaSenseプロジェクトの設計思想に沿い、堅牢なエラーハンドリングと汎用性を持つ。
     """
     def execute(self, objective: dict) -> dict:
         """
-        指定された画像パスから画像を読み込み、グレースケール変換後、
-        外部輪郭を検出してその数をカウントします。
+        指定された画像パスから画像を読み込み、輪郭の数を数えて返します。
 
         Args:
-            objective (dict): 処理に必要な情報を含む辞書。
-                              'image_path'キーに画像ファイルへのパスが含まれていることを期待します。
+            objective (dict): 処理対象の画像パスを含む辞書。
+                              例: {'image_path': '/path/to/image.jpg'}
 
         Returns:
             dict: 処理結果を示す辞書。
-                  成功時には'status': 'completed' と 'contour_count' (輪郭数)、
-                  失敗時には'status': 'failed' と 'error_message' を含みます。
+                  成功時: {'status': 'completed', 'num_contours': int}
+                  失敗時: {'status': 'failed', 'error': str}
         """
-        image_path = objective.get('image_path')
+        # 1. 入力値の検証
+        if 'image_path' not in objective:
+            return {'status': 'failed', 'error': 'Objective dictionary must contain "image_path".'}
 
-        if not image_path:
-            return {
-                'status': 'failed',
-                'error_message': 'objectiveに\'image_path\'が指定されていません。'
-            }
+        image_path = objective['image_path']
 
+        # 2. 画像の読み込みとエラーハンドリング
         try:
-            # 画像を読み込む
-            # cv2ライブラリは実行環境に既に存在するため、ここではimportしません。
+            # cv2ライブラリは実行環境に存在するためimport不要
             image = cv2.imread(image_path)
 
-            # 画像が正常に読み込まれたか確認
             if image is None:
-                return {
-                    'status': 'failed',
-                    'error_message': f'画像パス\'{image_path}\'からの画像読み込みに失敗しました。ファイルが存在し、有効な画像形式であることを確認してください。'
-                }
+                # cv2.imreadがNoneを返す場合、画像ファイルが存在しないか、読み込めない形式である
+                return {'status': 'failed', 'error': f'Could not read image from path: "{image_path}". '
+                                                      'Please ensure the file exists and is a valid image format.'}
+        except Exception as e:
+            # 画像読み込み中に予期せぬエラーが発生した場合
+            return {'status': 'failed', 'error': f'An unexpected error occurred during image loading: {e}'}
 
+        # 3. 画像処理とエラーハンドリング
+        try:
             # グレースケールに変換
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-            # 輪郭を見つける
-            # RETR_EXTERNALは最も外側の輪郭のみを検出し、
-            # CHAIN_APPROX_SIMPLEは輪郭の冗長な点を圧縮します。
+            # 外部輪郭を検出
+            # RETR_EXTERNAL: 最も外側の輪郭のみを検出
+            # CHAIN_APPROX_SIMPLE: 輪郭の水平、垂直、斜めのセグメントを圧縮し、端点のみを保存
             contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-            # 輪郭の数をカウント
-            contour_count = len(contours)
+            # 輪郭の数を数える
+            num_contours = len(contours)
 
-            return {
-                'status': 'completed',
-                'contour_count': contour_count,
-                'message': f'画像から{contour_count}個の外部輪郭を正常にカウントしました。'
-            }
+            # 処理結果を返す
+            return {'status': 'completed', 'num_contours': num_contours}
 
+        except cv2.error as e:
+            # OpenCV固有のエラーが発生した場合
+            return {'status': 'failed', 'error': f'OpenCV processing error during contour detection: {e}'}
         except Exception as e:
-            # 予期せぬエラーをキャッチし、エラーメッセージを返す
-            return {
-                'status': 'failed',
-                'error_message': f'画像処理中に予期せぬエラーが発生しました: {str(e)}'
-            }
+            # 画像処理中に予期せぬエラーが発生した場合
+            return {'status': 'failed', 'error': f'An unexpected error occurred during image processing: {e}'}
+

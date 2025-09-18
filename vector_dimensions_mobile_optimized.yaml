@@ -1,21 +1,15 @@
 symmetry_score:
   description: Measures symmetry based on Hu Moments.
   method: '...'
-  weight: 0.8112774909762333
+  weight: 0.8
   parameters: []
 edge_density:
   description: Calculates the density of edges.
   method: '...'
-  weight: 0.612658708843317
+  weight: 0.6
   parameters: []
 gaze_curvature:
   description: Approximates the curvature of a dominant line.
   method: '...'
-  weight: 0.55
+  weight: 0.5
   parameters: []
-texture_complexity:
-  description: Measures the complexity of surface texture.
-  method: self._calculate_texture_complexity(image)
-  weight: 0.6746626902512518
-  parameters:
-  - image

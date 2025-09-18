@@ -1,45 +1,59 @@
 import json
 import os
+import yaml
 from collections import OrderedDict
 
 class DimensionLoader:
-    def __init__(self, selia_path=None, lyra_path=None):
+    def __init__(self, paths=None):
         """
-        Initializes the DimensionLoader.
-        Paths must be provided for the loader to have dimensions.
+        Initializes the DimensionLoader by loading dimensions from a list of file paths.
         """
-        default_selia_path = "vector_dimensions_custom_ai.json"
-        default_lyra_path = "vector_dimensions_custom_ai_lyra.json"
-
-        self.selia_path = selia_path if selia_path is not None else default_selia_path
-        self.lyra_path = lyra_path if lyra_path is not None else default_lyra_path
+        if paths is None:
+            # If no paths are provided, use a default list of known dimension files.
+            self.paths = [
+                "vector_dimensions_custom_ai.json",
+                "vector_dimensions_custom_ai_lyra.json",
+                "vector_dimensions_custom_ai_terrier.json",
+                "vector_dimensions_mobile.yaml",
+                "vector_dimensions_mobile_optimized.yaml",
+            ]
+        else:
+            self.paths = paths
 
         self.load_dimensions()
 
     def load_dimensions(self):
         """Loads or reloads dimensions from the specified file paths."""
-        self._selia_dims = []
-        self._lyra_dims = []
-        try:
-            if self.selia_path and os.path.exists(self.selia_path):
-                 with open(self.selia_path, 'r', encoding='utf-8') as f:
-                    self._selia_dims = json.load(f, object_pairs_hook=OrderedDict)
-            else:
-                 print(f"Warning: Selia dimension file not found: {self.selia_path}")
-        except (IOError, json.JSONDecodeError) as e:
-            print(f"Warning: Could not load or parse Selia dimensions from {self.selia_path}. Error: {e}")
+        self._dimensions = []
+        for path in self.paths:
+            if not os.path.exists(path):
+                print(f"Warning: Dimension file not found: {path}")
+                continue
+            
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    if path.endswith('.json'):
+                        dims = json.load(f, object_pairs_hook=OrderedDict)
+                    elif path.endswith(('.yaml', '.yml')):
+                        dims = yaml.safe_load(f)
+                    else:
+                        print(f"Warning: Skipping unsupported file type: {path}")
+                        continue
+                
+                if not isinstance(dims, list):
+                    print(f"Warning: Dimension file {path} does not contain a list of dimensions. Skipping.")
+                    continue
 
-        try:
-            if self.lyra_path and os.path.exists(self.lyra_path):
-                with open(self.lyra_path, 'r', encoding='utf-8') as f:
-                    self._lyra_dims = json.load(f, object_pairs_hook=OrderedDict)
-        except (IOError, json.JSONDecodeError) as e:
-            print(f"Warning: Could not load or parse Lyra dimensions from {self.lyra_path}. Error: {e}")
-        
-        for dim in self._lyra_dims:
-            dim['layer'] = 'lyra'
+                # For backward compatibility, add 'layer' to lyra dimensions
+                if 'lyra' in os.path.basename(path):
+                    for dim in dims:
+                        if 'layer' not in dim:
+                            dim['layer'] = 'lyra'
 
-        self._dimensions = self._selia_dims + self._lyra_dims
+                self._dimensions.extend(dims)
+            except (IOError, json.JSONDecodeError, yaml.YAMLError) as e:
+                print(f"Warning: Could not load or parse dimensions from {path}. Error: {e}")
+
         self._id_map = OrderedDict((dim['id'], i) for i, dim in enumerate(self._dimensions))
         self._layer_map = self._create_layer_map()
         

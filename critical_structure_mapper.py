@@ -1,10 +1,13 @@
 import os
 import json
 import numpy as np
-from dimension_loader import dimension_loader
+from dimension_loader import DimensionLoader
 
 # 照合不能と見なすスコアの閾値
 UNMATCHABLE_THRESHOLD = 0.6
+
+# DimensionLoaderのインスタンスを生成
+loader = DimensionLoader()
 
 def map_critical_structure(log_dir="sigma_logs"):
     """
@@ -13,27 +16,28 @@ def map_critical_structure(log_dir="sigma_logs"):
     unmatchable_vectors = []
 
     for fname in sorted(os.listdir(log_dir)):
-        if not fname.endswith(".json"):
+        if not fname.endswith(".jsonl"):
             continue
         
         path = os.path.join(log_dir, fname)
         with open(path, "r", encoding="utf-8") as f:
-            try:
-                log = json.load(f)
-            except json.JSONDecodeError:
-                continue
+            for line in f:
+                try:
+                    log = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
 
-        score = log.get("best_match", {}).get("score", 0.0)
-        if score < UNMATCHABLE_THRESHOLD:
-            vector = log.get("vector", [])
-            if len(vector) == dimension_loader.vector_size:
-                unmatchable_vectors.append(vector)
+                score = log.get("best_match", {}).get("score", 0.0)
+                if score < UNMATCHABLE_THRESHOLD:
+                    vector = log.get("vector", [])
+                    if len(vector) == loader.vector_size:
+                        unmatchable_vectors.append(vector)
 
     if not unmatchable_vectors:
         return {
             "message": "No unmatchable group found.",
             "unmatchable_count": 0,
-            "critical_vector": [0.0] * dimension_loader.vector_size,
+            "critical_vector": [0.0] * loader.vector_size,
             "critical_structure_named": {}
         }
 
@@ -42,7 +46,7 @@ def map_critical_structure(log_dir="sigma_logs"):
     # 各次元の名前と平均値をマッピング
     critical_structure_named = {
         dim['id']: mean_vector[i]
-        for i, dim in enumerate(dimension_loader.get_dimensions())
+        for i, dim in enumerate(loader.get_dimensions())
     }
 
     return {

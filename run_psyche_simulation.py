@@ -18,11 +18,8 @@ def print_grand_header():
     print("2. Calculate the group psychological state C(t) for each time step.")
     print("3. Display SigmaSense's reaction to the evolving state.")
     print("-" * 70)
-    try:
-        input("Press Enter to begin the simulation...")
-    except (KeyboardInterrupt, EOFError):
-        print("\nSimulation cancelled.")
-        exit()
+    # The interactive prompt has been removed to allow for non-interactive execution.
+    print("Starting simulation automatically...")
 
 if __name__ == '__main__':
     print_grand_header()

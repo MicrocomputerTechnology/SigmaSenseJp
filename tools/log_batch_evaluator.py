@@ -1,7 +1,6 @@
 import sys
 import os
-import sys
-import os
+import json
 
 # スクリプトのディレクトリからプロジェクトのルートディレクトリを特定し、sys.pathに追加
 script_dir = os.path.dirname(__file__)
@@ -9,16 +8,22 @@ project_root = os.path.abspath(os.path.join(script_dir, '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-import json
 from evaluation_template import display_result
-from response_logger import ResponseLogger
+from dimension_loader import DimensionLoader
 
 # ログファイルのパス
 LOG_DIR = "sigma_logs"
 
 def evaluate_logs():
     print("🚀 ログファイルの評価を開始します。")
-    
+
+    # DimensionLoaderを一度だけ初期化
+    try:
+        loader = DimensionLoader()
+    except Exception as e:
+        print(f"❗ DimensionLoaderの初期化に失敗しました: {e}")
+        return
+
     log_files = [f for f in os.listdir(LOG_DIR) if f.startswith("sigma_log_") and f.endswith(".jsonl")]
     if not log_files:
         print("❗ 評価対象のログファイルが見つかりません。")
@@ -33,7 +38,8 @@ def evaluate_logs():
                 for line in f:
                     try:
                         result = json.loads(line.strip())
-                        display_result(result)
+                        # loaderを引数として渡す
+                        display_result(result, loader)
                         print("-" * 70)
                     except json.JSONDecodeError:
                         print(f"❗ 無効なJSON形式の行をスキップしました: {line.strip()}")

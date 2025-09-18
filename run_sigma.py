@@ -43,16 +43,9 @@ def main():
     hint_generator = NarrativeHintGenerator()
     
     # DimensionLoaderのインスタンス化
-    loader = DimensionLoader(selia_path=SELIA_DIMS_PATH, lyra_path=LYRA_DIMS_PATH)
-    dims_selia = loader._selia_dims
-    dims_lyra = loader._lyra_dims
-    
-    # SeliaとLyraの次元を結合して全次元マップを作成
-    dimensions_all = OrderedDict()
-    for dim in dims_selia:
-        dimensions_all[dim['id']] = dim
-    for dim in dims_lyra:
-        dimensions_all[dim['id']] = dim
+    loader = DimensionLoader()
+    # 全次元マップをローダーから直接取得
+    dimensions_all = OrderedDict((dim['id'], dim) for dim in loader.get_dimensions())
 
     print("--- Starting SigmaSense Processing ---")
     
@@ -64,8 +57,7 @@ def main():
         database,
         ids,
         vectors,
-        selia_dims_path=SELIA_DIMS_PATH,
-        lyra_dims_path=LYRA_DIMS_PATH
+        dimension_loader=loader
     )
 
     # 新しいロガーを初期化

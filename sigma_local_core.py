@@ -3,7 +3,7 @@ import numpy as np
 import os
 from dimension_generator_local import DimensionGenerator
 from dimension_suggester import DimensionSuggester
-from match_predictor import MatchPredictor
+from match_predictor import FastMatchPredictor as MatchPredictor
 from narrative_hint_generator import NarrativeHintGenerator
 from psyche_modulator import PsycheModulator
 from vetra_llm_core import VetraLLMCore
