@@ -136,7 +136,7 @@ def main():
             result["aegis_intervention"] = intervened
 
             # CLI表示
-            display_result(result)
+            display_result(result, loader)
 
             # 語りと介入結果を表示
             print("\n--- Narrative Analysis ---")

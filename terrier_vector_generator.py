@@ -1,222 +1,266 @@
 import numpy as np
 import cv2
 import json
+import os
+import sys
+import signal
 
-# --- Terrier Dimension Calculation Functions ---
+# Timeout mechanism to prevent hangs in OpenCV
+class Timeout:
+    def __init__(self, seconds=5, error_message='Processing timed out'):
+        self.seconds = seconds
+        self.error_message = error_message
+    def _handle_timeout(self, signum, frame):
+        raise TimeoutError(self.error_message)
+    def __enter__(self):
+        # signal.SIGALRM is not available on Windows
+        if sys.platform != "win32":
+            signal.signal(signal.SIGALRM, self._handle_timeout)
+            signal.alarm(self.seconds)
+    def __exit__(self, type, value, traceback):
+        if sys.platform != "win32":
+            signal.alarm(0) # Disable the alarm
 
 def _calculate_ear_uprightness_score(gray_img, face_cascade):
-    """
-    Calculates the ear uprightness score based on the aspect ratio of the ear contour.
-    """
     try:
-        # 1. Preprocess image
+        # 1. Detect face
         equalized_img = cv2.equalizeHist(gray_img)
-
-        # 2. Detect face
-        faces = face_cascade.detectMultiScale(equalized_img, scaleFactor=1.1, minNeighbors=5, minSize=(50, 50))
+        with Timeout(seconds=5, error_message="Face detection timed out in ear score calculation"):
+            faces = face_cascade.detectMultiScale(equalized_img, scaleFactor=1.1, minNeighbors=5, minSize=(50, 50))
+        
         if len(faces) == 0:
-            return 0.0  # No face detected
-
+            return 0.0
         (x, y, w, h) = faces[0]
 
-        # 3. Define ear ROIs
-        top_margin = int(h * 0.6)
-        side_margin = int(w * 0.05)
-        ear_roi_width = int(w * 0.4)
+        # 2. Define ear ROI (region above the face)
+        roi_y_start = max(0, y - h // 2)
+        roi_y_end = y
+        roi_x_start = max(0, x)
+        roi_x_end = x + w
+        
+        ear_roi = gray_img[roi_y_start:roi_y_end, roi_x_start:roi_x_end]
 
-        left_ear_roi_rect = (x + side_margin, y - top_margin, ear_roi_width, h)
-        right_ear_roi_rect = (x + w - ear_roi_width - side_margin, y - top_margin, ear_roi_width, h)
-
-        ratios = []
-        for roi_rect in [left_ear_roi_rect, right_ear_roi_rect]:
-            (rx, ry, rw, rh) = roi_rect
-            rx, ry = max(0, rx), max(0, ry)
-            rw, rh = min(rw, gray_img.shape[1] - rx), min(rh, gray_img.shape[0] - ry)
-            
-            ear_roi = equalized_img[ry:ry+rh, rx:rx+rw]
-            if ear_roi.size < 50: continue
-
-            # 4. Binarize and find contours
-            _, binary_roi = cv2.threshold(ear_roi, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-            contours, _ = cv2.findContours(binary_roi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            if not contours: continue
-
-            main_contour = max(contours, key=cv2.contourArea)
-            if cv2.contourArea(main_contour) < 50: continue
-
-            # 5. Calculate aspect ratio of the minimum area rectangle
-            rect = cv2.minAreaRect(main_contour)
-            (w_rect, h_rect) = rect[1]
-
-            if w_rect < 1 or h_rect < 1:
-                continue
-
-            aspect_ratio = max(w_rect, h_rect) / min(w_rect, h_rect)
-            ratios.append(aspect_ratio)
-
-        if not ratios:
+        if ear_roi.size == 0:
             return 0.0
 
-        # 6. Average and normalize
-        avg_ratio = np.mean(ratios)
-        # An upright ear should have a high ratio (e.g., > 2.5)
-        # A round/floppy ear should have a ratio closer to 1.
-        normalized_score = np.clip((avg_ratio - 1.0) / 2.5, 0.0, 1.0)
+        # 3. Pre-process ROI to find contours
+        blurred_roi = cv2.GaussianBlur(ear_roi, (5, 5), 0)
+        _, thresh = cv2.threshold(blurred_roi, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        # 4. Find contours
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if not contours:
+            return 0.0
+
+        # 5. Analyze contours to find the most "upright" one
+        max_aspect_ratio = 0
+        min_contour_area = (w * h) * 0.005 # Filter out tiny noise contours
+        
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area < min_contour_area:
+                continue
+            
+            (cx, cy, cw, ch) = cv2.boundingRect(contour)
+            
+            if cw == 0:
+                continue
+                
+            aspect_ratio = ch / cw
+            if aspect_ratio > max_aspect_ratio:
+                max_aspect_ratio = aspect_ratio
+
+        # 6. Normalize the score
+        # We'll assume an aspect ratio of 3.0 or more is a very upright ear (score 1.0)
+        normalized_score = min(max_aspect_ratio / 3.0, 1.0)
+        
         return normalized_score
 
+    except TimeoutError as e:
+        print(f"Warning: {e}", file=sys.stderr)
+        return 0.0
     except Exception as e:
-        print(f"ERROR in _calculate_ear_uprightness_score: {e}")
+        print(f"Error in _calculate_ear_uprightness_score: {e}", file=sys.stderr)
         return 0.0
 
 def _calculate_coat_texture_ruffness(gray_img, face_cascade):
-    """
-    Calculates the coat texture ruffness.
-    """
     try:
-        # 1. Define ROI based on face detection
-        faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-        if len(faces) == 0:
-            # If no face, use the whole image as ROI
-            roi = gray_img
-        else:
-            (x, y, w, h) = faces[0]
-            # ROI around the face/cheeks
-            roi_x = max(0, x - w//4)
-            roi_y = max(0, y + h//2)
-            roi_w = w + w//2
-            roi_h = h//2
-            roi = gray_img[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
+        # 1. Detect face to locate the area around it
+        with Timeout(seconds=5, error_message="Face detection timed out in coat texture calculation"):
+            faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(50, 50))
 
-        if roi.size == 0:
+        if len(faces) == 0:
+            # If no face, analyze the center of the image as a fallback
+            h, w = gray_img.shape
+            center_y, center_x = h // 2, w // 2
+            roi = gray_img[center_y - h // 4 : center_y + h // 4, center_x - w // 4 : center_x + w // 4]
+            if roi.size == 0:
+                return 0.0
+            laplacian_var = cv2.Laplacian(roi, cv2.CV_64F).var()
+            # Normalize based on a heuristic maximum variance
+            return min(laplacian_var / 500.0, 1.0)
+
+        (x, y, w, h) = faces[0]
+
+        # 2. Define ROIs for the coat (patches next to the face)
+        rois = []
+        # Left patch
+        left_roi_x_start = max(0, x - w // 2)
+        left_roi_x_end = x
+        if left_roi_x_end > left_roi_x_start:
+            rois.append(gray_img[y:y+h, left_roi_x_start:left_roi_x_end])
+        
+        # Right patch
+        right_roi_x_start = x + w
+        right_roi_x_end = min(gray_img.shape[1], x + w + w // 2)
+        if right_roi_x_end > right_roi_x_start:
+            rois.append(gray_img[y:y+h, right_roi_x_start:right_roi_x_end])
+
+        if not rois:
             return 0.0
 
-        # 2. Denoise
-        blurred_roi = cv2.GaussianBlur(roi, (5, 5), 0)
+        # 3. Calculate the average Laplacian variance for the ROIs
+        total_variance = 0
+        for roi in rois:
+            if roi.size > 0:
+                total_variance += cv2.Laplacian(roi, cv2.CV_64F).var()
+        
+        avg_variance = total_variance / len(rois) if rois else 0.0
 
-        # 3. Sobel filter
-        sobelx = cv2.Sobel(blurred_roi, cv2.CV_64F, 1, 0, ksize=3)
-        sobely = cv2.Sobel(blurred_roi, cv2.CV_64F, 0, 1, ksize=3)
-
-        # 4. Calculate magnitude
-        magnitude = np.sqrt(sobelx**2 + sobely**2)
-
-        # 5. Calculate mean
-        mean_magnitude = np.mean(magnitude)
-
-        # 6. Normalize
-        # This normalization is empirical and might need adjustment
-        normalized_score = np.clip((mean_magnitude - 20) / 80, 0.0, 1.0)
+        # 4. Normalize the score
+        # Heuristic: variance of 500 is considered very "ruff"
+        normalized_score = min(avg_variance / 500.0, 1.0)
+        
         return normalized_score
 
+    except TimeoutError as e:
+        print(f"Warning: {e}", file=sys.stderr)
+        return 0.0
     except Exception as e:
-        print(f"ERROR in _calculate_coat_texture_ruffness: {e}")
+        print(f"Error in _calculate_coat_texture_ruffness: {e}", file=sys.stderr)
         return 0.0
 
 def _calculate_face_aspect_ratio(gray_img, face_cascade):
-    """
-    Calculates the face aspect ratio.
-    """
     try:
-        faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        # 1. Detect face
+        with Timeout(seconds=5, error_message="Face detection timed out in face aspect ratio calculation"):
+            faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(50, 50))
+
         if len(faces) == 0:
-            return 0.0
+            return 0.0 # Return 0.0 if no face is detected
 
         (x, y, w, h) = faces[0]
+
+        # 2. Calculate aspect ratio
         if h == 0:
-            return 0.0
+            return 0.0 # Avoid division by zero
 
         aspect_ratio = w / h
-        # Normalize based on typical dog face ratios
-        normalized_score = np.clip((aspect_ratio - 0.8) / 0.4, 0.0, 1.0)
+
+        # 3. Normalize the score
+        # Heuristic: An aspect ratio of 2.0 or more is considered max (score 1.0)
+        normalized_score = min(aspect_ratio / 2.0, 1.0)
+        
         return normalized_score
 
+    except TimeoutError as e:
+        print(f"Warning: {e}", file=sys.stderr)
+        return 0.0
     except Exception as e:
-        print(f"ERROR in _calculate_face_aspect_ratio: {e}")
+        print(f"Error in _calculate_face_aspect_ratio: {e}", file=sys.stderr)
         return 0.0
 
-def _calculate_relative_muzzle_length(gray_img, face_cascade):
-    """
-    Calculates the relative muzzle length.
-    """
+def _calculate_relative_muzzle_length(gray_img, face_cascade, eye_cascade):
     try:
-        faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        # 1. Detect face
+        with Timeout(seconds=5, error_message="Face detection timed out in muzzle length calculation"):
+            faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(50, 50))
+
         if len(faces) == 0:
-            return 0.0
-
-        (x, y, w, h) = faces[0]
-        
-        # Fallback logic as described in algorithm_idea
-        # Approximate nose position
-        nose_y_approx = y + h * 0.75
-        nose_h_approx = h * 0.1
-        
-        muzzle_length_approx = (y + h) - (nose_y_approx + nose_h_approx)
-        if h == 0:
-            return 0.0
-            
-        muzzle_length_ratio = muzzle_length_approx / h
-        
-        # Normalize
-        normalized_score = np.clip((muzzle_length_ratio - 0.1) / 0.3, 0.0, 1.0)
-        return normalized_score
-
-    except Exception as e:
-        print(f"ERROR in _calculate_relative_muzzle_length: {e}")
-        return 0.0
-
-def _calculate_relative_eye_spacing(gray_img, face_cascade, eye_cascade):
-    """
-    Calculates the relative eye spacing.
-    """
-    try:
-        faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-        if len(faces) == 0:
-            return 0.0
+            return 0.5 # Return neutral score if no face
 
         (x, y, w, h) = faces[0]
         face_roi = gray_img[y:y+h, x:x+w]
 
-        eyes = eye_cascade.detectMultiScale(face_roi)
-        
+        # 2. Detect eyes within the face
+        with Timeout(seconds=2, error_message="Eye detection timed out in muzzle length calculation"):
+            eyes = eye_cascade.detectMultiScale(face_roi)
+
         if len(eyes) < 2:
-            # Fallback logic
-            left_eye_center_x = w * 0.3
-            right_eye_center_x = w * 0.7
-            eye_distance = abs(right_eye_center_x - left_eye_center_x)
-        else:
-            # Sort by x-coordinate to identify left and right eye
-            eyes = sorted(eyes, key=lambda eye: eye[0])
-            left_eye = eyes[0]
-            right_eye = eyes[-1]
-            
-            left_eye_center_x = left_eye[0] + left_eye[2] / 2
-            right_eye_center_x = right_eye[0] + right_eye[2] / 2
-            eye_distance = abs(right_eye_center_x - left_eye_center_x)
+            return 0.5 # Not enough info, return neutral score
 
-        if w == 0:
-            return 0.0
-
-        eye_spacing_ratio = eye_distance / w
+        # 3. Calculate average eye Y position (relative to the top of the face_roi)
+        avg_eye_y = sum([ey for (ex, ey, ew, eh) in eyes]) / len(eyes)
         
-        # Normalize
-        normalized_score = np.clip((eye_spacing_ratio - 0.3) / 0.3, 0.0, 1.0)
-        return normalized_score
+        # 4. Calculate relative muzzle length
+        # Muzzle starts below the eyes. Its height is relative to the whole face height.
+        muzzle_start_y_in_face = avg_eye_y
+        muzzle_height = h - muzzle_start_y_in_face
+        
+        if h == 0:
+            return 0.5
 
+        relative_length = muzzle_height / h
+        
+        # The score should be between 0 and 1, but clip just in case.
+        return np.clip(relative_length, 0.0, 1.0)
+
+    except TimeoutError as e:
+        print(f"Warning: {e}", file=sys.stderr)
+        return 0.5 # Return neutral score on timeout
     except Exception as e:
-        print(f"ERROR in _calculate_relative_eye_spacing: {e}")
-        return 0.0
+        print(f"Error in _calculate_relative_muzzle_length: {e}", file=sys.stderr)
+        return 0.5
 
-# --- Main Vector Generation Function ---
+def _calculate_relative_eye_spacing(gray_img, face_cascade, eye_cascade):
+    try:
+        with Timeout(seconds=5, error_message="Object detection timed out in eye spacing calculation"):
+            faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+            if len(faces) == 0:
+                return 0.5 # Return neutral: no face
+            
+            (x, y, w, h) = faces[0]
+            face_roi = gray_img[y:y+h, x:x+w]
+            eyes = eye_cascade.detectMultiScale(face_roi)
+        
+        # We need exactly two eyes to measure spacing
+        if len(eyes) != 2:
+            return 0.5 # Return neutral: not enough info
+
+        # Sort eyes by x-coordinate to have a consistent order
+        eyes = sorted(eyes, key=lambda eye: eye[0])
+        
+        eye1, eye2 = eyes
+        
+        # Calculate the center of each eye
+        center1_x = eye1[0] + eye1[2] / 2
+        center2_x = eye2[0] + eye2[2] / 2
+        
+        eye_distance = abs(center1_x - center2_x)
+        
+        # Normalize by face width
+        if w == 0:
+            return 0.5
+
+        relative_spacing = eye_distance / w
+        
+        return np.clip(relative_spacing, 0.0, 1.0)
+
+    except TimeoutError as e:
+        print(f"Warning: {e}", file=sys.stderr)
+        return 0.5 # Return neutral score on timeout
+    except Exception as e:
+        print(f"Error in _calculate_relative_eye_spacing: {e}", file=sys.stderr)
+        return 0.5
 
 def generate_terrier_vector(img_path, dim_path="vector_dimensions_custom_ai_terrier.json"):
-    """
-    Generates a meaning vector for an image based on the terrier dimension definitions.
-    """
+    dimensions = []
     try:
         with open(dim_path, 'r', encoding='utf-8') as f:
             dimensions = json.load(f)
     except FileNotFoundError:
-        print(f"❗ Error: Dimension definition file not found: {dim_path}")
+        print(f"Error: Dimension file not found: {dim_path}", file=sys.stderr)
         return []
 
     try:
@@ -226,27 +270,34 @@ def generate_terrier_vector(img_path, dim_path="vector_dimensions_custom_ai_terr
         
         gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        # Load cascades
-        # Note: These paths might need to be adjusted depending on the environment
         face_cascade = cv2.CascadeClassifier('haarcascade_dog_face.xml')
-        eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+        
+        cascades_path = os.path.join(os.path.dirname(cv2.__file__), 'data')
+        eye_cascade_path = os.path.join(cascades_path, 'haarcascade_eye.xml')
+        if not os.path.exists(eye_cascade_path):
+            cascades_path = os.path.join(os.path.dirname(cv2.__file__), '..', '..', '..', '..', 'share', 'opencv4', 'haarcascades')
+            eye_cascade_path = os.path.join(cascades_path, 'haarcascade_eye.xml')
+            if not os.path.exists(eye_cascade_path):
+                 raise FileNotFoundError(f"Could not find haarcascade_eye.xml in standard paths.")
+
+        eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
 
         calculation_map = {
             "ear_uprightness_score": lambda: _calculate_ear_uprightness_score(gray_img, face_cascade),
             "coat_texture_ruffness": lambda: _calculate_coat_texture_ruffness(gray_img, face_cascade),
             "face_aspect_ratio": lambda: _calculate_face_aspect_ratio(gray_img, face_cascade),
-            "relative_muzzle_length": lambda: _calculate_relative_muzzle_length(gray_img, face_cascade),
+            "relative_muzzle_length": lambda: _calculate_relative_muzzle_length(gray_img, face_cascade, eye_cascade),
             "relative_eye_spacing": lambda: _calculate_relative_eye_spacing(gray_img, face_cascade, eye_cascade),
         }
 
         meaning_vector = []
         for dim in dimensions:
             dim_id = dim['id']
-            value = calculation_map.get(dim_id, lambda: 0.0)() # Default to 0.0 if function not found
+            value = calculation_map.get(dim_id, lambda: 0.0)()
             meaning_vector.append(np.clip(value, 0.0, 1.0))
 
         return meaning_vector
 
     except Exception as e:
-        print(f"❗ Error during terrier vector generation ({img_path}): {e}")
+        print(f"An error occurred in generate_terrier_vector for image {img_path}: {e}", file=sys.stderr)
         return [0.0] * len(dimensions)
