@@ -1,0 +1,49 @@
+{
+    "nodes": {
+        "penguin": {
+            "id": "penguin",
+            "name_ja": "ペンギン",
+            "type": "instance"
+        },
+        "bird": {
+            "id": "bird",
+            "name_ja": "鳥",
+            "type": "concept"
+        },
+        "cat": {
+            "id": "cat",
+            "name_ja": "猫",
+            "type": "instance"
+        },
+        "dog": {
+            "id": "dog",
+            "name_ja": "犬",
+            "type": "instance"
+        },
+        "animal": {
+            "id": "animal",
+            "name_ja": "動物",
+            "type": "concept"
+        }
+    },
+    "edges": [
+        {
+            "source": "penguin",
+            "target": "bird",
+            "relationship": "is_a",
+            "provenance": "common_sense_rulebase.json"
+        },
+        {
+            "source": "cat",
+            "target": "animal",
+            "relationship": "is_a",
+            "provenance": "common_sense_rulebase.json"
+        },
+        {
+            "source": "dog",
+            "target": "animal",
+            "relationship": "is_a",
+            "provenance": "common_sense_rulebase.json"
+        }
+    ]
+}

@@ -1,15 +1,140 @@
-# TODO: 選択の意図を語るナレーター（IntentJustifier）を実装する
-#
-# 目的：
-# - ある特定の判断や選択に至った「なぜ？」に答えるため、その思考プロセスと
-#   根拠となった過去の経験を具体的に語る。
-#
-# 機能要件：
-# 1. 思考プロセスのトレース機能：`sigma_sense.py`の思考の軌跡（どのエンジンがどう判断したか）を
-#    入力として受け取る。
-# 2. 根拠の特定機能：PersonalMemoryGraphと連携し、その判断の決め手となった
-#    過去の類似経験や学習したルールを特定する。
-# 3. 論理的な説明生成機能：「今回、この画像を『鳥』と判断したのは、過去に学習した
-#    『翼を持つ』というルールと、以前に見た『スズメ』の記憶に基づいています。
-#    しかし、『ペンギン』の反例も考慮し、飛行能力については保留しています」
-#    といった、具体的で論理的な説明を生成する。
+# === 第十五次実験 実装ファイル ===
+
+from world_model import WorldModel
+from personal_memory_graph import PersonalMemoryGraph
+
+class IntentJustifier:
+    """
+    ある特定の判断や選択に至った「なぜ？」に答えるため、その思考プロセスと
+    根拠となった過去の経験を具体的に語る。
+    """
+
+    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph):
+        """
+        WorldModelとPersonalMemoryGraphのインスタンスを受け取って初期化する。
+        """
+        self.world_model = world_model
+        self.memory_graph = memory_graph
+
+    def justify_decision(self, current_experience: dict):
+        """
+        現在の経験（判断結果）に基づき、その意図を説明する語りを生成する。
+
+        Args:
+            current_experience (dict): `sigma_sense.match`から返される結果の辞書。
+
+        Returns:
+            str: 生成された語りのテキスト。
+        """
+        narrative = []
+        narrative.append("## 判断意図の語り")
+        narrative.append("---")
+
+        source_image = current_experience.get("source_image_name", "不明な画像")
+        best_match = current_experience.get("best_match", {}).get("image_name", "なし")
+        best_match_score = current_experience.get("best_match", {}).get("score", 0.0)
+        
+        narrative.append(f"今回、入力された画像「{source_image}」について、最も類似度が高いと判断したのは「{best_match}」（スコア: {best_match_score:.2f}）です。")
+
+        # 1. 論理的根拠をWorldModelから取得
+        narrative.append("\n### 知識に基づく論理的根拠：")
+        logical_context = current_experience.get("fusion_data", {}).get("logical_terms", {})
+        reasoning_path = self._trace_reasoning_path(logical_context)
+        if reasoning_path:
+            narrative.append("私の知識グラフによれば、以下の思考パスをたどりました：")
+            narrative.append(f"> `{' -> '.join(reasoning_path)}`")
+        else:
+            narrative.append("今回の判断に直接利用できる、知識グラフ上の明確な上位概念は見つかりませんでした。")
+
+        # 2. 過去の経験をPersonalMemoryGraphから取得
+        narrative.append("\n### 過去の経験に基づく文脈的根拠：")
+        past_memories = self.memory_graph.search_memories(key="source_image_name", value=source_image)
+        if len(past_memories) > 1: # 現在の経験も含まれるため、1より大きいかで判断
+            narrative.append(f"また、私は過去に「{source_image}」を{len(past_memories) - 1}回経験しています。")
+            # 最新の過去の記憶（最後から2番目）を取得
+            last_memory = past_memories[-2]
+            last_psyche = last_memory.get("experience", {}).get("auxiliary_analysis", {}).get("psyche_state", {}).get("state", "不明")
+            narrative.append(f"直近の経験では、私の心理状態は「{last_psyche}」でした。この過去の経験が、今回の判断にも影響を与えている可能性があります。")
+        else:
+            narrative.append(f"「{source_image}」については、これが初めての経験のようです。")
+
+        narrative.append("\n---")
+        narrative.append("以上の論理的根拠と過去の経験の双方を考慮し、今回の最終的な判断を下しました。")
+
+        return "\n".join(narrative)
+
+    def _trace_reasoning_path(self, logical_context: dict):
+        """WorldModelを使って推論のパスを再構築する（簡易版）"""
+        inferred_terms = {k for k, v in logical_context.items() if v.get("type") == "inferred"}
+        if not inferred_terms:
+            return []
+        
+        # 簡単のため、最初に見つかった推論のパスを返す
+        start_node = list(inferred_terms)[0]
+        path = [start_node]
+        current_node = start_node
+        # is_aを最大5階層まで遡る
+        for _ in range(5):
+            relations = self.world_model.find_related_nodes(current_node, relationship='is_a')
+            if relations:
+                parent_node_id = relations[0]["target_node"]["id"]
+                path.append(parent_node_id)
+                current_node = parent_node_id
+            else:
+                break
+        return path
+
+# --- 自己テスト用のサンプルコード ---
+if __name__ == '__main__':
+    import os
+
+    print("--- IntentJustifier Self-Test --- ")
+    # 1. モックの準備
+    # WorldModelのモック
+    wm = WorldModel('ij_test_wm.json')
+    wm.add_node('penguin', name_ja="ペンギン")
+    wm.add_node('bird', name_ja="鳥")
+    wm.add_edge('penguin', 'bird', 'is_a')
+
+    # PersonalMemoryGraphのモック
+    pmg = PersonalMemoryGraph('ij_test_pmg.jsonl')
+    # 過去の経験を追加
+    past_exp = {"source_image_name": "penguin.jpg", "auxiliary_analysis": {"psyche_state": {"state": "confused"}}}
+    pmg.add_experience(past_exp)
+
+    # 2. Justifierの初期化
+    justifier = IntentJustifier(world_model=wm, memory_graph=pmg)
+
+    # 3. 現在の経験データを作成
+    current_exp = {
+        "source_image_name": "penguin.jpg",
+        "best_match": {"image_name": "bird.jpg", "score": 0.85},
+        "fusion_data": {
+            "logical_terms": {
+                "penguin": {"source_engine": "LegacyOpenCVEngine", "type": "neural"},
+                "bird": {"source_engine": "SymbolicReasoner", "type": "inferred"}
+            }
+        }
+    }
+    # 現在の経験も記憶に追加
+    pmg.add_experience(current_exp)
+
+    # 4. 語りの生成
+    print("\n--- Generating Justification ---")
+    narrative = justifier.justify_decision(current_exp)
+    print(narrative)
+
+    # 5. 結果の検証
+    assert "知識グラフ" in narrative
+    assert "penguin -> bird" in narrative
+    assert "過去に「penguin.jpg」を1回経験しています" in narrative
+    assert "心理状態は「confused」でした" in narrative
+    print("\nAssertions passed. Narrative contains references to both knowledge and memory.")
+
+    # クリーンアップ
+    if os.path.exists('ij_test_wm.json'):
+        os.remove('ij_test_wm.json')
+    if os.path.exists('ij_test_pmg.jsonl'):
+        os.remove('ij_test_pmg.jsonl')
+
+    print("\n--- Self-Test Complete ---")
