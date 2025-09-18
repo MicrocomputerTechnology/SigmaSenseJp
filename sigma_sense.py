@@ -1,3 +1,32 @@
+# === 第十五次実験 改修方針 ===
+#
+# 目的：
+# このファイルは、第十五次実験の心臓部となる「思考のオーケストレーター」として再設計される。
+# 現在の静的な`match`メソッドは、自己言及的な思考プロセス（F1〜F6）を実行するために、
+# 以下の新しいコンポーネント群を正しい順序で呼び出す、全く新しいワークフローに置き換えられる。
+#
+# 主な変更点：
+# 1. **思考フローの再構築**: `match`メソッドのロジックを全面的に書き換え、
+#    実験計画F1〜F6に沿った処理の流れを実装する。
+#    - F1: 自己語りの生成 (MetaNarrator, IntentJustifier)
+#    - F2: 仮説生成と反例照合 (CausalDiscovery)
+#    - F3: 因果ルールの更新 (WorldModelへの書き込み)
+#    - F4: 時系列パターンの抽出 (TemporalReasoning)
+#    - F5: 自己語りの再構成 (MetaNarrator)
+#    - F6: 知識グラフの恒久化 (WorldModel)
+#
+# 2. **新規コンポーネントの統合**:
+#    - `personal_memory_graph.py`: 思考の各ステップで生成された判断や感情を記録するために呼び出す。
+#    - `world_model.py`: `symbolic_reasoner`の代わりに、更新された知識グラフから情報を読み取る。
+#    - `causal_discovery.py`: 新しい仮説を生成・検証するために呼び出す。
+#    - `temporal_reasoning.py`: 動画やログが入力された場合に、時間パターンを学習するために呼び出す。
+#    - `meta_narrator.py`, `intent_justifier.py`: `narrative_justifier`の代わりに、
+#      自己言及的な語りを生成するために呼び出す。
+#
+# 3. **状態の永続化**:
+#    - 一回の思考サイクルが完了した後、更新された`PersonalMemoryGraph`と`WorldModel`の状態を
+#      ファイルに保存する処理を追加する。
+#
 import numpy as np
 import os
 import json
