@@ -2,7 +2,7 @@ import json
 import datetime
 
 # 1. Read the successful handler code
-with open("/Users/miyata.fumio/ProjectRealize/temp_handler_terrier_id.py", "r", encoding="utf-8") as f:
+with open("temp_handler_terrier_id.py", "r", encoding="utf-8") as f:
     handler_code = f.read()
 
 # 2. Construct the log entry
@@ -25,7 +25,8 @@ log_entry = {
 }
 
 # 3. Append to the log file
-with open("/Users/miyata.fumio/ProjectRealize/permanentization_log.jsonl", "a", encoding="utf-8") as f:
+with open("permanentization_log.jsonl", "a", encoding="utf-8") as f:
     f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+
 
 print("✅ 成功した一時ハンドラの情報を permanentization_log.jsonl に記録しました。")

@@ -19,8 +19,8 @@ def cosine_similarity(v1, v2):
 
 def main():
     """Main function to compare two dog images."""
-    img1_path = "/Users/miyata.fumio/ProjectRealize/sigma_images/dog_01.jpg"
-    img2_path = "/Users/miyata.fumio/ProjectRealize/sigma_images/dog_02.jpg"
+    img1_path = "sigma_images/dog_01.jpg"
+    img2_path = "sigma_images/dog_02.jpg"
 
     print(f"🐕 1. Generating vector for {img1_path}...")
     vector1 = generate_terrier_vector(img1_path)
