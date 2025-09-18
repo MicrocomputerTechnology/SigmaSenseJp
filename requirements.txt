@@ -1,0 +1,12 @@
+numpy
+scikit-learn
+scipy
+opencv-python
+tqdm
+PyYAML
+google-generativeai
+Pillow
+scikit-image
+tensorflow
+ollama
+RestrictedPython

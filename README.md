@@ -1,6 +1,26 @@
 # SigmaSenseJp
 経験を通じて自らスキルを獲得し、成長していく知的エージェントを目指しています。
 
+## セットアップ
+
+本プロジェクトを実行するには、以下のライブラリが必要です。
+`pip install -r requirements.txt` を実行するか、個別にインストールしてください。
+
+```text:requirements.txt
+numpy
+scikit-learn
+scipy
+opencv-python
+tqdm
+PyYAML
+google-generativeai
+Pillow
+scikit-image
+tensorflow
+ollama
+RestrictedPython
+```
+
 # Project Realize: 自己進化型意味照合システム
 
 ## 1. 基本設計思想：SigmaSenseとは何か
