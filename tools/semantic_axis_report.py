@@ -7,7 +7,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from semantic_axis_aggregator import aggregate_semantic_axes
+from src.semantic_axis_aggregator import aggregate_semantic_axes
 
 def generate_narrative(source_image_name, match_result, source_vector, target_vector, dimensions, hint=None, top_n=3):
     """

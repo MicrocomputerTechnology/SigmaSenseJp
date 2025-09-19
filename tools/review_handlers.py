@@ -1,7 +1,7 @@
 import json
 import os
 
-LOG_FILE = os.path.join(os.path.dirname(__file__), '..', 'permanentization_log.jsonl')
+LOG_FILE = os.path.join(os.path.dirname(__file__), '..', 'sigma_logs', 'permanentization_log.jsonl')
 HANDLERS_DIR = os.path.join(os.path.dirname(__file__), '..', 'handlers')
 
 # 語り/学習目標のタイトルを英語のファイル名に変換するためのマップ
@@ -83,7 +83,8 @@ def review_and_permanentize():
                     os.makedirs(HANDLERS_DIR)
 
                 handler_code = entry.get("temporary_handler_code", "").strip()
-                file_content = f"from temporary_handler_base import BaseHandler\n\n{handler_code}\n"
+                sys_path_code = "import sys\\nimport os\\nsys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))"
+                file_content = f"{sys_path_code}\n\nfrom src.temporary_handler_base import BaseHandler\n\n{handler_code}\n"
 
                 with open(filepath, "w", encoding="utf-8") as f:
                     f.write(file_content)

@@ -8,11 +8,11 @@ project_root = os.path.abspath(os.path.join(script_dir, '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from evaluation_template import display_result
-from dimension_loader import DimensionLoader
+from src.evaluation_template import display_result
+from src.dimension_loader import DimensionLoader
 
 # ログファイルのパス
-LOG_DIR = "sigma_logs"
+LOG_DIR = os.path.join(project_root, "sigma_logs")
 
 def evaluate_logs():
     print("🚀 ログファイルの評価を開始します。")

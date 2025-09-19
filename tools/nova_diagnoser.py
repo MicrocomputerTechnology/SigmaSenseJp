@@ -10,7 +10,7 @@ project_root = os.path.abspath(os.path.join(script_dir, '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from dimension_loader import DimensionLoader # 修正: クラスをインポート
+from src.dimension_loader import DimensionLoader # 修正: クラスをインポート
 
 # DimensionLoaderのインスタンスを生成
 try:

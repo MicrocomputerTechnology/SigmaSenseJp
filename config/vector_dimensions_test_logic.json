@@ -1,0 +1,23 @@
+[
+  {
+    "id": "is_dog",
+    "name_ja": "犬である",
+    "layer": "semantic"
+  },
+  {
+    "id": "is_wolf",
+    "name_ja": "狼である",
+    "layer": "semantic"
+  },
+  {
+    "id": "animal",
+    "name_ja": "動物である",
+    "layer": "semantic"
+  },
+  {
+    "id": "is_canine",
+    "name_ja": "イヌ科である",
+    "layer": "semantic",
+    "logical_rule": "(is_dog OR is_wolf)"
+  }
+]

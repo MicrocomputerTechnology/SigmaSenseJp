@@ -14,17 +14,22 @@ import shutil
 import json
 
 # SigmaSenseのコア機能と、新しく定義した変換器をインポート
-from sigma_sense import SigmaSense
-from sigma_database_loader import load_sigma_database
-import image_transformer as it
-import vector_transformer as vt
+from src.sigma_sense import SigmaSense
+from src.sigma_database_loader import load_sigma_database
+from src.dimension_loader import DimensionLoader
+from src import image_transformer as it
+from src import vector_transformer as vt
 
 # ----------------------------------------------------------------------------
 # 設定ファイルの読み込み
 # ----------------------------------------------------------------------------
 
-def load_octasense_config(config_path='octasense_config.yaml'):
+def load_octasense_config(config_path=None):
     """OctaSenseの設定ファイルを読み込む"""
+    if config_path is None:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        config_dir = os.path.join(project_root, 'config')
+        config_path = os.path.join(config_dir, 'octasense_config.yaml')
     with open(config_path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
@@ -36,11 +41,17 @@ class FunctorValidator:
     """
     SigmaSenseが関手(Functor)の法則を満たすか、またOctaSenseの軸に沿った一貫性を持つかを検証する。
     """
-    def __init__(self, sigma_instance, failure_log_path="functor_consistency_failures.jsonl"):
+    def __init__(self, sigma_instance, failure_log_path=None):
+        if failure_log_path is None:
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+            log_dir = os.path.join(project_root, 'sigma_logs')
+            self.failure_log_path = os.path.join(log_dir, "functor_consistency_failures.jsonl")
+        else:
+            self.failure_log_path = failure_log_path
+
         self.sigma = sigma_instance
         self.dimension_loader = sigma_instance.dimension_loader  # Get loader from SigmaSense
         self.results = []
-        self.failure_log_path = failure_log_path
         # ログファイルを初期化
         with open(self.failure_log_path, 'w') as f:
             pass # ファイルを空にする
@@ -51,11 +62,11 @@ class FunctorValidator:
             if not os.path.exists(image_path_or_pil):
                 print(f"  ❗エラー: 画像ファイルが見つかりません: {image_path_or_pil}")
                 return None
-            return self.sigma.match(image_path_or_pil)['vector']
+            return self.sigma.process_experience(image_path_or_pil)['vector']
         
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             image_path_or_pil.save(tmp.name, "PNG")
-            vec = self.sigma.match(tmp.name)['vector']
+            vec = self.sigma.process_experience(tmp.name)['vector']
         os.remove(tmp.name)
         return np.array(vec)
 
@@ -131,17 +142,24 @@ class FunctorValidator:
 
 def main():
     """メインの検証処理"""
-    octasense_config = load_octasense_config()
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    config_dir = os.path.join(project_root, 'config')
+    log_dir = os.path.join(project_root, 'sigma_logs')
+    
+    octasense_config = load_octasense_config(os.path.join(config_dir, 'octasense_config.yaml'))
     print("OctaSense設定ファイルを正常に読み込みました。")
     print(f"詩名: {octasense_config['OctaSense']['poetic_name']}")
 
-    database, ids, vectors = load_sigma_database("sigma_product_database_custom_ai_generated.json")
+    db_path = os.path.join(config_dir, "sigma_product_database_custom_ai_generated.json")
+    database, ids, vectors = load_sigma_database(db_path)
     
     # 最新の方法でSigmaSenseをインスタンス化
-    sigma = SigmaSense(database, ids, vectors)
+    dim_loader = DimensionLoader()
+    sigma = SigmaSense(database, ids, vectors, dimension_loader=dim_loader)
     
     # ログファイル名を指定してValidatorを初期化
-    validator = FunctorValidator(sigma, failure_log_path="functor_consistency_failures.jsonl")
+    log_path = os.path.join(log_dir, "functor_consistency_failures.jsonl")
+    validator = FunctorValidator(sigma, failure_log_path=log_path)
     
     test_cases = [
         ("circle_center.jpg", it.add_red_tint, "彩", "赤色化"),
@@ -149,7 +167,7 @@ def main():
         ("circle_center.jpg", it.shift_left, "座", "左へシフト"),
     ]
 
-    image_dir = "sigma_images/"
+    image_dir = os.path.join(project_root, "sigma_images")
 
     for base_image, transform, axis, description in test_cases:
         image_path = os.path.join(image_dir, base_image)
