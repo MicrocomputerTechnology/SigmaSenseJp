@@ -105,6 +105,27 @@ class WorldModel:
         """
         return self.graph["nodes"].get(node_id)
 
+    def has_node(self, node_id):
+        """
+        指定されたIDのノードがグラフに存在するかを確認する。
+
+        Args:
+            node_id (str): 確認するノードのID。
+
+        Returns:
+            bool: ノードが存在すればTrue、しなければFalse。
+        """
+        return node_id in self.graph["nodes"]
+
+    def get_all_node_ids(self):
+        """
+        グラフに存在するすべてのノードIDのリストを返す。
+
+        Returns:
+            list: すべてのノードIDのリスト。
+        """
+        return list(self.graph["nodes"].keys())
+
     def find_related_nodes(self, source_id, relationship=None):
         """
         指定されたノードから特定の種類の関係性で繋がるノードを検索する。

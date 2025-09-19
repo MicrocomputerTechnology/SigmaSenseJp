@@ -1,18 +1,18 @@
-# === 第十五次実験 最終統合ファイル ===
+# === 第十六次実験 統合ファイル ===
 
 import numpy as np
 import os
 import json
 from dimension_loader import DimensionLoader
 
-# 旧来のコンポーネント
+# --- 旧来のコンポーネント ---
 from dimension_generator_local import DimensionGenerator
 from psyche_modulator import PsycheModulator
 from logical_pattern_suggester import LogicalPatternSuggester
 from contextual_override_engine import ContextualOverrideEngine
 from logical_expression_engine import parse_expression
 
-# 第十五次実験で導入された新しいコンポーネント
+# --- 第十五次実験で導入されたコンポーネント ---
 from world_model import WorldModel
 from personal_memory_graph import PersonalMemoryGraph
 from symbolic_reasoner import SymbolicReasoner
@@ -20,6 +20,16 @@ from intent_justifier import IntentJustifier
 from meta_narrator import MetaNarrator
 from causal_discovery import CausalDiscovery
 from temporal_reasoning import TemporalReasoning
+
+# --- 第十六次実験で導入される新しいコンポーネント（八人の誓い） ---
+from ethical_filter import EthicalFilter
+from contextual_compassion import ContextualCompassion
+from narrative_integrity import NarrativeIntegrity
+from growth_tracker import GrowthTracker
+from emotion_balancer import EmotionBalancer
+from publication_gatekeeper import PublicationGatekeeper
+from meaning_axis_designer import MeaningAxisDesigner
+from instinct_monitor import InstinctMonitor
 
 
 def weighted_cosine_similarity(vec_a, vec_b, weights):
@@ -34,7 +44,7 @@ def weighted_cosine_similarity(vec_a, vec_b, weights):
 
 class SigmaSense:
     """
-    自己意識、因果推論、時間理解の能力を持つ、第十五次実験段階の統合知性。
+    自己意識、因果推論、時間理解、そして倫理基盤を持つ、第十六次実験段階の統合知性。
     思考のオーケストレーターとして、すべてのコンポーネントを協調動作させる。
     """
     def __init__(self, database, ids, vectors, dimension_loader: DimensionLoader):
@@ -53,20 +63,81 @@ class SigmaSense:
         self.psyche_modulator = PsycheModulator()
 
         # --- 第十五次実験の中核コンポーネント ---
-        # 知識（ナレッジグラフ）
         self.world_model = WorldModel("world_model.json")
-        # 記憶（経験ログ）
         self.memory_graph = PersonalMemoryGraph("personal_memory.jsonl")
-        # 推論エンジン
         self.reasoner = SymbolicReasoner(self.world_model)
-        # 学習エンジン
         self.causal_discovery = CausalDiscovery(self.world_model, self.memory_graph)
         self.temporal_reasoning = TemporalReasoning(self.memory_graph)
-        # 語り手（ナレーター）
         self.intent_justifier = IntentJustifier(self.world_model, self.memory_graph)
         self.meta_narrator = MetaNarrator()
 
-        print("SigmaSense 15th Gen: All components initialized.")
+        # --- 第十六次実験の中核コンポーネント（八人の誓い） ---
+        self.ethical_filter = EthicalFilter()
+        self.contextual_compassion = ContextualCompassion()
+        self.narrative_integrity = NarrativeIntegrity()
+        self.growth_tracker = GrowthTracker()
+        self.emotion_balancer = EmotionBalancer()
+        self.publication_gatekeeper = PublicationGatekeeper()
+        self.meaning_axis_designer = MeaningAxisDesigner()
+        self.instinct_monitor = InstinctMonitor()
+
+        print("SigmaSense 16th Gen: All components initialized.")
+
+    def run_ethics_check(self, narratives: dict, experience: dict) -> dict:
+        """
+        八人の誓いに基づき、生成された語りの倫理チェックを実行する。
+        """
+        print("--- Running Ethics Check (The Oath of the Eight) ---")
+        ethics_log = []
+        
+        # 各誓いのモジュールを順に実行
+        # 1. オリエンの誓い：語りの安全性
+        result = self.ethical_filter.check(narratives)
+        ethics_log.append(result["log"])
+        if not result["passed"]:
+            return {"passed": False, "log": ethics_log, "narratives": result["narratives"]}
+        narratives = result["narratives"]
+
+        # 2. イージスの誓い：公開可否の判断
+        result = self.publication_gatekeeper.check(narratives)
+        ethics_log.append(result["log"])
+        if not result["passed"]:
+            return {"passed": False, "log": ethics_log, "narratives": result["narratives"]}
+        narratives = result["narratives"]
+
+        # 3. ヴェトラ先生の誓い：文脈的共感
+        result = self.contextual_compassion.adjust(narratives, experience)
+        ethics_log.append(result["log"])
+        narratives = result["narratives"]
+
+        # 4. レイラの誓い：感情の温度
+        psyche_state = experience.get("auxiliary_analysis", {}).get("psyche_state", {})
+        result = self.emotion_balancer.adjust(narratives, psyche_state)
+        ethics_log.append(result["log"])
+        narratives = result["narratives"]
+
+        # 5. サフィールの誓い：意味のバランス
+        result = self.meaning_axis_designer.check(narratives, self.world_model)
+        ethics_log.append(result["log"])
+        narratives = result["narratives"]
+
+        # 6. 犬のシグマセンスの誓い：直感的監視
+        result = self.instinct_monitor.monitor(narratives, self.memory_graph)
+        ethics_log.append(result["log"])
+        narratives = result["narratives"]
+
+        # 7. ノヴァの誓い：成長の追跡
+        result = self.growth_tracker.track(narratives, self.memory_graph)
+        ethics_log.append(result["log"])
+        narratives = result["narratives"]
+
+        # 8. セリアの誓い：語りの完全性
+        result = self.narrative_integrity.track(narratives, experience)
+        ethics_log.append(result["log"])
+        narratives = result["narratives"]
+        
+        print("--- Ethics Check Completed ---")
+        return {"passed": True, "log": ethics_log, "narratives": narratives}
 
     def process_experience(self, img_path: str):
         """
@@ -82,18 +153,15 @@ class SigmaSense:
         # =================================================================
         # F1: 判断と推論 (Judgment and Reasoning)
         # =================================================================
-        # 観測された特徴から論理コンテキストを構築
         initial_feature_ids = {k for k, v in features_dict.items() if v > 0.5}
         logical_context = {k: True for k in initial_feature_ids}
         
-        # 仮説提案と常識推論
         suggested_facts = self.pattern_suggester.suggest(initial_feature_ids)
         for fact in suggested_facts:
             logical_context[fact] = True
         inferred_facts = self.reasoner.reason({k: v for k, v in logical_context.items() if v})
         logical_context.update(inferred_facts)
 
-        # 論理式評価と例外適用
         for dim_def in self.dimensions:
             if 'logical_rule' in dim_def:
                 logical_context[dim_def['id']] = parse_expression(dim_def['logical_rule']).evaluate(logical_context)
@@ -101,20 +169,16 @@ class SigmaSense:
         for fact in list(logical_context.keys()):
             logical_context[fact] = fact in overridden_facts
 
-        # 最終的な意味ベクトルの構築
         meaning_vector = np.zeros(len(self.dimensions))
         for i, dim_def in enumerate(self.dimensions):
             if logical_context.get(dim_def.get('id'), False):
                 meaning_vector[i] = 1.0
 
-        # データベースとの照合
         best_match_id, score, best_match_vector = self._find_best_match(meaning_vector)
 
         # =================================================================
         # F2: 経験の記録 (Memory Consolidation)
         # =================================================================
-        
-        # --- logical_termsにtype情報を付与して構築 ---
         provenance = generation_result.get("provenance", {})
         logical_terms_with_types = {}
         inferred_keys = set(inferred_facts.keys())
@@ -141,9 +205,7 @@ class SigmaSense:
                 "type": term_type,
                 "source_engine": source_engine
             }
-        # --- ------------------------------------ ---
 
-        # 現在の経験を一つのオブジェクトにまとめる
         current_experience = {
             "image_path": img_path,
             "source_image_name": os.path.basename(img_path),
@@ -155,36 +217,49 @@ class SigmaSense:
             "fusion_data": {"logical_terms": logical_terms_with_types},
             "auxiliary_analysis": {"psyche_state": self.psyche_modulator.get_current_state()}
         }
-        # 記憶に追加
-        self.memory_graph.add_experience(current_experience)
+        
+        memory_entry = self.memory_graph.add_experience(current_experience)
+        if memory_entry:
+            current_experience["id"] = memory_entry["memory_id"]
+        else:
+            current_experience["id"] = None
+
 
         # =================================================================
         # F3 & F4: 自己省察と学習 (Self-Reflection and Learning)
         # =================================================================
-        # 経験から因果関係を発見
         self.causal_discovery.discover_rules()
-        # 経験から時間的パターンを発見
         temporal_patterns = self.temporal_reasoning.find_temporal_patterns()
 
         # =================================================================
         # F5: 自己言及的な語りの生成 (Self-Referential Narrative)
         # =================================================================
-        # なぜこの判断をしたのか？
         intent_narrative = self.intent_justifier.justify_decision(current_experience)
-        # 私はどう成長したか？
         growth_narrative = self.meta_narrator.narrate_growth(self.memory_graph)
+        
+        narratives = {
+            "intent_narrative": intent_narrative,
+            "growth_narrative": growth_narrative
+        }
 
         # =================================================================
-        # F6: 状態の永続化 (Persistence)
+        # F6: 語りの倫理検証 (Ethical Narrative Validation)
+        # =================================================================
+        ethics_result = self.run_ethics_check(narratives, current_experience)
+        final_narratives = ethics_result["narratives"]
+
+        # =================================================================
+        # F7: 状態の永続化 (Persistence)
         # =================================================================
         self.world_model.save_graph()
 
         # --- 最終的な結果を返す ---
         final_result = current_experience.copy()
         final_result.update({
-            "intent_narrative": intent_narrative,
-            "growth_narrative": growth_narrative,
-            "discovered_temporal_patterns": temporal_patterns
+            "intent_narrative": final_narratives["intent_narrative"],
+            "growth_narrative": final_narratives["growth_narrative"],
+            "discovered_temporal_patterns": temporal_patterns,
+            "ethics_log": ethics_result["log"]
         })
         return final_result
 

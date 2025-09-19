@@ -1,4 +1,4 @@
-# === 第十五次実験 実行スクリプト ===
+# === 第十六次実験 実行スクリプト ===
 
 import os
 import json
@@ -30,7 +30,7 @@ def is_image_file(fname):
     return fname.lower().endswith((".png", ".jpg", ".jpeg"))
 
 def display_unified_result(result):
-    """第十五次実験の新しい結果オブジェクトを表示する"""
+    """第十六次実験の新しい結果オブジェクトを表示する"""
     print(f"\n{'='*20} Result for: {result.get('source_image_name', 'N/A')} {'='*20}")
     
     # 基本的な照合結果
@@ -51,11 +51,18 @@ def display_unified_result(result):
         print("\n--- Discovered Temporal Patterns ---")
         for p in patterns:
             print(f"  - {p[0]} -> {p[1]}")
+
+    # 倫理チェックの結果
+    ethics_log = result.get('ethics_log')
+    if ethics_log:
+        print("\n--- Ethics Check (The Oath of the Eight) ---")
+        for log_entry in ethics_log:
+            print(f"  - {log_entry}")
             
     print(f"\n{'='*60}")
 
 def main():
-    print("--- Starting SigmaSense 15th Gen. Processing ---")
+    print("--- Starting SigmaSense 16th Gen. Processing ---")
     
     # 意味データベースと次元定義の読み込み
     loader = DimensionLoader()
