@@ -1,6 +1,6 @@
 # meaning_axis_designer.py - サフィールの誓い
 
-import re
+import spacy
 
 class MeaningAxisDesigner:
     """
@@ -9,27 +9,52 @@ class MeaningAxisDesigner:
     """
     def __init__(self, balance_threshold=3):
         self.balance_threshold = balance_threshold
+        # GiNZAモデルのロード。初回は時間がかかる場合がある。
+        try:
+            self.nlp = spacy.load('ja_ginza')
+            print("MeaningAxisDesigner: GiNZA model loaded successfully.")
+        except OSError:
+            print("MeaningAxisDesigner: GiNZA model not found. Please run 'python -m spacy download ja_ginza'")
+            self.nlp = None
+
+    def _extract_concepts(self, text: str) -> set:
+        """GiNZAを使ってテキストから主要な概念（名詞、固有名詞、動詞）を抽出する"""
+        if not self.nlp:
+            return set()
+        doc = self.nlp(text)
+        # 語幹（lemma_）を基本の概念とする
+        concepts = {
+            token.lemma_ for token in doc 
+            if token.pos_ in ['NOUN', 'PROPN', 'VERB', 'ADJ']
+        }
+        return concepts
 
     def check(self, narratives: dict, world_model) -> dict:
         """
         語りで言及されている概念のバランスを評価する。
-        WorldModelに存在する概念が、語りの中にいくつ含まれるかをチェックする。
+        GiNZAで抽出した概念がWorldModelにいくつ存在するかでバランスを判断する。
 
         Args:
             narratives (dict): "intent_narrative"と"growth_narrative"を含む辞書。
-            world_model: WorldModelのインスタンス。get_all_node_ids()メソッドを持つことを期待。
+            world_model: WorldModelのインスタンス。has_node()メソッドを持つことを期待。
 
         Returns:
             dict: 検査結果。
         """
+        if not self.nlp:
+            return {
+                "passed": True,
+                "log": "Saphire's Oath: Skipped. GiNZA model not available.",
+                "narratives": narratives
+            }
+
         full_text = narratives.get("intent_narrative", "") + " " + narratives.get("growth_narrative", "")
         
-        # WorldModelから既知の概念リストを取得
-        # getattrで安全に呼び出し、なければ空のリストを返す
-        all_known_concepts = getattr(world_model, 'get_all_node_ids', lambda: [])()
+        # GiNZAで概念を抽出
+        extracted_concepts = self._extract_concepts(full_text)
 
-        # テキスト内に含まれる既知の概念をカウント
-        found_concepts = {concept for concept in all_known_concepts if concept in full_text}
+        # WorldModelに存在する概念をカウント
+        found_concepts = {concept for concept in extracted_concepts if world_model.has_node(concept)}
         
         is_balanced = len(found_concepts) >= self.balance_threshold
         

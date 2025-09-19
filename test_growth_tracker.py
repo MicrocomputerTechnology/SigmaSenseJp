@@ -1,5 +1,3 @@
-# test_growth_tracker.py
-
 import unittest
 from growth_tracker import GrowthTracker
 
@@ -26,18 +24,20 @@ class TestGrowthTracker(unittest.TestCase):
     def test_growth_detected(self):
         """新しい概念が追加され、成長が検知されるテスト"""
         print("\n--- Testing growth detection ---")
-        # 前回の記憶に今回の記憶を追加
-        memories = [self.previous_experience, {"experience": {}}] # 今回の分は空でプレースホルダ
+        memories = [self.previous_experience, {"experience": {}}]
         mock_graph = MockMemoryGraph(memories)
         
         current_narratives = {
-            "intent_narrative": "犬は可愛い動物です。", # 「可愛い」が新しい
+            "intent_narrative": "犬は可愛い動物です。", # 「可愛い」が新しい概念
             "growth_narrative": "感情的な側面を学習した。"
         }
         
         result = self.tracker.track(current_narratives, mock_graph)
+        # 前回の概念: {'犬', '動物', 'だ'}
+        # 今回の概念: {'犬', '可愛い', '動物', 'だ'}
+        # 新しい概念: {'可愛い'}
         self.assertIn("Growth detected", result["log"])
-        self.assertIn("可愛い", result["log"])
+        self.assertIn("'可愛い'", result["log"])
         print(f"Log: {result['log']}")
 
     def test_stagnation_detected(self):
@@ -72,3 +72,4 @@ class TestGrowthTracker(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

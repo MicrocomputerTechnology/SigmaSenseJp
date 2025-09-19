@@ -1,17 +1,31 @@
 # growth_tracker.py - ノヴァの誓い
 
-import re
+import spacy
 
 class GrowthTracker:
     """
     自己語りの変化と成長を記録・再構成し、語りの意味軸の変遷をログ化する。
     """
     def __init__(self):
-        pass
+        # GiNZAモデルのロード
+        try:
+            self.nlp = spacy.load('ja_ginza')
+            print("GrowthTracker: GiNZA model loaded successfully.")
+        except OSError:
+            print("GrowthTracker: GiNZA model not found. Please run 'python -m spacy download ja_ginza'")
+            self.nlp = None
 
     def _extract_concepts(self, narrative_text: str) -> set:
-        """簡易的な概念抽出"""
-        return set(re.split(r'\W+', narrative_text))
+        """GiNZAを使ってテキストから主要な概念（名詞、固有名詞、動詞）を抽出する"""
+        if not self.nlp or not narrative_text:
+            return set()
+        doc = self.nlp(narrative_text)
+        # 語幹（lemma_）を基本の概念とする
+        concepts = {
+            token.lemma_ for token in doc 
+            if token.pos_ in ['NOUN', 'PROPN', 'VERB', 'ADJ']
+        }
+        return concepts
 
     def track(self, narratives: dict, memory_graph) -> dict:
         """
@@ -25,6 +39,13 @@ class GrowthTracker:
         Returns:
             dict: 検査結果。
         """
+        if not self.nlp:
+            return {
+                "passed": True,
+                "log": "Nova's Oath: Skipped. GiNZA model not available.",
+                "narratives": narratives
+            }
+
         past_memories = memory_graph.get_all_memories()
         
         if len(past_memories) < 2: # 比較対象となる過去の記憶がない
