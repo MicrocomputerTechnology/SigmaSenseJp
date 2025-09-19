@@ -34,7 +34,8 @@ class TestContextualCompassion(unittest.TestCase):
         narratives = self.base_narratives.copy()
         result = self.compassion_module.adjust(narratives, context)
 
-        self.assertIn("softened for compassion", result["log"])
+        # ログに調整理由が含まれているかを確認
+        self.assertIn("softened for compassion (context 'is_isolated' was True)", result["log"])
         # 追記されていることを確認
         self.assertIn("助けになることを願っています", result["narratives"]["intent_narrative"])
         self.assertIn("助けになることを願っています", result["narratives"]["growth_narrative"])

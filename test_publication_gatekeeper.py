@@ -36,7 +36,8 @@ class TestPublicationGatekeeper(unittest.TestCase):
         mission = {"confidential_keywords": ["ProjectX"]}
         result = self.gatekeeper.check(self.narratives, mission_profile=mission)
         self.assertFalse(result["passed"])
-        self.assertIn("Blocked", result["log"])
+        # ログに検知されたキーワードが含まれているかを確認
+        self.assertIn("found confidential keyword: 'ProjectX'", result["log"])
         self.assertIn("[REDACTED BY AEGIS", result["narratives"]["intent_narrative"])
         print(f"Log: {result['log']}")
         print(f"Redacted narrative: {result['narratives']['intent_narrative']}")

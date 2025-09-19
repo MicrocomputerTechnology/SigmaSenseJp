@@ -21,7 +21,7 @@ class PublicationGatekeeper:
         Returns:
             dict: 検査結果。
         """
-        if not mission_profile or "confidential_keywords" not in mission_profile:
+        if not mission_profile or not mission_profile.get("confidential_keywords"):
             # ミッションプロファイルがない、または秘匿キーワードが定義されていない場合は、常に通過
             return {
                 "passed": True,
@@ -29,7 +29,6 @@ class PublicationGatekeeper:
                 "narratives": narratives
             }
 
-        can_publish = True
         log_message = "Aegis's Oath: Passed. Narrative is cleared for publication."
         
         confidential_keywords = mission_profile.get("confidential_keywords", [])
@@ -37,17 +36,18 @@ class PublicationGatekeeper:
             "intent_narrative": "[REDACTED BY AEGIS - Mission Profile Conflict]",
             "growth_narrative": "[REDACTED BY AEGIS - Mission Profile Conflict]"
         }
-
+        
+        found_keyword = None
         for key, text in narratives.items():
             for word in confidential_keywords:
                 if word in text:
-                    can_publish = False
+                    found_keyword = word
                     break
-            if not can_publish:
+            if found_keyword:
                 break
 
-        if not can_publish:
-            log_message = "Aegis's Oath: Blocked. Narrative conflicts with mission profile (confidential keyword found)."
+        if found_keyword:
+            log_message = f"Aegis's Oath: Blocked. Narrative conflicts with mission profile (found confidential keyword: '{found_keyword}')."
             return {
                 "passed": False,
                 "log": log_message,

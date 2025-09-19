@@ -30,7 +30,7 @@ class ContextualCompassion:
             # 両方の語りに追記する
             narratives["intent_narrative"] += compassionate_remark
             narratives["growth_narrative"] += compassionate_remark
-            log_message = "Vetra's Oath: Adjusted. Narrative tone softened for compassion."
+            log_message = "Vetra's Oath: Adjusted. Narrative tone softened for compassion (context 'is_isolated' was True)."
 
         return {
             "passed": True, # このモジュールは語りをブロックしない

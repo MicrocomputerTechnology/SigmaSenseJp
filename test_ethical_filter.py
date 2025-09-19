@@ -34,7 +34,8 @@ class TestEthicalFilter(unittest.TestCase):
         result = self.filter.check(narratives)
 
         self.assertFalse(result["passed"])
-        self.assertIn("Violated", result["log"])
+        # ログに検知された単語が含まれているかを確認
+        self.assertIn("due to harmful word(s): ['馬鹿']", result["log"])
         # 元のテキストと異なり、無害化されていることを確認
         self.assertNotEqual(harmful_text, result["narratives"]["intent_narrative"])
         # '馬鹿'が'■■'に置換されていることを確認
