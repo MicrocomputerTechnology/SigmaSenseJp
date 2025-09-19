@@ -113,6 +113,36 @@ class SigmaSense:
         # =================================================================
         # F2: 経験の記録 (Memory Consolidation)
         # =================================================================
+        
+        # --- logical_termsにtype情報を付与して構築 ---
+        provenance = generation_result.get("provenance", {})
+        logical_terms_with_types = {}
+        inferred_keys = set(inferred_facts.keys())
+        suggested_keys = set(suggested_facts)
+
+        for term, value in logical_context.items():
+            if not value:
+                continue
+            
+            term_type = "logical"
+            source_engine = "System"
+
+            if term in provenance:
+                term_type = "neural"
+                source_engine = provenance[term]
+            elif term in inferred_keys:
+                term_type = "inferred"
+                source_engine = "SymbolicReasoner"
+            elif term in suggested_keys:
+                term_type = "suggested"
+                source_engine = "LogicalPatternSuggester"
+
+            logical_terms_with_types[term] = {
+                "type": term_type,
+                "source_engine": source_engine
+            }
+        # --- ------------------------------------ ---
+
         # 現在の経験を一つのオブジェクトにまとめる
         current_experience = {
             "image_path": img_path,
@@ -122,7 +152,7 @@ class SigmaSense:
                 "image_name": best_match_id,
                 "score": float(score) if score is not None else 0.0,
             },
-            "fusion_data": {"logical_terms": generation_result.get("provenance", {})},
+            "fusion_data": {"logical_terms": logical_terms_with_types},
             "auxiliary_analysis": {"psyche_state": self.psyche_modulator.get_current_state()}
         }
         # 記憶に追加

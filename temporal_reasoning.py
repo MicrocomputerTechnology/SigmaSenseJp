@@ -85,7 +85,7 @@ if __name__ == '__main__':
     # 4. 結果の検証
     expected_pattern = ("A.jpg", "B.jpg")
     assert len(patterns) == 1, f"Expected 1 pattern, but found {len(patterns)}."
-    assert patterns[0] == expected_pattern, f"Expected pattern {expected_pattern}, but found {patterns[0]}.
+    assert patterns[0] == expected_pattern, f"Expected pattern {expected_pattern}, but found {patterns[0]}."
     print(f"\n[PASS] Correctly identified the frequent pattern: {expected_pattern}")
 
     # クリーンアップ
