@@ -1,19 +1,15 @@
+# === 第十五次実験 実行スクリプト ===
+
 import os
 import json
-from collections import OrderedDict
 from sigma_database_loader import load_sigma_database
 from sigma_sense import SigmaSense
 from response_logger import ResponseLogger
-from evaluation_template import display_result
 from dimension_loader import DimensionLoader
-from tools.semantic_axis_report import generate_narrative
-from aegis_ethics_filter import AegisEthicsFilter
-from narrative_hint_generator import NarrativeHintGenerator
-from fusion_mapper import FusionMapper
-
 import numpy as np
 
 def convert_numpy_types(obj):
+    """JSONシリアライズのためにNumpyの型をPythonネイティブ型に変換する"""
     if isinstance(obj, dict):
         return {k: convert_numpy_types(v) for k, v in obj.items()}
     elif isinstance(obj, list):
@@ -26,33 +22,46 @@ def convert_numpy_types(obj):
         return obj.tolist()
     return obj
 
-# 実験対象画像ディレクトリと意味データベースのパス
+# --- 定数定義 ---
 IMG_DIR = "sigma_images"
 DB_PATH = "sigma_product_database_custom_ai_generated.json"
-AEGIS_PROFILE_PATH = "saphiel_mission_profile.json"
-SELIA_DIMS_PATH = "vector_dimensions_custom_ai.json"
-LYRA_DIMS_PATH = "vector_dimensions_custom_ai_lyra.json"
-
 
 def is_image_file(fname):
     return fname.lower().endswith((".png", ".jpg", ".jpeg"))
 
-def main():
-    # イージスフィルターと次元定義の読み込み
-    aegis = AegisEthicsFilter(AEGIS_PROFILE_PATH)
-    hint_generator = NarrativeHintGenerator()
+def display_unified_result(result):
+    """第十五次実験の新しい結果オブジェクトを表示する"""
+    print(f"\n{'='*20} Result for: {result.get('source_image_name', 'N/A')} {'='*20}")
     
-    # DimensionLoaderのインスタンス化
-    loader = DimensionLoader()
-    # 全次元マップをローダーから直接取得
-    dimensions_all = OrderedDict((dim['id'], dim) for dim in loader.get_dimensions())
+    # 基本的な照合結果
+    best_match = result.get('best_match', {})
+    print(f"[Best Match] -> {best_match.get('image_name', 'N/A')} (Score: {best_match.get('score', 0.0):.4f})")
+    
+    # 意図の語り
+    print("\n--- Intent Narrative ---")
+    print(result.get('intent_narrative', 'No intent narrative generated.'))
+    
+    # 成長の物語
+    print("\n--- Growth Narrative ---")
+    print(result.get('growth_narrative', 'No growth narrative generated.'))
+    
+    # 発見された時間的パターン
+    patterns = result.get('discovered_temporal_patterns')
+    if patterns:
+        print("\n--- Discovered Temporal Patterns ---")
+        for p in patterns:
+            print(f"  - {p[0]} -> {p[1]}")
+            
+    print(f"\n{'='*60}")
 
-    print("--- Starting SigmaSense Processing ---")
+def main():
+    print("--- Starting SigmaSense 15th Gen. Processing ---")
     
-    # 意味データベースの読み込み
+    # 意味データベースと次元定義の読み込み
+    loader = DimensionLoader()
     database, ids, vectors = load_sigma_database(DB_PATH)
 
-    # 照合器インスタンスの生成（次元ファイルのパスを明示的に渡す）
+    # SigmaSenseの初期化
     sigma = SigmaSense(
         database,
         ids,
@@ -60,90 +69,32 @@ def main():
         dimension_loader=loader
     )
 
-    # 新しいロガーを初期化
+    # ロガーの初期化
     logger = ResponseLogger()
 
-    # Create a directory for fusion maps if it doesn't exist
-    fusion_map_dir = os.path.join(os.path.dirname(logger.log_path), "fusion_maps")
-    os.makedirs(fusion_map_dir, exist_ok=True)
+    # 対象画像群に対して思考サイクルを実行
+    image_files = sorted([f for f in os.listdir(IMG_DIR) if is_image_file(f)])
+    if not image_files:
+        print(f"No images found in '{IMG_DIR}'. Halting.")
+        return
 
-    # 対象画像群に対して照合処理を実行
-    for fname in sorted(os.listdir(IMG_DIR)):
-        if is_image_file(fname):
-            img_path = os.path.join(IMG_DIR, fname)
+    for fname in image_files:
+        img_path = os.path.join(IMG_DIR, fname)
 
-            # 意味ベクトル生成 → 再構成判定 → 照合 → 応答生成
-            result = sigma.match(img_path)
+        # 新しい思考サイクルを実行
+        result = sigma.process_experience(img_path)
 
-            # --- Fusion Map Generation ---
-            if "fusion_data" in result and result["fusion_data"]:
-                mapper = FusionMapper(result["fusion_data"])
-                dot_string = mapper.generate_dot_graph()
-                
-                # Save the DOT file
-                base_name = os.path.splitext(fname)[0]
-                output_dot_path = os.path.join(fusion_map_dir, f"{base_name}_fusion_map.dot")
-                with open(output_dot_path, 'w') as f:
-                    f.write(dot_string)
-                
-                print(f"\n--- Fusion Map Generated ---")
-                print(f"Saved to: {output_dot_path}")
-                # Add this info to the result for logging
-                result["fusion_map_path"] = output_dot_path
-            # -----------------------------
+        # 結果をコンソールに表示
+        display_unified_result(result)
 
-            # 語り生成
-            best_match = result.get("best_match")
-            if best_match and best_match.get("image_name"):
-                # 語り生成のため、best_match辞書にカテゴリ情報を追加
-                best_match['category'] = result.get('response')
-                
-                # Generate narrative hint
-                hint = hint_generator.generate_hint(
-                    similarity_score=best_match.get('score', 0.0),
-                    vec1=result.get("vector"),
-                    vec2=best_match.get("vector")
-                )
-                result['narrative_hint'] = hint # Log the hint
+        # 完全な結果をログに記録
+        cleaned_result = convert_numpy_types(result)
+        logger.log(cleaned_result)
 
-                narrative = generate_narrative(
-                    source_image_name=result.get("source_image_name"),
-                    match_result=best_match,
-                    source_vector=result.get("vector"),
-                    target_vector=best_match.get("vector"),
-                    dimensions=dimensions_all, # 常に全次元を渡す
-                    hint=hint
-                )
-            else:
-                narrative = f"No significant match found for {result.get('source_image_name')} to generate a narrative."
-
-            # 倫理フィルター適用
-            filtered_narrative, intervened = aegis.filter(
-                narrative=narrative,
-                image_name=result.get("source_image_name")
-            )
-
-            # 結果オブジェクトに語りと介入情報を追加
-            result["narrative"] = filtered_narrative
-            result["aegis_intervention"] = intervened
-
-            # CLI表示
-            display_result(result, loader)
-
-            # 語りと介入結果を表示
-            print("\n--- Narrative Analysis ---")
-            print(filtered_narrative)
-            if intervened:
-                print("\033[91m>>> AEGIS INTERVENTION RECORDED <<< [0m") # 赤色で表示
-
-            # 新しいロガーで結果を記録
-            cleaned_result = convert_numpy_types(result)
-            logger.log(cleaned_result)
-            print("-" * 70) # 区切り線
-
-    print("\n✅ 全画像の処理が完了しました。")
-    print(f"ログは {logger.log_path} に保存されています。")
-    print(f"Fusion maps saved in {fusion_map_dir}")
+    print(f"\n✅ All {len(image_files)} images processed.")
+    print(f"Log saved to {logger.log_path}")
+    print(f"Knowledge graph saved to {sigma.world_model.graph_path}")
+    print(f"Memory log saved to {sigma.memory_graph.memory_path}")
 
 if __name__ == "__main__":
     main()

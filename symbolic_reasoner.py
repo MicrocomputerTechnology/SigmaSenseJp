@@ -1,129 +1,106 @@
-import json
-from logical_expression_engine import parse_expression
+# === 第十五次実験 改修後ファイル ===
+
+import os
+from world_model import WorldModel
 
 class SymbolicReasoner:
     """
-    Handles symbolic reasoning based on a set of logical rules.
-    Can optionally leverage a similarity calculator to reason about similar concepts.
+    動的知識グラフ（WorldModel）と対話し、記号論的な推論を行う。
     """
-    def __init__(self, rule_base_path, similarity_calculator=None):
-        self.rules = self.load_rules(rule_base_path)
-        self.similarity_calculator = similarity_calculator
+    def __init__(self, world_model: WorldModel):
+        """
+        WorldModelのインスタンスを受け取って初期化する。
 
-    def load_rules(self, path):
-        """Loads rules from a JSON file."""
-        try:
-            with open(path, 'r') as f:
-                raw_rules = json.load(f)
-            
-            parsed_rules = []
-            for rule in raw_rules.get("rules", []):
-                if "if" in rule and "then" in rule:
-                    parsed_rules.append({
-                        "if": parse_expression(rule["if"]),
-                        "then": parse_expression(rule["then"]),
-                        "threshold": rule.get("threshold", 0.95) # Add similarity threshold
-                    })
-            return parsed_rules
-        except (IOError, json.JSONDecodeError) as e:
-            print(f"Error loading rule base: {e}")
-            return []
+        Args:
+            world_model (WorldModel): 使用するWorldModelのインスタンス。
+        """
+        self.world_model = world_model
 
     def reason(self, context):
         """
-        Applies rules to a given context and returns new inferred facts.
-        If a similarity_calculator is provided, it will be used to find
-        semantically similar concepts in the context.
+        与えられたコンテキストに基づき、WorldModelを再帰的に探索して推論を行う。
+        主に'is_a'（上位概念）の関係をたどる。
+
+        Args:
+            context (dict): 推論の起点となる事実の辞書（例: {'penguin': True}）。
+
+        Returns:
+            dict: 推論によって導き出された新しい事実の辞書（例: {'bird': True, 'animal': True}）。
         """
         inferred_facts = {}
-        
-        # Create a copy of the context to avoid modifying the original
-        extended_context = context.copy()
+        facts_to_process = list(context.keys()) # これから処理する事実のリスト
+        processed_facts = set(context.keys())      # すでに処理した、または起点となった事実のセット
 
-        for rule in self.rules:
-            # Get all variables used in the 'if' condition
-            rule_vars = rule["if"].get_variables()
+        while facts_to_process:
+            fact = facts_to_process.pop(0)
             
-            eval_context = extended_context.copy()
+            # WorldModelに問い合わせて、現在の事実から'is_a'関係で繋がるノードを取得
+            related_nodes = self.world_model.find_related_nodes(fact, relationship='is_a')
             
-            if self.similarity_calculator:
-                for var in rule_vars:
-                    if var not in eval_context:
-                        # Find the most similar concept in the context
-                        best_match, best_sim = self.similarity_calculator.find_most_similar(
-                            var, context.keys()
-                        )
-                        
-                        # If similarity is above the rule's threshold, use the value
-                        if best_match and best_sim >= rule["threshold"]:
-                            eval_context[var] = context[best_match]
-
-            # If the 'if' part of the rule is true in the current context
-            if rule["if"].evaluate(eval_context):
-                inferred_fact_name = str(rule["then"])
-                if not extended_context.get(inferred_fact_name, False):
-                     inferred_facts[inferred_fact_name] = True
-                     extended_context[inferred_fact_name] = True # Add to context for chained reasoning
+            for item in related_nodes:
+                target_node_info = item.get('target_node')
+                if not target_node_info:
+                    continue
+                
+                inferred_fact_id = target_node_info.get('id')
+                # まだ推論されておらず、起点でもない新しい事実であれば
+                if inferred_fact_id and inferred_fact_id not in processed_facts:
+                    inferred_facts[inferred_fact_id] = True       # 推論結果に追加
+                    processed_facts.add(inferred_fact_id)      # 処理済みセットに追加
+                    facts_to_process.append(inferred_fact_id)  # さらなる推論のためにリストに追加
 
         return inferred_facts
 
-# Mock SimilarityCalculator for testing purposes
-class MockSimilarityCalculator:
-    def __init__(self):
-        # Pre-defined similarity scores for testing
-        self.similarity_map = {
-            ("is_dog", "is_poodle"): 0.98,
-            ("is_dog", "is_cat"): 0.7,
-            ("is_bird", "is_sparrow"): 0.97
-        }
+    def update_knowledge(self, source_id, target_id, relationship, **attributes):
+        """
+        WorldModelに新しい知識（エッジ）を追加または更新する。
+        CausalDiscoveryエンジンなどから利用されることを想定。
+        """
+        # ノードが存在しない可能性も考慮し、WorldModel側にノード追加も依頼する
+        self.world_model.add_node(source_id)
+        self.world_model.add_node(target_id)
+        self.world_model.add_edge(source_id, target_id, relationship, **attributes)
+        print(f"SymbolicReasoner: Updated knowledge: {source_id} -[{relationship}]-> {target_id}")
 
-    def get_similarity(self, term1, term2):
-        return self.similarity_map.get((term1, term2), 0.0) or self.similarity_map.get((term2, term1), 0.0)
-
-    def find_most_similar(self, target_term, context_terms):
-        best_match = None
-        max_similarity = -1.0
-        for term in context_terms:
-            sim = self.get_similarity(target_term, term)
-            if sim > max_similarity:
-                max_similarity = sim
-                best_match = term
-        return best_match, max_similarity
-
-
+# --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
-    rule_file = "common_sense_rulebase.json"
+    print("--- SymbolicReasoner Self-Test (with WorldModel) --- ")
+    
+    # テスト用のWorldModelを準備
+    test_graph_path = 'reasoner_test_wm.json'
+    if os.path.exists(test_graph_path):
+        os.remove(test_graph_path)
+    
+    wm = WorldModel(graph_path=test_graph_path)
+    wm.add_node('penguin', name_ja="ペンギン")
+    wm.add_node('bird', name_ja="鳥")
+    wm.add_node('animal', name_ja="動物")
+    wm.add_edge('penguin', 'bird', 'is_a')
+    wm.add_edge('bird', 'animal', 'is_a')
 
-    # --- Test 1: Original functionality without similarity ---
-    print("--- Running Test 1: Basic Reasoning ---")
-    initial_context = {"is_dog": True, "has_long_ears": True}
-    print(f"Initial context: {initial_context}")
-    reasoner_basic = SymbolicReasoner(rule_file)
-    new_facts = reasoner_basic.reason(initial_context)
+    # 1. 推論器の初期化
+    reasoner = SymbolicReasoner(world_model=wm)
+
+    # 2. 推論の実行
+    initial_context = {'penguin': True}
+    print(f"\nInitial context: {initial_context}")
+    new_facts = reasoner.reason(initial_context)
     print(f"Inferred facts: {new_facts}")
-    assert new_facts == {'is_animal': True}, "Test 1 Failed"
-    print("Test 1 Passed\n")
 
-    # --- Test 2: Reasoning with semantic similarity ---
-    print("--- Running Test 2: Semantic Reasoning ---")
-    semantic_context = {"is_poodle": True}
-    print(f"Semantic context: {semantic_context}")
-    
-    # Initialize the reasoner with the mock similarity calculator
-    mock_calculator = MockSimilarityCalculator()
-    reasoner_semantic = SymbolicReasoner(rule_file, similarity_calculator=mock_calculator)
-    
-    # Perform reasoning
-    semantic_facts = reasoner_semantic.reason(semantic_context)
-    print(f"Inferred facts from semantic context: {semantic_facts}")
-    assert semantic_facts == {'is_animal': True}, "Test 2 Failed"
-    print("Test 2 Passed\n")
+    # 3. 結果の検証（連鎖的な推論が成功したか）
+    expected_facts = {'bird': True, 'animal': True}
+    assert new_facts == expected_facts, f"Test Failed: Expected {expected_facts}, but got {new_facts}"
+    print("Chained reasoning test passed.")
 
-    # --- Test 3: Failed reasoning due to low similarity ---
-    print("--- Running Test 3: Failed Semantic Reasoning ---")
-    fail_context = {"is_cat": True} # Similarity to 'is_dog' is 0.7, below threshold
-    print(f"Fail context: {fail_context}")
-    semantic_facts_fail = reasoner_semantic.reason(fail_context)
-    print(f"Inferred facts from fail context: {semantic_facts_fail}")
-    assert semantic_facts_fail == {'is_animal': True}, "Test 3 Failed, but this is expected"
-    print("Test 3 Passed (Correctly did not infer beyond the direct rule)\n")
+    # 4. 知識更新のテスト
+    print("\nTesting knowledge update...")
+    reasoner.update_knowledge('sparrow', 'bird', 'is_a', provenance="Test Update")
+    sparrow_relations = wm.find_related_nodes('sparrow', 'is_a')
+    assert len(sparrow_relations) > 0 and sparrow_relations[0]['target_node']['id'] == 'bird'
+    print("Knowledge update test passed.")
+
+    # クリーンアップ
+    if os.path.exists(test_graph_path):
+        os.remove(test_graph_path)
+
+    print("\n--- Self-Test Complete ---")

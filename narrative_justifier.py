@@ -1,3 +1,26 @@
+# === 第十五次実験 改修方針 ===
+#
+# 目的：
+# このファイルの機能を、より高度で自己言及的な語り（ナラティブ）を生成する新しいモジュール群に
+# 段階的に移行、または置き換える。
+#
+# 主な変更点：
+# 1. **機能の分離と高度化**:
+#    - 現在の`justify`メソッドが担う「思考プロセスの説明」機能は、新設される
+#      `intent_justifier.py`（意図の正当化）に、より洗練された形で実装される。
+#      `IntentJustifier`は、単なる事実の列挙ではなく、その判断に至った根拠（過去の経験など）を
+#      `PersonalMemoryGraph`から取得して語る。
+#
+# 2. **新しい語り手の導入**:
+#    - 新設される`meta_narrator.py`が、「自己の成長譚」を語る役割を担う。
+#      これは、`PersonalMemoryGraph`を俯瞰し、SigmaSenseがどのように学習・進化したかを
+#      物語として生成する、全く新しい機能である。
+#
+# 3. **最終的な役割**:
+#    - このファイルは、最終的には上記の新しいモジュール群に完全に置き換えられて廃止されるか、
+#      あるいは、最も基本的なデバッグレベルのログを生成するだけの、限定的な役割を持つ
+#      ヘルパーとして残存する可能性がある。
+#
 import os
 from dimension_loader import DimensionLoader
 
@@ -46,7 +69,7 @@ class NarrativeJustifier:
 
         # 2. Inferred Knowledge
         if inferred_facts:
-            inferred_names = [f"「{self._get_dim_name(f)}」" for f in inferred_facts]
+            inferred_names = [f"「{self._get_dim_name(f)}" for f in inferred_facts]
             narrative.append(f"常識ルールに基づき、観測された特徴から {', '.join(inferred_names)} であると推論されます。")
 
         # 3. Logical Conclusions
