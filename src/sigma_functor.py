@@ -1,5 +1,5 @@
 import numpy as np
-from dimension_loader import DimensionLoader
+from .dimension_loader import DimensionLoader
 from collections import defaultdict
 import tempfile
 import os
@@ -19,13 +19,17 @@ class SigmaFunctor:
         if isinstance(image_path_or_pil, str):
             if not os.path.exists(image_path_or_pil):
                 return None
-            return np.array(self.sigma.match(image_path_or_pil)['vector'])
+            # 戻り値の形式を 'vector' キーに合わせる
+            result = self.sigma.process_experience(image_path_or_pil)
+            return np.array(result['vector']) if result and 'vector' in result else None
         
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             image_path_or_pil.save(tmp.name, "PNG")
-            vec = self.sigma.match(tmp.name)['vector']
+            # 戻り値の形式を 'vector' キーに合わせる
+            result = self.sigma.process_experience(tmp.name)
+            vec = result['vector'] if result and 'vector' in result else None
         os.remove(tmp.name)
-        return np.array(vec)
+        return np.array(vec) if vec is not None else None
 
     def check_functoriality(self, image_path, image_transform_func, vector_transform_func):
         """

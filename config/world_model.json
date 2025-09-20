@@ -8868,6 +8868,559 @@
             "relationship": "causes",
             "confidence": 1.0,
             "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_std",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "gracefulness",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "form_presence",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "aspect_ratio_consistency",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "global_luminosity",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "centrality_of_shapes",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_convexity_index",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_max",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_rectangularity_index",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_max",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "edge_softness",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_std",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "vertical_balance_score",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "alignment_strength",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "horizontal_balance_score",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_std",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "gracefulness",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "form_presence",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "aspect_ratio_consistency",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "global_luminosity",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "centrality_of_shapes",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_convexity_index",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_max",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_rectangularity_index",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_max",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "edge_softness",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_std",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "vertical_balance_score",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "alignment_strength",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "horizontal_balance_score",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_std",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_std",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_std",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "gracefulness",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "form_presence",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "aspect_ratio_consistency",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "global_luminosity",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "centrality_of_shapes",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_convexity_index",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_max",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_rectangularity_index",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_max",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "edge_softness",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_std",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "vertical_balance_score",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "alignment_strength",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "horizontal_balance_score",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "gracefulness",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "gracefulness",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "form_presence",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "form_presence",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "aspect_ratio_consistency",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "global_luminosity",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "centrality_of_shapes",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_convexity_index",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_max",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_rectangularity_index",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_max",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "edge_softness",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_std",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "vertical_balance_score",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "alignment_strength",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "horizontal_balance_score",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "aspect_ratio_consistency",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "global_luminosity",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "centrality_of_shapes",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_convexity_index",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "mobilenet_v1_feature_max",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "average_rectangularity_index",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_max",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "edge_softness",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "resnet_v2_50_feature_std",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "vertical_balance_score",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "alignment_strength",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "horizontal_balance_score",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "effnet_feature_max",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "effnet_feature_max",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "effnet_feature_max",
+            "target": "gaze_impression",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "effnet_feature_max",
+            "target": "approachability",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
         }
     ]
 }
