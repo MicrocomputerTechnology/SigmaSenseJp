@@ -9421,6 +9421,34 @@
             "relationship": "causes",
             "confidence": 1.0,
             "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "total_shape_area_ratio",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "total_shape_area_ratio",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "total_shape_area_ratio",
+            "target": "contrast_level",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "motion_resonance",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
         }
     ]
 }
