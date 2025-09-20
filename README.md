@@ -57,7 +57,7 @@ SigmaSenseのアーキテクチャは、二つの異なる知性の協調によ�
   - **該当ファイル**: `sigma_sense.py`, `sigma_local_core.py`
 
 - **情報理論 (Information Theory)**:
-  - **内容**: `compute_entropy`（エントロピー）と`compute_sparsity`（スパース度）を計算し、その結果に基づいて`should_trigger_reconstruction`が意味の再構成が必要かを判断しています。
+  - **内容**: `compute_entropy`（エントロピー）、`mutual_information`（相互情報量）、`kl_divergence`（KLダイバージェンス）といった本格的な情報理論の指標を計算します。`should_trigger_reconstruction`はこれらの指標を利用し、単純な情報量の不足だけでなく、ベクトル間の情報理論的な「距離」が閾値を超えた場合にも、意味の再構成を判断できるようになりました。
   - **該当ファイル**: `information_metrics.py`, `reconstruction_trigger.py`
 
 - **圏論 (Category Theory)**:
