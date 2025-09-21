@@ -144,6 +144,21 @@ class TestFunctoriality(unittest.TestCase):
         
         return Image.merge('HSV', (shifted_h, s, v)).convert('RGB')
 
+    @staticmethod
+    def _scale_image_transform(pil_image, scale_factor):
+        """
+        Scales a PIL image.
+        """
+        new_size = (int(pil_image.width * scale_factor), int(pil_image.height * scale_factor))
+        return pil_image.resize(new_size, Image.Resampling.LANCZOS)
+
+    @staticmethod
+    def _translate_image_transform(pil_image, dx, dy):
+        """
+        Translates a PIL image.
+        """
+        return pil_image.transform(pil_image.size, Image.AFFINE, (1, 0, dx, 0, 1, dy))
+
     def test_hue_rotation_functoriality(self):
         """
         Tests if the hue rotation image transform corresponds to the hue rotation vector transform.
@@ -171,6 +186,60 @@ class TestFunctoriality(unittest.TestCase):
 
         self.assertTrue(is_consistent, "Hue rotation functoriality check failed: not consistent.")
         self.assertLess(diff_norm, 0.1, "Hue rotation functoriality check failed: difference too large.")
+
+    def test_scale_functoriality(self):
+        """
+        Tests if image scaling corresponds to vector scaling.
+        """
+        image_path = 'sigma_images/square_left.jpg' # A simple shape for clear scaling
+        self.assertTrue(os.path.exists(image_path), f"Test image not found at {image_path}")
+
+        scale_factor = 0.5 # Scale image to half size
+
+        # Image transform function (g)
+        image_transform_func = lambda img: self._scale_image_transform(img, scale_factor)
+
+        # Vector transform function name (F_g)
+        vector_transform_func_name = "scale_vector_transform"
+
+        diff_norm, is_consistent, vec_after_g, expected_vec_after = \
+            self.sigma_functor.check_functoriality(image_path, image_transform_func, vector_transform_func_name, scale_factor)
+
+        print(f"\n--- Scale Functoriality Test ---")
+        print(f"Diff Norm: {diff_norm}")
+        print(f"Is Consistent: {is_consistent}")
+        print(f"Vector after image transform (F(g(x))): {vec_after_g}")
+        print(f"Expected vector after vector transform ((F_g)(F(x))): {expected_vec_after}")
+
+        self.assertTrue(is_consistent, "Scale functoriality check failed: not consistent.")
+        self.assertLess(diff_norm, 0.1, "Scale functoriality check failed: difference too large.")
+
+    def test_translation_functoriality(self):
+        """
+        Tests if image translation corresponds to vector translation.
+        """
+        image_path = 'sigma_images/square_left.jpg' # A simple shape for clear translation
+        self.assertTrue(os.path.exists(image_path), f"Test image not found at {image_path}")
+
+        dx, dy = 10, 20 # Translate image by 10 pixels right, 20 pixels down
+
+        # Image transform function (g)
+        image_transform_func = lambda img: self._translate_image_transform(img, dx, dy)
+
+        # Vector transform function name (F_g)
+        vector_transform_func_name = "translate_vector_transform"
+
+        diff_norm, is_consistent, vec_after_g, expected_vec_after = \
+            self.sigma_functor.check_functoriality(image_path, image_transform_func, vector_transform_func_name, dx, dy)
+
+        print(f"\n--- Translation Functoriality Test ---")
+        print(f"Diff Norm: {diff_norm}")
+        print(f"Is Consistent: {is_consistent}")
+        print(f"Vector after image transform (F(g(x))): {vec_after_g}")
+        print(f"Expected vector after vector transform ((F_g)(F(x))): {expected_vec_after}")
+
+        self.assertTrue(is_consistent, "Translation functoriality check failed: not consistent.")
+        self.assertLess(diff_norm, 0.1, "Translation functoriality check failed: difference too large.")
 
 if __name__ == '__main__':
     unittest.main()

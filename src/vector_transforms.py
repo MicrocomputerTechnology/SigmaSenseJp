@@ -7,20 +7,20 @@ class VectorTransforms:
     def __init__(self, dimension_loader):
         self.dimension_loader = dimension_loader
 
-    def rotate_hue_vector_transform(self, meaning_vector, angle_deg):
+    def rotate_hue_vector_transform(self, feature_dict, angle_deg):
         """
-        Simulates the effect of rotating an image on its hue dimension in the meaning vector.
+        Simulates the effect of rotating an image on its hue dimension in the feature dictionary.
         Assumes hue is represented in a circular 0-180 range.
         """
         hue_dim_id = "opencv_dominant_hue"
-        hue_index = self.dimension_loader.get_index(hue_dim_id)
+        
+        original_hue = feature_dict.get(hue_dim_id)
 
-        if hue_index is None or hue_index >= len(meaning_vector):
-            # Hue dimension not found or vector too small, return original vector
-            return np.copy(meaning_vector)
+        if original_hue is None:
+            # Hue dimension not found, return original dictionary
+            return feature_dict.copy()
 
-        transformed_vector = np.copy(meaning_vector)
-        original_hue = transformed_vector[hue_index]
+        transformed_dict = feature_dict.copy()
 
         # Simulate hue shift (e.g., 180 degrees is a full circle for OpenCV hue)
         # A simple linear shift for now. More complex models might be needed for true functoriality.
@@ -30,6 +30,22 @@ class VectorTransforms:
         
         # Normalize angle to 0-180 range for OpenCV hue
         shifted_hue = (original_hue + angle_deg) % 180
-        transformed_vector[hue_index] = shifted_hue
+        transformed_dict[hue_dim_id] = shifted_hue
 
-        return transformed_vector
+        return transformed_dict
+
+    def scale_vector_transform(self, feature_dict, scale_factor):
+        """
+        Simulates the effect of scaling an image on its feature dictionary.
+        For high-level binary features, scaling (within reasonable bounds) is assumed to be invariant.
+        """
+        return feature_dict.copy()
+
+    def translate_vector_transform(self, feature_dict, dx, dy):
+        """
+        Simulates the effect of translating an image on its feature dictionary.
+        Most of our current features are translation invariant, so this returns the original dictionary.
+        """
+        # If there were features representing absolute position, they would be updated here.
+        # For now, our features are translation invariant.
+        return feature_dict.copy()
