@@ -104,9 +104,10 @@ class TestSheafAxioms(unittest.TestCase):
         self.assertIsNotNone(v12, "Vector for U12 should not be None")
 
         # 4. Get index for the dominant hue dimension
-        dim_map = self.loader.get_dimension_map()
         try:
-            d_hue = dim_map['dominant_hue_of_shapes']
+            d_hue = self.loader.get_index('dominant_hue_of_shapes')
+            if d_hue is None:
+                raise KeyError("'dominant_hue_of_shapes' not found in dimension map.")
         except KeyError as e:
             self.fail(f"This test requires the 'dominant_hue_of_shapes' dimension. Missing: {e}")
 
