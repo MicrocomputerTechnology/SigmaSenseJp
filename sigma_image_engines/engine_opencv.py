@@ -1,6 +1,7 @@
 
 import cv2
 import numpy as np
+from information_metrics import compute_kl_divergence, compute_wasserstein_distance
 
 class OpenCVEngine:
     """
@@ -47,12 +48,18 @@ class OpenCVEngine:
         h_hist = cv2.calcHist([hsv], [0], None, [180], [0, 180])
         s_hist = cv2.calcHist([hsv], [1], None, [256], [0, 256])
         
+        # Normalize histograms to probability distributions
+        h_hist_prob = h_hist.flatten() / h_hist.sum() if h_hist.sum() > 0 else np.zeros_like(h_hist.flatten())
+        s_hist_prob = s_hist.flatten() / s_hist.sum() if s_hist.sum() > 0 else np.zeros_like(s_hist.flatten())
+
         features = {
             "opencv_hu_moment_1": float(hu_moments[0][0]),
             "opencv_hu_moment_2": float(hu_moments[1][0]),
             "opencv_dominant_hue": int(np.argmax(h_hist)),
             "opencv_avg_saturation": float(np.mean(s_hist)),
             "opencv_edge_density": float(self._calculate_edge_density(image)),
+            "opencv_h_hist_prob": h_hist_prob,
+            "opencv_s_hist_prob": s_hist_prob,
         }
 
         # Add Fourier Descriptors (e.g., first few magnitudes as features)
@@ -148,14 +155,26 @@ class OpenCVEngine:
         resampled = np.vstack((interp_x, interp_y)).T
         return resampled.reshape(-1, 1, 2).astype(np.int32)
 
+    def compare_images_probabilistically(self, image_path1, image_path2):
+        """
+        Compares two images based on their probabilistic feature distributions.
+        """
+        features1 = self.extract_features(image_path1)
+        features2 = self.extract_features(image_path2)
 
-if __name__ == '__main__':
-    # Example usage
-    engine = OpenCVEngine()
-    # Create a dummy image for testing
-    dummy_image_path = "test.png"
-    cv2.imwrite(dummy_image_path, np.zeros((100, 100, 3), dtype=np.uint8))
-    features = engine.extract_features(dummy_image_path)
-    print("Extracted OpenCV features:")
-    for name, value in features.items():
-        print(f"  - {name}: {value}")
+        h_hist_prob1 = features1.get("opencv_h_hist_prob")
+        s_hist_prob1 = features1.get("opencv_s_hist_prob")
+        h_hist_prob2 = features2.get("opencv_h_hist_prob")
+        s_hist_prob2 = features2.get("opencv_s_hist_prob")
+
+        results = {}
+
+        if h_hist_prob1 is not None and h_hist_prob2 is not None:
+            results["h_hist_kl_divergence"] = compute_kl_divergence(h_hist_prob1, h_hist_prob2)
+            results["h_hist_wasserstein_distance"] = compute_wasserstein_distance(np.arange(len(h_hist_prob1)), np.arange(len(h_hist_prob2)), u_weights=h_hist_prob1, v_weights=h_hist_prob2)
+        
+        if s_hist_prob1 is not None and s_hist_prob2 is not None:
+            results["s_hist_kl_divergence"] = compute_kl_divergence(s_hist_prob1, s_hist_prob2)
+            results["s_hist_wasserstein_distance"] = compute_wasserstein_distance(np.arange(len(s_hist_prob1)), np.arange(len(s_hist_prob2)), u_weights=s_hist_prob1, v_weights=s_hist_prob2)
+
+        return results

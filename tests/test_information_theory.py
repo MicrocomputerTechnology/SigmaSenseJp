@@ -155,10 +155,12 @@ class TestWassersteinDistance(unittest.TestCase):
         Tests that the Wasserstein distance of a distribution to itself is zero.
         """
         # Arrange
-        p = [1, 2, 3, 4, 5]
+        # For Wasserstein distance, the values are the support, and weights are probabilities
+        u_values = [1, 2, 3, 4, 5]
+        u_weights = [0.2, 0.2, 0.2, 0.2, 0.2] # Uniform distribution
 
         # Act
-        distance = compute_wasserstein_distance(p, p)
+        distance = compute_wasserstein_distance(u_values, u_values, u_weights=u_weights, v_weights=u_weights)
 
         # Assert
         self.assertAlmostEqual(distance, 0.0, places=4, msg="Distance to self should be zero.")
@@ -168,12 +170,14 @@ class TestWassersteinDistance(unittest.TestCase):
         Tests that Wasserstein distance is symmetric. d(u, v) = d(v, u).
         """
         # Arrange
-        u = [1, 2, 5]
-        v = [3, 4, 6]
+        u_values = [1, 2, 5]
+        u_weights = [0.3, 0.4, 0.3]
+        v_values = [3, 4, 6]
+        v_weights = [0.2, 0.5, 0.3]
 
         # Act
-        dist_uv = compute_wasserstein_distance(u, v)
-        dist_vu = compute_wasserstein_distance(v, u)
+        dist_uv = compute_wasserstein_distance(u_values, v_values, u_weights=u_weights, v_weights=v_weights)
+        dist_vu = compute_wasserstein_distance(v_values, u_values, u_weights=v_weights, v_weights=u_weights)
 
         # Assert
         self.assertAlmostEqual(dist_uv, dist_vu, places=4, msg="Distance should be symmetric.")
@@ -185,11 +189,13 @@ class TestWassersteinDistance(unittest.TestCase):
         """
         # Arrange
         u_values = [0]
+        u_weights = [1.0]
         v_values = [2]
+        v_weights = [1.0]
         expected_distance = 2.0
 
         # Act
-        distance = compute_wasserstein_distance(u_values, v_values)
+        distance = compute_wasserstein_distance(u_values, v_values, u_weights=u_weights, v_weights=v_weights)
 
         # Assert
         self.assertAlmostEqual(distance, expected_distance, places=4, msg="Distance between [0] and [2] should be 2.")
@@ -200,14 +206,19 @@ class TestWassersteinDistance(unittest.TestCase):
         d([0], [2]) should be equal to d([10], [12]).
         """
         # Arrange
-        u1 = [0]
-        v1 = [2]
-        u2 = [10]
-        v2 = [12]
+        u1_values = [0]
+        u1_weights = [1.0]
+        v1_values = [2]
+        v1_weights = [1.0]
+
+        u2_values = [10]
+        u2_weights = [1.0]
+        v2_values = [12]
+        v2_weights = [1.0]
 
         # Act
-        dist1 = compute_wasserstein_distance(u1, v1)
-        dist2 = compute_wasserstein_distance(u2, v2)
+        dist1 = compute_wasserstein_distance(u1_values, v1_values, u_weights=u1_weights, v_weights=v1_weights)
+        dist2 = compute_wasserstein_distance(u2_values, v2_values, u_weights=u2_weights, v_weights=v2_weights)
 
         # Assert
         self.assertAlmostEqual(dist1, dist2, places=4, msg="Distance should be invariant to translation.")
@@ -291,13 +302,6 @@ class TestProbabilityDistributionConversion(unittest.TestCase):
         Tests basic conversion of a simple array to a probability distribution.
         """
         # Arrange
-        data = [1, 2, 2, 3, 3, 3]
-        # Expected: hist = [1, 2, 3] for bins=3 (or similar depending on bin edges)
-        # Normalized: [1/6, 2/6, 3/6] = [0.1667, 0.3333, 0.5]
-        # With default bins=10, it will be more spread out.
-        # Let's use a fixed bin range for predictability.
-        # Data range is 1 to 3. Bins: [1, 1.2, 1.4, ..., 3]
-        # For simplicity, let's test with data that falls neatly into bins.
         data = [1, 1, 2, 2, 3, 3] # 2 of each
         # If bins=3, and range is 1-3, then bins could be [1, 1.66, 2.33, 3]
         # 1s fall into first bin, 2s into second, 3s into third.

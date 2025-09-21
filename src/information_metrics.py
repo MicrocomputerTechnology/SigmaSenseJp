@@ -53,22 +53,21 @@ def compute_kl_divergence(p, q):
     divergence = np.sum(p_norm * np.log2(p_norm / q_norm))
     return round(float(divergence), 4)
 
-def compute_wasserstein_distance(p, q):
+def compute_wasserstein_distance(u_values, v_values, u_weights=None, v_weights=None):
     """
-    2つの1Dベクトル（値の分布とみなす）間のWasserstein距離を計算する。
+    2つの分布間のWasserstein距離を計算する。
+    u_values, v_valuesは分布のサポート（値）、u_weights, v_weightsは対応する確率（重み）。
     """
-    p_vec = np.asarray(p, dtype=float)
-    q_vec = np.asarray(q, dtype=float)
+    u_values = np.asarray(u_values, dtype=float)
+    v_values = np.asarray(v_values, dtype=float)
 
-    # 負の値チェック
-    if np.any(p_vec < 0) or np.any(q_vec < 0):
-        raise ValueError("入力ベクトルに負の値を含めることはできません。")
+    # 負の値チェックはscipy関数に任せるか、別途厳密に行う
 
     # 空のベクトルは0を返す
-    if p_vec.size == 0 or q_vec.size == 0:
+    if u_values.size == 0 or v_values.size == 0:
         return 0.0
 
-    distance = wasserstein_distance(p_vec, q_vec)
+    distance = wasserstein_distance(u_values, v_values, u_weights=u_weights, v_weights=v_weights)
     return round(float(distance), 4)
 
 def compute_mutual_information(labels_true, labels_pred):
