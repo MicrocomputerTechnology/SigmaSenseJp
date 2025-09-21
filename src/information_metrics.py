@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.stats import wasserstein_distance
+from sklearn.metrics import mutual_info_score
+import math
 
 def compute_entropy(vector):
     """
@@ -68,3 +70,13 @@ def compute_wasserstein_distance(p, q):
 
     distance = wasserstein_distance(p_vec, q_vec)
     return round(float(distance), 4)
+
+def compute_mutual_information(labels_true, labels_pred):
+    """
+    2つのラベル配列間の相互情報量を計算する。
+    """
+    # mutual_info_scoreは内部でnp.logを使用（自然対数）
+    mi_score_nats = mutual_info_score(labels_true, labels_pred)
+    # bits（2を底とする対数）に変換
+    mi_score_bits = mi_score_nats / math.log(2)
+    return round(float(mi_score_bits), 4)

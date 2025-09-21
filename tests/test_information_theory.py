@@ -2,11 +2,12 @@ import unittest
 import numpy as np
 import sys
 import os
+import collections
 
 # Add the src directory to the Python path to import the module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance
+from information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance, compute_mutual_information
 
 class TestInformationTheory(unittest.TestCase):
 
@@ -120,7 +121,7 @@ class TestKLDivergence(unittest.TestCase):
         """
         Tests KL divergence for a known case.
         P = [0.5, 0.5], Q = [0.25, 0.75]
-        D_KL(P || Q) = 0.5*log2(0.5/0.25) + 0.5*log2(0.5/0.75) = 0.5*log2(2) + 0.5*log2(2/3) = 0.5*1 + 0.5*(log2(2)-log2(3)) = 0.5 + 0.5*(1-1.58496) = 0.2075
+        D_KL(P || Q) = 0.5*log2(0.5/0.25) + 0.5*log2(0.5/0.75) = 0.5*1 + 0.5*(log2(2)-log2(3)) = 0.5 + 0.5*(1-1.58496) = 0.2075
         """
         # Arrange
         p = [0.5, 0.5]
@@ -210,6 +211,78 @@ class TestWassersteinDistance(unittest.TestCase):
 
         # Assert
         self.assertAlmostEqual(dist1, dist2, places=4, msg="Distance should be invariant to translation.")
+
+class TestMutualInformation(unittest.TestCase):
+
+    def test_mutual_information_of_independent_variables_is_zero(self):
+        """
+        Tests that mutual information is zero for independent variables.
+        """
+        # Arrange
+        x = [0, 0, 1, 1, 0, 0, 1, 1]
+        y = [0, 1, 0, 1, 0, 1, 0, 1] # Independent of x
+
+        # Act
+        mi = compute_mutual_information(x, y)
+
+        # Assert
+        self.assertAlmostEqual(mi, 0.0, places=4, msg="MI for independent variables should be zero.")
+
+    def test_mutual_information_of_variable_with_itself_is_entropy(self):
+        """
+        Tests that mutual information of a variable with itself is its entropy.
+        I(X; X) = H(X).
+        """
+        # Arrange
+        x = [0, 0, 1, 1, 2, 2]
+        # Calculate H(X) manually for comparison
+        # P(0)=1/3, P(1)=1/3, P(2)=1/3. H(X) = -3 * (1/3 * log2(1/3)) = log2(3) approx 1.58496
+        counts = collections.Counter(x)
+        total_elements = sum(counts.values())
+        probabilities = [count / total_elements for count in counts.values()]
+        expected_entropy = compute_entropy(probabilities) # Use our own entropy function for consistency
+
+        # Act
+        mi = compute_mutual_information(x, x)
+
+        # Assert
+        self.assertAlmostEqual(mi, expected_entropy, places=4, msg="MI(X;X) should be H(X).")
+
+    def test_mutual_information_is_non_negative(self):
+        """
+        Tests that mutual information is always non-negative.
+        """
+        # Arrange
+        x = [0, 0, 1, 1]
+        y = [0, 1, 0, 1]
+
+        # Act
+        mi = compute_mutual_information(x, y)
+
+        # Assert
+        self.assertGreaterEqual(mi, 0.0, "Mutual information should be non-negative.")
+
+    def test_mutual_information_with_known_values(self):
+        """
+        Tests mutual information for a known case.
+        X = [0, 0, 1, 1]
+        Y = [0, 1, 0, 1]
+        P(X=0,Y=0)=0.25, P(X=0,Y=1)=0.25, P(X=1,Y=0)=0.25, P(X=1,Y=1)=0.25
+        P(X=0)=0.5, P(X=1)=0.5
+        P(Y=0)=0.5, P(Y=1)=0.5
+        H(X) = 1, H(Y) = 1, H(X,Y) = 2
+        I(X;Y) = H(X) + H(Y) - H(X,Y) = 1 + 1 - 2 = 0
+        """
+        # Arrange
+        x = [0, 0, 1, 1]
+        y = [0, 1, 0, 1]
+        expected_mi = 0.0 # For this specific independent case
+
+        # Act
+        mi = compute_mutual_information(x, y)
+
+        # Assert
+        self.assertAlmostEqual(mi, expected_mi, places=4, msg="MI for known independent variables is incorrect.")
 
 if __name__ == '__main__':
     unittest.main()
