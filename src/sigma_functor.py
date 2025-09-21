@@ -1,5 +1,6 @@
 import numpy as np
 from .dimension_loader import DimensionLoader
+from .vector_transforms import VectorTransforms
 from collections import defaultdict
 import tempfile
 import os
@@ -13,6 +14,8 @@ class SigmaFunctor:
     """
     def __init__(self, sigma_instance):
         self.sigma = sigma_instance
+        self.dimension_loader = sigma_instance.dimension_loader # SigmaSenseからDimensionLoaderを取得
+        self.vector_transforms = VectorTransforms(self.dimension_loader)
 
     def _get_vector(self, image_path_or_pil):
         """画像パスまたはPIL.Imageから意味ベクトルを生成する"""
@@ -31,13 +34,13 @@ class SigmaFunctor:
         os.remove(tmp.name)
         return np.array(vec) if vec is not None else None
 
-    def check_functoriality(self, image_path, image_transform_func, vector_transform_func):
+    def check_functoriality(self, image_path, image_transform_func, vector_transform_func_name, *args, **kwargs):
         """
         関手性を検証する。
         F(g(x)) と (F_g)(F(x)) の差を計算する。
         - F: SigmaSenseによる画像からベクトルへの写像
         - g: 画像への変換 (例: 回転)
-        - F_g: ベクトルへの変換
+        - F_g: ベクトルへの変換 (vector_transform_func_nameで指定されたVectorTransformsのメソッド)
         """
         # F(x)
         vec_before = self._get_vector(image_path)
@@ -51,7 +54,12 @@ class SigmaFunctor:
             return None, True # 変換後画像のベクトルが生成できなければチェック不能
 
         # (F_g)(F(x))
-        expected_vec_after = vector_transform_func(vec_before)
+        # vector_transform_func_nameからVectorTransformsのメソッドを取得
+        if not hasattr(self.vector_transforms, vector_transform_func_name):
+            raise AttributeError(f"VectorTransforms does not have method: {vector_transform_func_name}")
+        
+        vector_transform_method = getattr(self.vector_transforms, vector_transform_func_name)
+        expected_vec_after = vector_transform_method(vec_before, *args, **kwargs)
 
         # F(g(x)) と (F_g)(F(x)) の差分（距離）を計算
         diff_norm = np.linalg.norm(vec_after_g - expected_vec_after)
