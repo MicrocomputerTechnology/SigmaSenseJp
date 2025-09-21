@@ -6,7 +6,7 @@ import os
 # Add the src directory to the Python path to import the module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from information_metrics import compute_entropy, compute_kl_divergence
+from information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance
 
 class TestInformationTheory(unittest.TestCase):
 
@@ -146,6 +146,70 @@ class TestKLDivergence(unittest.TestCase):
 
         # Assert
         self.assertTrue(np.isfinite(divergence), "Divergence should be a finite number even with zeros.")
+
+class TestWassersteinDistance(unittest.TestCase):
+
+    def test_distance_of_self_is_zero(self):
+        """
+        Tests that the Wasserstein distance of a distribution to itself is zero.
+        """
+        # Arrange
+        p = [1, 2, 3, 4, 5]
+
+        # Act
+        distance = compute_wasserstein_distance(p, p)
+
+        # Assert
+        self.assertAlmostEqual(distance, 0.0, places=4, msg="Distance to self should be zero.")
+
+    def test_distance_is_symmetric(self):
+        """
+        Tests that Wasserstein distance is symmetric. d(u, v) = d(v, u).
+        """
+        # Arrange
+        u = [1, 2, 5]
+        v = [3, 4, 6]
+
+        # Act
+        dist_uv = compute_wasserstein_distance(u, v)
+        dist_vu = compute_wasserstein_distance(v, u)
+
+        # Assert
+        self.assertAlmostEqual(dist_uv, dist_vu, places=4, msg="Distance should be symmetric.")
+
+    def test_distance_with_known_values(self):
+        """
+        Tests the distance between two simple, known distributions.
+        The distance between a distribution at point 0 and one at point 2 should be 2.
+        """
+        # Arrange
+        u_values = [0]
+        v_values = [2]
+        expected_distance = 2.0
+
+        # Act
+        distance = compute_wasserstein_distance(u_values, v_values)
+
+        # Assert
+        self.assertAlmostEqual(distance, expected_distance, places=4, msg="Distance between [0] and [2] should be 2.")
+
+    def test_translation_invariance(self):
+        """
+        Tests that the distance is the same if both distributions are shifted.
+        d([0], [2]) should be equal to d([10], [12]).
+        """
+        # Arrange
+        u1 = [0]
+        v1 = [2]
+        u2 = [10]
+        v2 = [12]
+
+        # Act
+        dist1 = compute_wasserstein_distance(u1, v1)
+        dist2 = compute_wasserstein_distance(u2, v2)
+
+        # Assert
+        self.assertAlmostEqual(dist1, dist2, places=4, msg="Distance should be invariant to translation.")
 
 if __name__ == '__main__':
     unittest.main()

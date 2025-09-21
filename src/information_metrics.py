@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import wasserstein_distance
 
 def compute_entropy(vector):
     """
@@ -49,3 +50,21 @@ def compute_kl_divergence(p, q):
 
     divergence = np.sum(p_norm * np.log2(p_norm / q_norm))
     return round(float(divergence), 4)
+
+def compute_wasserstein_distance(p, q):
+    """
+    2つの1Dベクトル（値の分布とみなす）間のWasserstein距離を計算する。
+    """
+    p_vec = np.asarray(p, dtype=float)
+    q_vec = np.asarray(q, dtype=float)
+
+    # 負の値チェック
+    if np.any(p_vec < 0) or np.any(q_vec < 0):
+        raise ValueError("入力ベクトルに負の値を含めることはできません。")
+
+    # 空のベクトルは0を返す
+    if p_vec.size == 0 or q_vec.size == 0:
+        return 0.0
+
+    distance = wasserstein_distance(p_vec, q_vec)
+    return round(float(distance), 4)
