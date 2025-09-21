@@ -7,9 +7,9 @@ import numpy as np
 # プロジェクトルートを定義
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-from dimension_generator_local import DimensionGenerator
-from dimension_loader import DimensionLoader
-from correction_applicator import CorrectionApplicator
+from .dimension_generator_local import DimensionGenerator
+from .dimension_loader import DimensionLoader
+from .correction_applicator import CorrectionApplicator
 
 # --- NumPyデータ型をJSONに変換するためのカスタムエンコーダ ---
 class NumpyEncoder(json.JSONEncoder):
@@ -53,7 +53,7 @@ def build_vector_from_facts(facts, dimension_loader):
             vector[i] = 0.0 # 変換できない場合は0.0とする
     return vector
 
-def build_database():
+def build_database(img_dir=IMG_DIR, db_path=DB_PATH):
     """sigma_imagesディレクトリ内の画像から最新のアーキテクチャに基づいた意味データベースを構築する"""
     print(f"🚀 最新アーキテクチャでの意味データベース構築を開始します...")
     print(f"   画像ディレクトリ: {IMG_DIR}")
