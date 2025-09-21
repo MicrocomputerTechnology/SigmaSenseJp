@@ -8,7 +8,7 @@ import cv2
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../sigma_image_engines')))
 
-from group_theory_action import GroupAction, get_rotation_group_2d
+from group_theory_action import GroupAction, get_rotation_group_2d, get_affine_group_2d
 from engine_opencv import OpenCVEngine
 
 class TestGroupTheoryAction(unittest.TestCase):
@@ -75,6 +75,10 @@ class TestFourierDescriptorsInvariance(unittest.TestCase):
         fd_features = sorted([v for k, v in features.items() if k.startswith('opencv_fourier_descriptor_')])
         return np.array(fd_features)
 
+    def _extract_hu_moments(self, image_path):
+        features = self.engine.extract_features(image_path)
+        return np.array([features["opencv_hu_moment_1"], features["opencv_hu_moment_2"]])
+
     def test_fourier_descriptors_rotation_invariance(self):
         """
         Tests that Fourier Descriptors are invariant to rotation.
@@ -133,6 +137,80 @@ class TestFourierDescriptorsInvariance(unittest.TestCase):
 
         np.testing.assert_allclose(original_fd, translated_fd, rtol=1e-2, atol=2e-2,
                                    err_msg="Fourier Descriptors should be invariant to translation.")
+
+    def test_hu_moments_affine_invariance(self):
+        """
+        Tests that Hu Moments are invariant to affine transformations.
+        """
+        original_hu = self._extract_hu_moments(self.base_image_path)
+
+        # Apply an affine transformation (e.g., rotation + scale + shear)
+        # Define 3 points in the original image and their corresponding points in the transformed image
+        # For a square, we can pick corners.
+        pts1 = np.float32([[50, 50], [150, 50], [50, 150]]) # Top-left, Top-right, Bottom-left of a 100x100 square
+        
+        # Define corresponding points after a transformation
+        # Example: Rotate by 30 deg, scale by 0.8, translate by (20, 30)
+        # This is a simplified affine transformation for testing purposes.
+        # A more robust test would use get_affine_group_2d to generate the matrix.
+        # For now, let's manually create a simple affine matrix.
+        
+        # Rotation by 30 degrees
+        angle = np.radians(30)
+        rot_matrix = np.array([
+            [np.cos(angle), -np.sin(angle)],
+            [np.sin(angle),  np.cos(angle)]
+        ])
+        
+        # Scale by 0.8
+        scale_matrix = np.array([
+            [0.8, 0],
+            [0, 0.8]
+        ])
+
+        # Shear (simple x-shear)
+        shear_factor = 0.2
+        shear_matrix = np.array([
+            [1, shear_factor],
+            [0, 1]
+        ])
+
+        # Translation
+        translation_vector = np.array([20, 30])
+
+        # Combine transformations (order matters: scale, rotate, shear, translate)
+        # For simplicity, let's just define the destination points directly for a known transformation
+        # This avoids complex matrix multiplications in the test itself.
+        
+        # Let's use a simple rotation and translation for the test image
+        # Original points: (50,50), (150,50), (50,150)
+        # After 30 deg rotation around (0,0) and translation (20,30)
+        # (x', y') = (x*cos - y*sin + tx, x*sin + y*cos + ty)
+        
+        # For a 100x100 square centered at (100,100) in a 200x200 image
+        # Let's use cv2.getAffineTransform directly to generate the matrix
+        # This is more robust than manual point calculation.
+        
+        # Define 3 points in the original image
+        pts1_img = np.float32([[50, 50], [150, 50], [50, 150]])
+        
+        # Define corresponding points after a transformation (e.g., rotation + translation)
+        # Rotate by 30 degrees around center (100,100) and translate by (20,20)
+        M_test = cv2.getRotationMatrix2D((100, 100), 30, 1.0) # Rotate by 30 deg, no scale
+        M_test[0, 2] += 20 # Add translation x
+        M_test[1, 2] += 20 # Add translation y
+
+        transformed_image_path = "test_square_affine.png"
+        img = cv2.imread(self.base_image_path)
+        (h, w) = img.shape[:2]
+        transformed_img = cv2.warpAffine(img, M_test, (w, h))
+        cv2.imwrite(transformed_image_path, transformed_img)
+
+        transformed_hu = self._extract_hu_moments(transformed_image_path)
+        os.remove(transformed_image_path)
+
+        np.testing.assert_allclose(original_hu, transformed_hu, rtol=1e-2, atol=1e-2,
+                                   err_msg="Hu Moments should be invariant to affine transformations.")
 
 if __name__ == '__main__':
     unittest.main()

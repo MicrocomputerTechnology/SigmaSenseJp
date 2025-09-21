@@ -102,3 +102,54 @@ def get_translation_group_2d(translations):
             return lambda p: p + translation_vector
         transformations.append(make_translation(t))
     return transformations
+
+def get_affine_group_2d(rotations_deg=[0], scales=[1.0], translations=[(0,0)], shears_deg=[0]):
+    """
+    Creates a list of 2D affine transformations.
+    Each transformation is a combination of rotation, scaling, translation, and shear.
+    Returns a list of functions that apply the affine transformation to a 2D point.
+    """
+    transformations = []
+    for rot_deg in rotations_deg:
+        for scale in scales:
+            for trans_vec in translations:
+                for shear_deg in shears_deg:
+                    # Identity matrix
+                    M = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], dtype=np.float32)
+
+                    # Apply rotation
+                    rot_rad = np.radians(rot_deg)
+                    R = np.array([
+                        [np.cos(rot_rad), -np.sin(rot_rad), 0],
+                        [np.sin(rot_rad),  np.cos(rot_rad), 0]
+                    ])
+                    M = R @ M # Apply rotation to identity
+
+                    # Apply scaling
+                    S = np.array([
+                        [scale, 0, 0],
+                        [0, scale, 0]
+                    ])
+                    M = S @ M # Apply scaling
+
+                    # Apply shear (simple shear in x direction for now)
+                    shear_rad = np.radians(shear_deg)
+                    Sh = np.array([
+                        [1, np.tan(shear_rad), 0],
+                        [0, 1, 0]
+                    ])
+                    M = Sh @ M # Apply shear
+
+                    # Apply translation
+                    T = np.array([
+                        [1, 0, trans_vec[0]],
+                        [0, 1, trans_vec[1]]
+                    ])
+                    M = T @ M # Apply translation
+
+                    # Create a function that applies this affine matrix to a point
+                    def make_affine_transform(matrix):
+                        return lambda p: (matrix @ np.array([p[0], p[1], 1.0]))[:2]
+                    
+                    transformations.append(make_affine_transform(M))
+    return transformations
