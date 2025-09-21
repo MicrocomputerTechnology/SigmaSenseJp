@@ -22,3 +22,30 @@ def compute_sparsity(vector):
     zero_count = np.sum(vec == 0)
     sparsity = zero_count / len(vec)
     return round(float(sparsity), 4)
+
+def compute_kl_divergence(p, q):
+    """
+    2つのベクトル（確率分布とみなす）間のKLダイバージェンスを計算する。
+    D_KL(P || Q)
+    """
+    p_vec = np.asarray(p, dtype=float)
+    q_vec = np.asarray(q, dtype=float)
+
+    # ゼロや負の値が含まれていないことを確認
+    if np.any(p_vec < 0) or np.any(q_vec < 0):
+        raise ValueError("入力ベクトルに負の値を含めることはできません。")
+
+    # 合計が0の場合は、空の分布として0を返す
+    if np.sum(p_vec) == 0 or np.sum(q_vec) == 0:
+        return 0.0
+
+    # 確率分布に正規化
+    p_norm = p_vec / np.sum(p_vec)
+    q_norm = q_vec / np.sum(q_vec)
+
+    # ゼロ割りを避けるための微小値を追加
+    p_norm = np.where(p_norm == 0, 1e-10, p_norm)
+    q_norm = np.where(q_norm == 0, 1e-10, q_norm)
+
+    divergence = np.sum(p_norm * np.log2(p_norm / q_norm))
+    return round(float(divergence), 4)
