@@ -7,7 +7,7 @@ import collections
 # Add the src directory to the Python path to import the module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance, compute_mutual_information
+from information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance, compute_mutual_information, to_probability_distribution
 
 class TestInformationTheory(unittest.TestCase):
 
@@ -283,6 +283,79 @@ class TestMutualInformation(unittest.TestCase):
 
         # Assert
         self.assertAlmostEqual(mi, expected_mi, places=4, msg="MI for known independent variables is incorrect.")
+
+class TestProbabilityDistributionConversion(unittest.TestCase):
+
+    def test_basic_conversion(self):
+        """
+        Tests basic conversion of a simple array to a probability distribution.
+        """
+        # Arrange
+        data = [1, 2, 2, 3, 3, 3]
+        # Expected: hist = [1, 2, 3] for bins=3 (or similar depending on bin edges)
+        # Normalized: [1/6, 2/6, 3/6] = [0.1667, 0.3333, 0.5]
+        # With default bins=10, it will be more spread out.
+        # Let's use a fixed bin range for predictability.
+        # Data range is 1 to 3. Bins: [1, 1.2, 1.4, ..., 3]
+        # For simplicity, let's test with data that falls neatly into bins.
+        data = [1, 1, 2, 2, 3, 3] # 2 of each
+        # If bins=3, and range is 1-3, then bins could be [1, 1.66, 2.33, 3]
+        # 1s fall into first bin, 2s into second, 3s into third.
+        # hist = [2, 2, 2]
+        # prob_dist = [1/3, 1/3, 1/3]
+        expected_dist = np.array([1/3, 1/3, 1/3])
+
+        # Act
+        prob_dist = to_probability_distribution(data, bins=3) # Specify bins for predictability
+
+        # Assert
+        np.testing.assert_allclose(prob_dist, expected_dist, rtol=1e-4, atol=1e-4,
+                                   err_msg="Basic conversion to probability distribution is incorrect.")
+
+    def test_sum_of_probabilities_is_one(self):
+        """
+        Tests that the sum of the probabilities in the resulting distribution is 1.
+        """
+        # Arrange
+        data = np.random.rand(100)
+
+        # Act
+        prob_dist = to_probability_distribution(data)
+
+        # Assert
+        self.assertAlmostEqual(np.sum(prob_dist), 1.0, places=6,
+                               msg="Sum of probabilities should be 1.")
+
+    def test_empty_data_handling(self):
+        """
+        Tests that an empty data array results in an empty probability distribution.
+        """
+        # Arrange
+        data = []
+
+        # Act
+        prob_dist = to_probability_distribution(data)
+
+        # Assert
+        self.assertEqual(len(prob_dist), 0, "Empty data should result in an empty distribution.")
+
+    def test_different_bin_numbers(self):
+        """
+        Tests conversion with a different number of bins.
+        """
+        # Arrange
+        data = [1, 1, 1, 2, 2, 3, 4, 4, 4, 4]
+        # With bins=4, and data range 1-4, each bin gets 1 unit.
+        # hist = [3, 2, 1, 4]
+        # prob_dist = [0.3, 0.2, 0.1, 0.4]
+        expected_dist = np.array([0.3, 0.2, 0.1, 0.4])
+
+        # Act
+        prob_dist = to_probability_distribution(data, bins=4)
+
+        # Assert
+        np.testing.assert_allclose(prob_dist, expected_dist, rtol=1e-4, atol=1e-4,
+                                   err_msg="Conversion with different bins is incorrect.")
 
 if __name__ == '__main__':
     unittest.main()

@@ -80,3 +80,20 @@ def compute_mutual_information(labels_true, labels_pred):
     # bits（2を底とする対数）に変換
     mi_score_bits = mi_score_nats / math.log(2)
     return round(float(mi_score_bits), 4)
+
+def to_probability_distribution(data, bins=10):
+    """
+    数値データの1D配列を確率分布に変換する（ヒストグラムを使用）。
+    """
+    if not isinstance(data, np.ndarray):
+        data = np.array(data)
+
+    if data.size == 0:
+        return np.array([])
+
+    # ヒストグラムを作成し、度数分布を得る
+    hist, bin_edges = np.histogram(data, bins=bins, density=False)
+
+    # 度数分布を正規化して確率分布にする
+    prob_dist = hist / hist.sum()
+    return prob_dist
