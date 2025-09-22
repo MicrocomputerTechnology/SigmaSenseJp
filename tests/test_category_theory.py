@@ -21,6 +21,7 @@ from src.sigma_database_loader import load_sigma_database
 from src.build_database import build_database
 from src.image_transformer import identity as identity_transform
 from src.sigma_functor import SigmaFunctor
+from src.vector_transforms import VectorTransforms
 
 class TestCategoryTheory(unittest.TestCase):
 
@@ -109,7 +110,8 @@ class TestFunctoriality(unittest.TestCase):
         cls.loader = DimensionLoader()
         database, ids, vectors = load_sigma_database(cls.db_path)
         cls.sigma = SigmaSense(database, ids, vectors, dimension_loader=cls.loader)
-        cls.sigma_functor = SigmaFunctor(cls.sigma)
+        vector_transforms_instance = VectorTransforms(cls.loader)
+        cls.sigma_functor = SigmaFunctor(vector_transforms_instance, cls.sigma)
         print("SigmaSense and SigmaFunctor instances created for functoriality tests.")
 
     @classmethod

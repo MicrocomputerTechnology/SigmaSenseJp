@@ -275,7 +275,8 @@ def generate_terrier_vector(img_path, dim_path=None):
         if img is None:
             raise FileNotFoundError(f"Image file could not be read: {img_path}")
         
-        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        gray_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         
         cascade_path = os.path.join(config_dir, 'haarcascade_dog_face.xml')
         face_cascade = cv2.CascadeClassifier(cascade_path)

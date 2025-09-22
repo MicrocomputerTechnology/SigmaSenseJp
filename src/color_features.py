@@ -11,7 +11,8 @@ def extract_average_color(img):
         return {"dominant_color_hue": 0.0, "dominant_color_sat": 0.0, "dominant_color_val": 0.0}
 
     # グレースケールに変換し、大津の二値化で前景マスクを生成
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     
     # マスクから輪郭を抽出
@@ -33,7 +34,7 @@ def extract_average_color(img):
         return {"dominant_color_hue": 0.0, "dominant_color_sat": 0.0, "dominant_color_val": 0.0}
 
     # BGRからHSVに変換
-    hsv_img_cropped = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2HSV)
+    hsv_img_cropped = cv2.cvtColor(img_cropped, cv2.COLOR_RGB2HSV)
     
     # 切り抜いた領域でマスクを使って前景領域の平均HSV値を計算
     mean_hsv = cv2.mean(hsv_img_cropped, mask=mask_cropped)

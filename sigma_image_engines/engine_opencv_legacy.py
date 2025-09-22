@@ -15,6 +15,7 @@ class LegacyOpenCVEngine:
         self.config = config if config else {}
 
     def extract_features(self, image_path):
+
         """
         Extracts a comprehensive set of features from an image using legacy OpenCV logic.
         """
@@ -28,13 +29,16 @@ class LegacyOpenCVEngine:
             diagonal_length = math.sqrt(h**2 + w**2)
 
             # --- Common Preprocessing ---
-            gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            lab_img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            gray_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+            hsv_img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+            lab_img = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
             l_channel, _, _ = cv2.split(lab_img)
             _, foreground_mask = cv2.threshold(l_channel, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
             contours, _ = cv2.findContours(foreground_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
             contours = [c for c in contours if cv2.contourArea(c) > 50]
+
 
             feature_map = {}
 
@@ -49,12 +53,14 @@ class LegacyOpenCVEngine:
             return {}
 
     def _calculate_selia_features(self, feature_map, img, gray_img, hsv_img, l_channel, contours, img_area, w, h, diagonal_length):
+
         """Calculates all Selia (structural) features."""
         self._calculate_color_features(feature_map, img, hsv_img)
         self._calculate_contrast_and_line(feature_map, l_channel, diagonal_length)
         self._calculate_shape_and_spatial_features(feature_map, contours, img, hsv_img, img_area, w, h, diagonal_length)
 
     def _calculate_lyra_features(self, feature_map, gray_img, hsv_img):
+
         """Calculates all Lyra (perceptual) features."""
         feature_map['contour_fluctuation'] = self._calculate_contour_fluctuation(gray_img)
         feature_map['edge_softness'] = self._calculate_edge_softness(gray_img)
@@ -69,6 +75,7 @@ class LegacyOpenCVEngine:
     # --- SELIA FEATURE HELPERS (from vector_generator.py) ---
 
     def _calculate_color_features(self, feature_map, img, hsv_img):
+
         try:
             _, _, v = cv2.split(hsv_img)
             feature_map['global_luminosity'] = np.mean(v) / 255.0
@@ -82,7 +89,7 @@ class LegacyOpenCVEngine:
             else:
                 feature_map['main_color_saturation'] = 0.0
 
-            lab_img_color = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+            lab_img_color = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
             a_channel, b_channel = lab_img_color[:, :, 1], lab_img_color[:, :, 2]
             hist_ab = cv2.calcHist([a_channel, b_channel], [0, 1], None, [32, 32], [0, 256, 0, 256])
             non_zero_bins = np.count_nonzero(hist_ab)
@@ -91,6 +98,7 @@ class LegacyOpenCVEngine:
             feature_map.update({'main_color_saturation': 0.0, 'global_luminosity': 0.0, 'color_diversity_index': 0.0})
 
     def _calculate_contrast_and_line(self, feature_map, l_channel, diagonal_length):
+
         try:
             feature_map['contrast_level'] = np.clip(np.std(l_channel) / 128.0, 0.0, 1.0)
             edges = cv2.Canny(l_channel, 50, 150, apertureSize=3)
@@ -128,7 +136,15 @@ class LegacyOpenCVEngine:
         feature_map['alignment_strength'] = 1.0
 
         num_contours = len(contours)
-        if num_contours == 0: return
+        if num_contours == 0:
+            # If no contours are found, calculate dominant hue from the entire image
+            h_channel = hsv_img[:, :, 0]
+            if len(h_channel) > 0:
+                hist_h = cv2.calcHist([h_channel], [0], None, [180], [0, 180])
+                feature_map['dominant_hue_of_shapes'] = np.argmax(hist_h) / 179.0
+            else:
+                feature_map['dominant_hue_of_shapes'] = 0.0
+            return
 
         feature_map['num_detected_shapes'] = np.clip(num_contours / 20.0, 0.0, 1.0)
         areas, circularities, rectangularities, convexities, aspect_ratios, roughnesses = [], [], [], [], [], []
@@ -183,13 +199,26 @@ class LegacyOpenCVEngine:
         if shape_masks:
             combined_mask = np.zeros((h, w), dtype=np.uint8)
             for mask in shape_masks: combined_mask = cv2.bitwise_or(combined_mask, mask)
+            rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            hsv_img_rgb = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2HSV)
             all_shape_pixels_hsv = cv2.bitwise_and(hsv_img, hsv_img, mask=combined_mask)
+            # Debugging: Save hsv_img and combined_mask
+
             s_channel, h_channel = all_shape_pixels_hsv[:, :, 1], all_shape_pixels_hsv[:, :, 0]
             valid_pixels = s_channel > 10
             valid_s, valid_h = s_channel[valid_pixels], h_channel[valid_pixels]
+
+            print(f"DEBUG: hsv_img shape: {hsv_img.shape}")
+            print(f"DEBUG: combined_mask shape: {combined_mask.shape}")
+            print(f"DEBUG: all_shape_pixels_hsv shape: {all_shape_pixels_hsv.shape}")
+            print(f"DEBUG: h_channel unique values: {np.unique(h_channel)}")
+            print(f"DEBUG: valid_h unique values: {np.unique(valid_h)}")
+
             feature_map['mean_color_saturation_of_shapes'] = np.mean(valid_s) / 255.0 if len(valid_s) > 0 else 0.0
             if len(valid_h) > 0:
                 hist_h = cv2.calcHist([valid_h], [0], None, [180], [0, 180])
+                print(f"DEBUG: hist_h argmax: {np.argmax(hist_h)}")
+                print(f"DEBUG: hist_h max: {np.max(hist_h)}")
                 feature_map['dominant_hue_of_shapes'] = np.argmax(hist_h) / 179.0
             else:
                 feature_map['dominant_hue_of_shapes'] = 0.0

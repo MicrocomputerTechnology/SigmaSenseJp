@@ -48,7 +48,9 @@ class OpenCVEngine:
         fourier_descriptors = self._extract_fourier_descriptors(gray)
         
         # Color Histograms
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        # Convert BGR to RGB before converting to HSV
+        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        hsv = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2HSV)
         h_hist = cv2.calcHist([hsv], [0], None, [180], [0, 180])
         s_hist = cv2.calcHist([hsv], [1], None, [256], [0, 256])
         

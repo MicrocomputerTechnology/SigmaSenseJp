@@ -54,6 +54,7 @@ def build_vector_from_facts(facts, dimension_loader):
     return vector
 
 def build_database(img_dir=IMG_DIR, db_path=DB_PATH):
+    print("DEBUG: build_database called")
     """sigma_imagesディレクトリ内の画像から最新のアーキテクチャに基づいた意味データベースを構築する"""
     print(f"🚀 最新アーキテクチャでの意味データベース構築を開始します...")
     print(f"   画像ディレクトリ: {img_dir}")
