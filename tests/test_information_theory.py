@@ -361,5 +361,50 @@ class TestProbabilityDistributionConversion(unittest.TestCase):
         np.testing.assert_allclose(prob_dist, expected_dist, rtol=1e-4, atol=1e-4,
                                    err_msg="Conversion with different bins is incorrect.")
 
+class TestVectorMutualInformation(unittest.TestCase):
+
+    def test_correlated_vectors_have_higher_mi(self):
+        """
+        Tests that highly correlated continuous vectors, when discretized,
+        yield higher mutual information than uncorrelated vectors.
+        """
+        # Arrange: Create synthetic continuous vectors
+        np.random.seed(42)
+        num_samples = 1000
+        num_bins = 20 # Number of bins for discretization
+
+        # Highly correlated vectors
+        x_correlated = np.random.rand(num_samples) * 10
+        y_correlated = x_correlated + np.random.randn(num_samples) * 0.5 # x + some noise
+
+        # Uncorrelated vectors
+        x_uncorrelated = np.random.rand(num_samples) * 10
+        y_uncorrelated = np.random.rand(num_samples) * 10
+
+        # Discretize continuous vectors into categorical labels
+        # Determine bin edges from the combined range of all data to ensure consistent binning
+        min_val = min(x_correlated.min(), y_correlated.min(), x_uncorrelated.min(), y_uncorrelated.min())
+        max_val = max(x_correlated.max(), y_correlated.max(), x_uncorrelated.max(), y_uncorrelated.max())
+        bins = np.linspace(min_val, max_val, num_bins + 1)
+
+        labels_x_corr = np.digitize(x_correlated, bins)
+        labels_y_corr = np.digitize(y_correlated, bins)
+
+        labels_x_uncorr = np.digitize(x_uncorrelated, bins)
+        labels_y_uncorr = np.digitize(y_uncorrelated, bins)
+
+        # Act: Compute mutual information
+        mi_correlated = compute_mutual_information(labels_x_corr, labels_y_corr)
+        mi_uncorrelated = compute_mutual_information(labels_x_uncorr, labels_y_uncorr)
+
+        # Assert: Correlated vectors should have significantly higher MI
+        # The threshold 0.5 is empirical and might need adjustment based on data generation
+        self.assertGreater(mi_correlated, mi_uncorrelated,
+                           "MI for correlated vectors should be higher than for uncorrelated vectors.")
+        self.assertGreater(mi_correlated, 0.5, # Ensure MI is not trivially low for correlated data
+                           "MI for correlated vectors should be significantly positive.")
+        self.assertLess(mi_uncorrelated, 0.3, # Ensure MI is close to zero for uncorrelated data
+                        "MI for uncorrelated vectors should be close to zero.")
+
 if __name__ == '__main__':
     unittest.main()
