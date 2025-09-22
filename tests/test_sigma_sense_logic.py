@@ -93,6 +93,61 @@ class TestSigmaSenseLogicIntegration(unittest.TestCase):
         
         print("--- Test finished successfully ---")
 
+    def test_find_best_match_with_different_metrics(self):
+        """
+        Tests that _find_best_match correctly identifies the best match
+        using different similarity metrics (cosine, KL divergence, Wasserstein).
+        """
+        print("\n--- Running test_find_best_match_with_different_metrics ---")
+
+        # 1. Create a dummy database for SigmaSense
+        # These vectors are designed to be easily comparable for different metrics
+        # They are normalized to sum to 1 to act as probability distributions for KL/Wasserstein
+        # For cosine, the magnitude also matters, but relative values are key.
+        target_vec = np.array([0.1, 0.2, 0.7], dtype=np.float32)
+        db_vec_a = np.array([0.1, 0.2, 0.7], dtype=np.float32) # Identical to target
+        db_vec_b = np.array([0.7, 0.2, 0.1], dtype=np.float32) # Very different
+        db_vec_c = np.array([0.2, 0.3, 0.5], dtype=np.float32) # Somewhat similar
+
+        dummy_ids = ["vec_a", "vec_b", "vec_c"]
+        dummy_vectors = np.array([db_vec_a, db_vec_b, db_vec_c], dtype=np.float32)
+        dummy_weights = np.array([1.0, 1.0, 1.0], dtype=np.float32) # All dimensions equally important
+
+        # Temporarily override sigma_sense's database for this test
+        original_vectors = self.sigma_sense.vectors
+        original_ids = self.sigma_sense.ids
+        original_weights = self.sigma_sense.weights
+
+        self.sigma_sense.vectors = dummy_vectors
+        self.sigma_sense.ids = dummy_ids
+        self.sigma_sense.weights = dummy_weights
+
+        # 2. Test with 'cosine' metric
+        best_id_cosine, score_cosine, _ = self.sigma_sense._find_best_match(target_vec, metric='cosine')
+        print(f"Cosine: Best match = {best_id_cosine}, Score = {score_cosine:.4f}")
+        self.assertEqual(best_id_cosine, "vec_a")
+        self.assertAlmostEqual(score_cosine, 1.0, places=4) # Identical vectors should have cosine similarity of 1
+
+        # 3. Test with 'kl_divergence' metric
+        # For KL, identical distributions should yield max similarity (1.0)
+        best_id_kl, score_kl, _ = self.sigma_sense._find_best_match(target_vec, metric='kl_divergence')
+        print(f"KL Divergence: Best match = {best_id_kl}, Score = {score_kl:.4f}")
+        self.assertEqual(best_id_kl, "vec_a")
+        self.assertAlmostEqual(score_kl, 1.0, places=4) # Identical distributions should have 0 KL div, so 1/(1+0)=1 similarity
+
+        # 4. Test with 'wasserstein' metric
+        # For Wasserstein, identical distributions should yield max similarity (1.0)
+        best_id_wasserstein, score_wasserstein, _ = self.sigma_sense._find_best_match(target_vec, metric='wasserstein')
+        print(f"Wasserstein: Best match = {best_id_wasserstein}, Score = {score_wasserstein:.4f}")
+        self.assertEqual(best_id_wasserstein, "vec_a")
+        self.assertAlmostEqual(score_wasserstein, 1.0, places=4) # Identical distributions should have 0 Wasserstein dist, so 1/(1+0)=1 similarity
+
+        # Restore original sigma_sense database
+        self.sigma_sense.vectors = original_vectors
+        self.sigma_sense.ids = original_ids
+        self.sigma_sense.weights = original_weights
+        print("--- Test finished successfully ---")
+
     def tearDown(self):
         """Clean up environment variables."""
         # No need to manage env vars anymore
