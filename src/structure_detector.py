@@ -10,6 +10,10 @@ def extract_structure_features(image_path):
     img = cv2.imread(image_path)
     if img is None:
         return []
+    if np.std(img) < 5: # Threshold for solid color
+        h, w, _ = img.shape
+        return [{"x": 0, "y": 0, "w": w, "h": h}]
+
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
@@ -51,6 +55,7 @@ def extract_structure_features(image_path):
         
         # マスクから輪郭を見つける
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
         if contours:
             # 最大の輪郭（オブジェクト全体）のバウンディングボックスを取得
             c = max(contours, key=cv2.contourArea)

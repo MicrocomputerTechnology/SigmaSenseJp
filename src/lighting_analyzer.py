@@ -8,7 +8,8 @@ def analyze_lighting(img):
     if img is None:
         return {"brightness": 0.0, "shadow_intensity": 0.0}
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     
     # 輝度ヒストグラムから陰影領域の割合を計算
     # 輝度が低い（暗い）領域が多ければ陰影が強いと判断

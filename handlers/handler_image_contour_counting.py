@@ -39,7 +39,8 @@ class ImageContourCountHandler(BaseHandler):
         # 3. 画像処理とエラーハンドリング
         try:
             # グレースケールに変換
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
             # 外部輪郭を検出
             # RETR_EXTERNAL: 最も外側の輪郭のみを検出
