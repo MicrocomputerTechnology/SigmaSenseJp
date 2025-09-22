@@ -1,4 +1,4 @@
-from .information_metrics import compute_entropy, kl_divergence
+from .information_metrics import compute_entropy, compute_kl_divergence
 
 def should_trigger_reconstruction(vector_p, vector_q=None, threshold_entropy=2.5, threshold_kl=1.0):
     """
@@ -13,5 +13,5 @@ def should_trigger_reconstruction(vector_p, vector_q=None, threshold_entropy=2.5
         return entropy < threshold_entropy
     else:
         # KLダイバージェンスチェック
-        divergence = kl_divergence(vector_p, vector_q)
+        divergence = compute_kl_divergence(vector_p, vector_q)
         return divergence > threshold_kl
