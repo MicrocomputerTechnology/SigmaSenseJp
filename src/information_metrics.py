@@ -1,4 +1,5 @@
 import numpy as np
+import numpy as np
 from scipy.stats import wasserstein_distance
 from sklearn.metrics import mutual_info_score
 import math
@@ -13,6 +14,7 @@ def compute_entropy(vector):
     if total == 0:
         return 0.0
     probs = vec / total
+    # ゼロや負の値をクリップしてlog計算のエラーを防ぐ
     probs = np.clip(probs, 1e-10, 1.0)
     entropy = -np.sum(probs * np.log2(probs))
     return round(float(entropy), 4)
