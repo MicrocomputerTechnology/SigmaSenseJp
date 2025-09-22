@@ -1,15 +1,27 @@
-numpy
-scikit-learn
-scipy
-opencv-python
-tqdm
-PyYAML
-google-generativeai
-Pillow
-scikit-image
-tensorflow
-ollama
-RestrictedPython
-spacy
-ginza
-ja-ginza
+# It is recommended to use a Python version 3.9 or higher.
+
+# Core scientific libraries
+numpy==2.3.3
+scikit-learn==1.7.2
+scipy==1.16.2
+
+# Image processing
+opencv-python==4.12.0.88
+Pillow==11.3.0
+scikit-image==0.25.2
+
+# AI/ML
+tensorflow==2.20.0
+# google-generativeai is deprecated and will be replaced by google-genai.
+google-generativeai==0.8.5
+ollama==0.5.4
+
+# NLP
+spacy==3.8
+ginza==5.2.0
+ja-ginza==5.2.0
+
+# Utilities
+tqdm==4.67.1
+PyYAML==6.0.2
+RestrictedPython==8.0
