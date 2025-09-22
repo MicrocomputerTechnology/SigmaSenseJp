@@ -9449,6 +9449,48 @@
             "relationship": "causes",
             "confidence": 1.0,
             "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "dominant_hue_of_shapes",
+            "target": "mean_color_saturation_of_shapes",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "dominant_hue_of_shapes",
+            "target": "main_color_saturation",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "dominant_hue_of_shapes",
+            "target": "inner_vitality",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "dominant_hue_of_shapes",
+            "target": "average_circularity_index",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "is_dog",
+            "target": "animal",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
+        },
+        {
+            "source": "is_canine",
+            "target": "animal",
+            "relationship": "causes",
+            "confidence": 1.0,
+            "provenance": "CausalDiscovery"
         }
     ]
 }

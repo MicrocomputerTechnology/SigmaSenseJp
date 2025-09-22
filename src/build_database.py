@@ -7,9 +7,9 @@ import numpy as np
 # プロジェクトルートを定義
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-from dimension_generator_local import DimensionGenerator
-from dimension_loader import DimensionLoader
-from correction_applicator import CorrectionApplicator
+from .dimension_generator_local import DimensionGenerator
+from .dimension_loader import DimensionLoader
+from .correction_applicator import CorrectionApplicator
 
 # --- NumPyデータ型をJSONに変換するためのカスタムエンコーダ ---
 class NumpyEncoder(json.JSONEncoder):
@@ -53,22 +53,22 @@ def build_vector_from_facts(facts, dimension_loader):
             vector[i] = 0.0 # 変換できない場合は0.0とする
     return vector
 
-def build_database():
+def build_database(img_dir=IMG_DIR, db_path=DB_PATH):
     """sigma_imagesディレクトリ内の画像から最新のアーキテクチャに基づいた意味データベースを構築する"""
     print(f"🚀 最新アーキテクチャでの意味データベース構築を開始します...")
-    print(f"   画像ディレクトリ: {IMG_DIR}")
-    print(f"   出力先: {DB_PATH}")
+    print(f"   画像ディレクトリ: {img_dir}")
+    print(f"   出力先: {db_path}")
 
     # 最新の次元生成器と次元定義ローダーを初期化
     dim_generator = DimensionGenerator()
     dim_loader = DimensionLoader() # 引数なしで初期化し、デフォルトの全次元ファイルを読み込む
 
     database = []
-    if not os.path.isdir(IMG_DIR):
-        print(f"❗ エラー: 画像ディレクトリが見つかりません: {IMG_DIR}")
+    if not os.path.isdir(img_dir):
+        print(f"❗ エラー: 画像ディレクトリが見つかりません: {img_dir}")
         return
 
-    image_files = [f for f in sorted(os.listdir(IMG_DIR)) if is_image_file(f)]
+    image_files = [f for f in sorted(os.listdir(img_dir)) if is_image_file(f)]
 
     if not image_files:
         print("❗ 警告: 対象となる画像ファイルが見つかりません。")
@@ -76,7 +76,7 @@ def build_database():
 
     # tqdmを使ってプログレスバーを表示
     for fname in tqdm(image_files, desc="ベクトル生成中"):
-        img_path = os.path.join(IMG_DIR, fname)
+        img_path = os.path.join(img_dir, fname)
         item_id = os.path.splitext(fname)[0]
         
         # 1. 特徴量を網羅的に抽出
@@ -100,9 +100,9 @@ def build_database():
     stabilized_database = corrector.apply_to_database(database)
 
     try:
-        with open(DB_PATH, 'w', encoding='utf-8') as f:
+        with open(db_path, 'w', encoding='utf-8') as f:
             json.dump(stabilized_database, f, indent=2, ensure_ascii=False, cls=NumpyEncoder)
-        print(f"\n✅ データベースの構築と安定化が完了しました。{len(stabilized_database)}件のデータが {DB_PATH} に保存されました。")
+        print(f"\n✅ データベースの構築と安定化が完了しました。{len(stabilized_database)}件のデータが {db_path} に保存されました。")
     except IOError as e:
         print(f"\n❗ エラー: データベースファイルの書き込みに失敗しました: {e}")
 

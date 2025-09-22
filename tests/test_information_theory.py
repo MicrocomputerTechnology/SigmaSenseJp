@@ -1,80 +1,410 @@
+import unittest
 import numpy as np
-import os
 import sys
+import os
+import collections
 
-# Add the project root to the Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add the src directory to the Python path to import the module
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from src.information_metrics import compute_entropy, mutual_information, kl_divergence
-from src.reconstruction_trigger import should_trigger_reconstruction
+from information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance, compute_mutual_information, to_probability_distribution
 
-def run_tests():
-    """
-    Runs all information theory related unit tests.
-    """
-    print("--- Starting Information Theory Functions Test ---")
+class TestInformationTheory(unittest.TestCase):
 
-    # --- Test Data ---
-    vec_uniform = np.array([0.25, 0.25, 0.25, 0.25])
-    vec_sparse = np.array([0.9, 0.1, 0.0, 0.0])
-    vec_identical_1 = np.random.rand(100)
-    vec_identical_2 = vec_identical_1.copy()
-    vec_random = np.random.rand(100)
-    dist_p = np.array([0.1, 0.9])
-    dist_q = np.array([0.8, 0.2])
+    def test_zero_entropy_for_deterministic_distribution(self):
+        """
+        Tests that a deterministic distribution (only one non-zero element) has zero entropy.
+        This is a fundamental property of Shannon Entropy.
+        """
+        # Arrange
+        deterministic_vector = [0, 0, 5, 0, 0]
 
-    # --- 1. Entropy Test ---
-    print("\n[1. Entropy Test]")
-    entropy_uniform = compute_entropy(vec_uniform)
-    entropy_sparse = compute_entropy(vec_sparse)
-    print(f"Entropy (Uniform): {entropy_uniform}")
-    print(f"Entropy (Sparse): {entropy_sparse}")
-    assert entropy_uniform > entropy_sparse, "Test failed: Uniform entropy should be greater than sparse entropy."
-    print("OK: Uniform entropy is correctly higher than sparse entropy.")
+        # Act
+        entropy = compute_entropy(deterministic_vector)
 
-    # --- 2. Mutual Information Test ---
-    print("\n[2. Mutual Information Test]")
-    mi_identical = mutual_information(vec_identical_1, vec_identical_2)
-    mi_random = mutual_information(vec_identical_1, vec_random)
-    print(f"Mutual Information (Identical): {mi_identical}")
-    print(f"Mutual Information (Random): {mi_random}")
-    assert mi_identical > mi_random, "Test failed: MI for identical vectors should be higher than for random vectors."
-    print("OK: Mutual information for identical vectors is correctly higher.")
+        # Assert
+        self.assertEqual(entropy, 0.0, "A deterministic vector should have zero entropy.")
 
-    # --- 3. KL Divergence Test ---
-    print("\n[3. KL Divergence Test]")
-    kl_same = kl_divergence(dist_p, dist_p)
-    kl_different = kl_divergence(dist_p, dist_q)
-    print(f"KL Divergence (P || P): {kl_same}")
-    print(f"KL Divergence (P || Q): {kl_different}")
-    assert kl_different > kl_same, "Test failed: KL divergence for different distributions should be greater."
-    print("OK: KL divergence for different distributions is correctly higher.")
+    def test_maximum_entropy_for_uniform_distribution(self):
+        """
+        Tests that a uniform distribution has maximum possible entropy.
+        For a vector of size n, max entropy is log2(n).
+        """
+        # Arrange
+        uniform_vector = [1, 1, 1, 1]
+        n = len(uniform_vector)
+        expected_max_entropy = np.log2(n)
 
-    # --- 4. Reconstruction Trigger Test ---
-    print("\n[4. Reconstruction Trigger Test]")
-    # Test Case 4.1: Low entropy trigger
-    low_entropy_vector = [0.99, 0.01, 0, 0, 0, 0, 0, 0, 0, 0]
-    trigger_entropy = should_trigger_reconstruction(low_entropy_vector, threshold_entropy=1.0)
-    print(f"Trigger on low entropy (entropy={compute_entropy(low_entropy_vector)}): {trigger_entropy}")
-    assert trigger_entropy is True, "Test failed: Should trigger for low entropy."
-    print("OK: Triggered correctly on low entropy.")
+        # Act
+        entropy = compute_entropy(uniform_vector)
 
-    # Test Case 4.2: High KL divergence trigger
-    p_vec = [0.1, 0.2, 0.7]
-    q_vec = [0.7, 0.2, 0.1]
-    trigger_kl = should_trigger_reconstruction(p_vec, vector_q=q_vec, threshold_kl=0.5)
-    print(f"Trigger on high KL divergence (KL={kl_divergence(p_vec, q_vec)}): {trigger_kl}")
-    assert trigger_kl is True, "Test failed: Should trigger for high KL divergence."
-    print("OK: Triggered correctly on high KL divergence.")
+        # Assert
+        self.assertAlmostEqual(entropy, expected_max_entropy, places=4, msg="A uniform vector should have maximum entropy.")
 
-    # Test Case 4.3: No trigger
-    high_entropy_vector = [0.25, 0.25, 0.25, 0.25]
-    no_trigger_entropy = should_trigger_reconstruction(high_entropy_vector, threshold_entropy=1.0)
-    print(f"No trigger on high entropy (entropy={compute_entropy(high_entropy_vector)}): {not no_trigger_entropy}")
-    assert no_trigger_entropy is False, "Test failed: Should not trigger for high entropy."
-    print("OK: Did not trigger on high entropy as expected.")
+    def test_entropy_for_known_distribution(self):
+        """
+        Tests the entropy calculation for a known, non-trivial probability distribution.
+        P = [0.5, 0.25, 0.25]
+        Entropy = -(0.5*log2(0.5) + 0.25*log2(0.25) + 0.25*log2(0.25)) = 1.5
+        """
+        # Arrange
+        known_vector = [2, 1, 1] # Corresponds to probabilities [0.5, 0.25, 0.25]
+        expected_entropy = 1.5
 
-    print("\n--- All Information Theory Tests Passed Successfully! ---")
+        # Act
+        entropy = compute_entropy(known_vector)
+
+        # Assert
+        self.assertAlmostEqual(entropy, expected_entropy, places=4, msg="Entropy for P=[0.5, 0.25, 0.25] should be 1.5.")
+        
+    def test_empty_vector(self):
+        """
+        Tests that an empty vector or a vector of zeros results in zero entropy.
+        """
+        # Arrange
+        empty_vector = []
+        zero_vector = [0, 0, 0]
+
+        # Act
+        entropy_empty = compute_entropy(empty_vector)
+        entropy_zero = compute_entropy(zero_vector)
+
+        # Assert
+        self.assertEqual(entropy_empty, 0.0, "An empty vector should have zero entropy.")
+        self.assertEqual(entropy_zero, 0.0, "A zero vector should have zero entropy.")
+
+class TestKLDivergence(unittest.TestCase):
+
+    def test_divergence_of_self_is_zero(self):
+        """
+        Tests that the KL divergence of a distribution with itself is zero. D_KL(P || P) = 0.
+        """
+        # Arrange
+        p = [0.1, 0.2, 0.7]
+
+        # Act
+        divergence = compute_kl_divergence(p, p)
+
+        # Assert
+        self.assertAlmostEqual(divergence, 0.0, places=4, msg="KL divergence of a distribution with itself should be zero.")
+
+    def test_divergence_is_non_negative(self):
+        """
+        Tests that KL divergence is always non-negative. D_KL(P || Q) >= 0.
+        """
+        # Arrange
+        p = [0.1, 0.2, 0.7]
+        q = [0.7, 0.2, 0.1]
+
+        # Act
+        divergence = compute_kl_divergence(p, q)
+
+        # Assert
+        self.assertGreaterEqual(divergence, 0.0, "KL divergence should be non-negative.")
+
+    def test_divergence_is_not_symmetric(self):
+        """
+        Tests that KL divergence is not symmetric. D_KL(P || Q) != D_KL(Q || P).
+        """
+        # Arrange
+        p = [0.2, 0.8]
+        q = [0.6, 0.4]
+
+        # Act
+        div_pq = compute_kl_divergence(p, q)
+        div_qp = compute_kl_divergence(q, p)
+
+        # Assert
+        self.assertNotAlmostEqual(div_pq, div_qp, msg="KL divergence should not be symmetric.")
+
+    def test_divergence_with_known_values(self):
+        """
+        Tests KL divergence for a known case.
+        P = [0.5, 0.5], Q = [0.25, 0.75]
+        D_KL(P || Q) = 0.5*log2(0.5/0.25) + 0.5*log2(0.5/0.75) = 0.5*1 + 0.5*(log2(2)-log2(3)) = 0.5 + 0.5*(1-1.58496) = 0.2075
+        """
+        # Arrange
+        p = [0.5, 0.5]
+        q = [0.25, 0.75]
+        expected_divergence = 0.2075
+
+        # Act
+        divergence = compute_kl_divergence(p, q)
+
+        # Assert
+        self.assertAlmostEqual(divergence, expected_divergence, places=4, msg="KL divergence for known P, Q is incorrect.")
+
+    def test_divergence_with_zeros(self):
+        """
+        Tests that divergence calculation is stable when zeros are present.
+        """
+        # Arrange
+        p = [0.5, 0.5, 0]
+        q = [0.25, 0.25, 0.5]
+
+        # Act
+        divergence = compute_kl_divergence(p, q)
+
+        # Assert
+        self.assertTrue(np.isfinite(divergence), "Divergence should be a finite number even with zeros.")
+
+class TestWassersteinDistance(unittest.TestCase):
+
+    def test_distance_of_self_is_zero(self):
+        """
+        Tests that the Wasserstein distance of a distribution to itself is zero.
+        """
+        # Arrange
+        # For Wasserstein distance, the values are the support, and weights are probabilities
+        u_values = [1, 2, 3, 4, 5]
+        u_weights = [0.2, 0.2, 0.2, 0.2, 0.2] # Uniform distribution
+
+        # Act
+        distance = compute_wasserstein_distance(u_values, u_values, u_weights=u_weights, v_weights=u_weights)
+
+        # Assert
+        self.assertAlmostEqual(distance, 0.0, places=4, msg="Distance to self should be zero.")
+
+    def test_distance_is_symmetric(self):
+        """
+        Tests that Wasserstein distance is symmetric. d(u, v) = d(v, u).
+        """
+        # Arrange
+        u_values = [1, 2, 5]
+        u_weights = [0.3, 0.4, 0.3]
+        v_values = [3, 4, 6]
+        v_weights = [0.2, 0.5, 0.3]
+
+        # Act
+        dist_uv = compute_wasserstein_distance(u_values, v_values, u_weights=u_weights, v_weights=v_weights)
+        dist_vu = compute_wasserstein_distance(v_values, u_values, u_weights=v_weights, v_weights=u_weights)
+
+        # Assert
+        self.assertAlmostEqual(dist_uv, dist_vu, places=4, msg="Distance should be symmetric.")
+
+    def test_distance_with_known_values(self):
+        """
+        Tests the distance between two simple, known distributions.
+        The distance between a distribution at point 0 and one at point 2 should be 2.
+        """
+        # Arrange
+        u_values = [0]
+        u_weights = [1.0]
+        v_values = [2]
+        v_weights = [1.0]
+        expected_distance = 2.0
+
+        # Act
+        distance = compute_wasserstein_distance(u_values, v_values, u_weights=u_weights, v_weights=v_weights)
+
+        # Assert
+        self.assertAlmostEqual(distance, expected_distance, places=4, msg="Distance between [0] and [2] should be 2.")
+
+    def test_translation_invariance(self):
+        """
+        Tests that the distance is the same if both distributions are shifted.
+        d([0], [2]) should be equal to d([10], [12]).
+        """
+        # Arrange
+        u1_values = [0]
+        u1_weights = [1.0]
+        v1_values = [2]
+        v1_weights = [1.0]
+
+        u2_values = [10]
+        u2_weights = [1.0]
+        v2_values = [12]
+        v2_weights = [1.0]
+
+        # Act
+        dist1 = compute_wasserstein_distance(u1_values, v1_values, u_weights=u1_weights, v_weights=v1_weights)
+        dist2 = compute_wasserstein_distance(u2_values, v2_values, u_weights=u2_weights, v_weights=v2_weights)
+
+        # Assert
+        self.assertAlmostEqual(dist1, dist2, places=4, msg="Distance should be invariant to translation.")
+
+class TestMutualInformation(unittest.TestCase):
+
+    def test_mutual_information_of_independent_variables_is_zero(self):
+        """
+        Tests that mutual information is zero for independent variables.
+        """
+        # Arrange
+        x = [0, 0, 1, 1, 0, 0, 1, 1]
+        y = [0, 1, 0, 1, 0, 1, 0, 1] # Independent of x
+
+        # Act
+        mi = compute_mutual_information(x, y)
+
+        # Assert
+        self.assertAlmostEqual(mi, 0.0, places=4, msg="MI for independent variables should be zero.")
+
+    def test_mutual_information_of_variable_with_itself_is_entropy(self):
+        """
+        Tests that mutual information of a variable with itself is its entropy.
+        I(X; X) = H(X).
+        """
+        # Arrange
+        x = [0, 0, 1, 1, 2, 2]
+        # Calculate H(X) manually for comparison
+        # P(0)=1/3, P(1)=1/3, P(2)=1/3. H(X) = -3 * (1/3 * log2(1/3)) = log2(3) approx 1.58496
+        counts = collections.Counter(x)
+        total_elements = sum(counts.values())
+        probabilities = [count / total_elements for count in counts.values()]
+        expected_entropy = compute_entropy(probabilities) # Use our own entropy function for consistency
+
+        # Act
+        mi = compute_mutual_information(x, x)
+
+        # Assert
+        self.assertAlmostEqual(mi, expected_entropy, places=4, msg="MI(X;X) should be H(X).")
+
+    def test_mutual_information_is_non_negative(self):
+        """
+        Tests that mutual information is always non-negative.
+        """
+        # Arrange
+        x = [0, 0, 1, 1]
+        y = [0, 1, 0, 1]
+
+        # Act
+        mi = compute_mutual_information(x, y)
+
+        # Assert
+        self.assertGreaterEqual(mi, 0.0, "Mutual information should be non-negative.")
+
+    def test_mutual_information_with_known_values(self):
+        """
+        Tests mutual information for a known case.
+        X = [0, 0, 1, 1]
+        Y = [0, 1, 0, 1]
+        P(X=0,Y=0)=0.25, P(X=0,Y=1)=0.25, P(X=1,Y=0)=0.25, P(X=1,Y=1)=0.25
+        P(X=0)=0.5, P(X=1)=0.5
+        P(Y=0)=0.5, P(Y=1)=0.5
+        H(X) = 1, H(Y) = 1, H(X,Y) = 2
+        I(X;Y) = H(X) + H(Y) - H(X,Y) = 1 + 1 - 2 = 0
+        """
+        # Arrange
+        x = [0, 0, 1, 1]
+        y = [0, 1, 0, 1]
+        expected_mi = 0.0 # For this specific independent case
+
+        # Act
+        mi = compute_mutual_information(x, y)
+
+        # Assert
+        self.assertAlmostEqual(mi, expected_mi, places=4, msg="MI for known independent variables is incorrect.")
+
+class TestProbabilityDistributionConversion(unittest.TestCase):
+
+    def test_basic_conversion(self):
+        """
+        Tests basic conversion of a simple array to a probability distribution.
+        """
+        # Arrange
+        data = [1, 1, 2, 2, 3, 3] # 2 of each
+        # If bins=3, and range is 1-3, then bins could be [1, 1.66, 2.33, 3]
+        # 1s fall into first bin, 2s into second, 3s into third.
+        # hist = [2, 2, 2]
+        # prob_dist = [1/3, 1/3, 1/3]
+        expected_dist = np.array([1/3, 1/3, 1/3])
+
+        # Act
+        prob_dist = to_probability_distribution(data, bins=3) # Specify bins for predictability
+
+        # Assert
+        np.testing.assert_allclose(prob_dist, expected_dist, rtol=1e-4, atol=1e-4,
+                                   err_msg="Basic conversion to probability distribution is incorrect.")
+
+    def test_sum_of_probabilities_is_one(self):
+        """
+        Tests that the sum of the probabilities in the resulting distribution is 1.
+        """
+        # Arrange
+        data = np.random.rand(100)
+
+        # Act
+        prob_dist = to_probability_distribution(data)
+
+        # Assert
+        self.assertAlmostEqual(np.sum(prob_dist), 1.0, places=6,
+                               msg="Sum of probabilities should be 1.")
+
+    def test_empty_data_handling(self):
+        """
+        Tests that an empty data array results in an empty probability distribution.
+        """
+        # Arrange
+        data = []
+
+        # Act
+        prob_dist = to_probability_distribution(data)
+
+        # Assert
+        self.assertEqual(len(prob_dist), 0, "Empty data should result in an empty distribution.")
+
+    def test_different_bin_numbers(self):
+        """
+        Tests conversion with a different number of bins.
+        """
+        # Arrange
+        data = [1, 1, 1, 2, 2, 3, 4, 4, 4, 4]
+        # With bins=4, and data range 1-4, each bin gets 1 unit.
+        # hist = [3, 2, 1, 4]
+        # prob_dist = [0.3, 0.2, 0.1, 0.4]
+        expected_dist = np.array([0.3, 0.2, 0.1, 0.4])
+
+        # Act
+        prob_dist = to_probability_distribution(data, bins=4)
+
+        # Assert
+        np.testing.assert_allclose(prob_dist, expected_dist, rtol=1e-4, atol=1e-4,
+                                   err_msg="Conversion with different bins is incorrect.")
+
+class TestVectorMutualInformation(unittest.TestCase):
+
+    def test_correlated_vectors_have_higher_mi(self):
+        """
+        Tests that highly correlated continuous vectors, when discretized,
+        yield higher mutual information than uncorrelated vectors.
+        """
+        # Arrange: Create synthetic continuous vectors
+        np.random.seed(42)
+        num_samples = 1000
+        num_bins = 20 # Number of bins for discretization
+
+        # Highly correlated vectors
+        x_correlated = np.random.rand(num_samples) * 10
+        y_correlated = x_correlated + np.random.randn(num_samples) * 0.5 # x + some noise
+
+        # Uncorrelated vectors
+        x_uncorrelated = np.random.rand(num_samples) * 10
+        y_uncorrelated = np.random.rand(num_samples) * 10
+
+        # Discretize continuous vectors into categorical labels
+        # Determine bin edges from the combined range of all data to ensure consistent binning
+        min_val = min(x_correlated.min(), y_correlated.min(), x_uncorrelated.min(), y_uncorrelated.min())
+        max_val = max(x_correlated.max(), y_correlated.max(), x_uncorrelated.max(), y_uncorrelated.max())
+        bins = np.linspace(min_val, max_val, num_bins + 1)
+
+        labels_x_corr = np.digitize(x_correlated, bins)
+        labels_y_corr = np.digitize(y_correlated, bins)
+
+        labels_x_uncorr = np.digitize(x_uncorrelated, bins)
+        labels_y_uncorr = np.digitize(y_uncorrelated, bins)
+
+        # Act: Compute mutual information
+        mi_correlated = compute_mutual_information(labels_x_corr, labels_y_corr)
+        mi_uncorrelated = compute_mutual_information(labels_x_uncorr, labels_y_uncorr)
+
+        # Assert: Correlated vectors should have significantly higher MI
+        # The threshold 0.5 is empirical and might need adjustment based on data generation
+        self.assertGreater(mi_correlated, mi_uncorrelated,
+                           "MI for correlated vectors should be higher than for uncorrelated vectors.")
+        self.assertGreater(mi_correlated, 0.5, # Ensure MI is not trivially low for correlated data
+                           "MI for correlated vectors should be significantly positive.")
+        self.assertLess(mi_uncorrelated, 0.3, # Ensure MI is close to zero for uncorrelated data
+                        "MI for uncorrelated vectors should be close to zero.")
 
 if __name__ == '__main__':
-    run_tests()
+    unittest.main()
