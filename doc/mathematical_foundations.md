@@ -1,30 +1,60 @@
-# Mathematical Foundations of SigmaSense
+# 理論的基盤と実装の詳細
 
-This document provides the formal definitions required by Issue #6, mapping the mathematical concepts used in this project to their concrete implementations in the code.
+本プロジェクトの演繹エンジンは、曖昧さを排した数学的・物理学的理論に基づいて意味ベクトルを計算します。以下に各理論の定義と、それに対応する具体的な実装を示します。
 
-## 1. Group Theory
+## 1. 構造幾何学 (Structural Geometry)
 
-The concepts of group theory are used to handle transformations and invariants. The primary implementation can be found in `src/group_theory_action.py`.
+- **理論**: 画像から、回転、スケール、平行移動といったユークリッド変換群の作用に対して不変な特徴量を抽出します。本プロジェクトでは特に、画像モーメントから導出されるHuモーメント不変量を利用します。画像の(p+q)次モーメントは以下で定義されます。
+  ```
+  M_pq = Σ_x Σ_y (x^p * y^q * I(x,y))
+  ```
+  ここから導かれる7つのHuモーメント不変量 `(I_1, ..., I_7)` が、形状を記述するベクトルとして機能します。
+- **実装**:
+  - `cv2.moments` および `cv2.HuMoments` 関数を利用して、上記モーメントを計算します。
+  - **該当コード**: `sigma_image_engines/engine_opencv.py`, `shape_descriptor_extractor.py`
 
-| Mathematical Concept | Code Implementation | Description |
-| :--- | :--- | :--- |
-| **Group (G)** | `GroupAction` class | A class initialized with a list of transformation functions that represent the group elements. |
-| **Group Element (g)** | A single transformation function | A function that takes a point (numpy array) and returns a transformed point. |
-| **Group Action** | `GroupAction.act(g, x)` method | Applies a group element `g` to a point `x`. |
-| **Orbit of x (Orbit(x))** | `GroupAction.get_orbit(x)` method | Calculates the set of all points reachable from `x` by applying all group transformations. |
-| **Stabilizer of x (Stab(x))**| `GroupAction.get_stabilizer(x)` method | Calculates the subgroup of transformations that leave the point `x` invariant. |
-| **Mathematical Test** | `tests/test_group_theory.py` | Verifies that the `get_orbit` method correctly computes the orbit for a point under the C4 rotation group, confirming adherence to the mathematical definition. |
+## 2. 線形代数 (Linear Algebra)
 
-## 2. Sheaf Theory
+- **理論**: 抽出された特徴量は、高次元ベクトル空間 `V` 上の点（意味ベクトル）として表現されます。2つの意味ベクトル `A` と `B` の類似度は、主にコサイン類似度によって計算されます。
+  ```
+  similarity = cos(θ) = (A・B) / (||A|| ||B||)
+  ```
+  これにより、ベクトルの大きさに依らず、向きの一致度を評価できます。
+- **実装**:
+  - `numpy.dot` や `numpy.linalg.norm` を用いてコサイン類似度を計算します。
+  - **該当コード**: `sigma_sense.py` 内の類似度計算部, `information_metrics.py`
 
-Sheaf theory is used to ensure that locally extracted features can be consistently combined into a global representation. The main logic is in `src/sheaf_analyzer.py` and `src/structure_detector.py`.
+## 3. 情報理論 (Information Theory)
 
-| Mathematical Concept | Code Implementation | Description |
-| :--- | :--- | :--- |
-| **Topological Space (X)** | The input image | The entire space on which the sheaf is defined. |
-| **Open Set (U)** | A rectangular region `(x, y, w, h)` | A sub-region of the image on which local data (features) are defined. |
-| **Section over U (F(U))** | A feature vector (numpy array) | The data associated with an open set, extracted by a feature generation engine for that image region. |
-| **Restriction Map** | Cropping the image | The restriction of data from a larger set `U` to a smaller set `V` is implicitly handled by running feature extraction on the sub-image corresponding to `V`. |
-| **Gluing Axiom (Semantic)** | `tests/test_sheaf_axioms.py` | This test provides a semantic, verifiable version of the gluing axiom. It checks that the feature vectors of two overlapping regions (`U1`, `U2`) are consistent with the feature vector of their intersection (`U12`). For example, if `U1` is red and `U2` is blue, the feature vector of the intersection `U12` should correspond to purple. This ensures local data is consistent on overlaps. |
-| **Mathematical Test** | `tests/test_sheaf_axioms.py` | Verifies the semantic gluing axiom described above. |
+- **理論**: ベクトルが持つ情報量を、シャノンエントロピーによって定量化します。ベクトル `X` の各要素 `x_i` が特定の確率分布に従うと仮定したとき、そのエントロピー `H(X)` は以下で計算されます。
+  ```
+  H(X) = -Σ_i (P(x_i) * log_2(P(x_i)))
+  ```
+  エントロピーが高いほど、ベクトルの状態が不確実（情報量が多い）であることを示します。
+- **実装**:
+  - `scipy.stats.entropy` を用いて、ベクトル値のヒストグラムからエントロピーを計算します。
+  - **該当コード**: `information_metrics.py` の `compute_entropy` 関数
 
+## 4. 圏論 (Category Theory)
+
+- **理論**: システムの論理的整合性を「関手性 (Functoriality)」によって保証します。画像の圏 `C` (対象: 画像, 射: 画像変換 `f`) から意味ベクトルの圏 `V` (対象: ベクトル, 射: ベクトル演算 `F(f)`) への写像 `F` が関手であるとは、`F(g ∘ f) = F(g) ∘ F(f)` が成り立つことです。つまり、「画像を回転させてから赤くする」ことと、「画像を赤くしてから回転させる」ことのベクトル表現が、操作の順序に依らず一致することを要求します。
+- **実装**:
+  - `tools/functor_consistency_checker.py` がこの関手性を実証的にテストします。画像に変換 `f` を適用し、得られたベクトル `F(f(img))` が、元のベクトル `F(img)` に期待される変換 `F(f)` を施したものと一致するかを検証します。
+  - **該当コード**: `sigma_functor.py`, `tools/functor_consistency_checker.py`
+
+## 5. 層理論 (Sheaf Theory)
+
+- **理論**: 局所的な情報から大域的な情報を矛盾なく「貼り合わせる」ための理論です。画像 `X` の開被覆 `{U_i}` 上で定義された特徴ベクトル（切断） `s_i` が、任意の重複領域 `U_i ∩ U_j` 上で `s_i|_(U_i ∩ U_j) = s_j|_(U_i ∩ U_j)` を満たす場合（貼り合わせ条件）、大域的な特徴ベクトル `s` が一意に存在します。
+- **実装**:
+  - `src/structure_detector.py` が画像を複数の局所領域（開集合）に分割します。
+  - `src/sheaf_analyzer.py` が、隣接する領域から得られた特徴ベクトルが、重複部分で矛盾のない値を持つか（貼り合わせ条件を満たすか）を検証します。
+  - **該当コード**: `src/sheaf_analyzer.py`, `src/structure_detector.py`
+
+## 6. 群化理論 (Grouping Theory)
+
+- **理論**: ユークリッド群（回転、スケール、平行移動）の作用に対して不変な形状記述子を用いて、画像内のオブジェクトを「同じ形」の集合（群）として認識します。
+- **実装**:
+  1. `get_shape_invariant_key` 関数が、各オブジェクト（輪郭）に対してHuモーメント不変量からなる「形状キー」を計算します。
+  2. `Counter` を用いて形状キーの頻度を計数し、最も出現数の多い形状を「優勢群」とします。
+  3. 優勢群に属するオブジェクトの数 `group_count` と、その空間的な密集度 `group_density` を計算します。
+  - **該当コード**: `semantic_group_detector.py`
