@@ -212,5 +212,39 @@ class TestFourierDescriptorsInvariance(unittest.TestCase):
         np.testing.assert_allclose(original_hu, transformed_hu, rtol=1e-2, atol=1e-2,
                                    err_msg="Hu Moments should be invariant to affine transformations.")
 
+    def test_hu_moments_projective_invariance(self):
+        """
+        Tests that Hu Moments are invariant to projective transformations.
+        """
+        original_hu = self._extract_hu_moments(self.base_image_path)
+
+        # Apply a projective transformation (perspective warp)
+        img = cv2.imread(self.base_image_path)
+        (h, w) = img.shape[:2]
+
+        # Define 4 points in the original image (corners of the square)
+        # The square is 100x100 with a 10px border, so it's from (10,10) to (110,110)
+        pts1 = np.float32([[10, 10], [110, 10], [10, 110], [110, 110]])
+        
+        # Define corresponding points for the perspective distortion
+        # Make it look like it's tilting away from the viewer
+        pts2 = np.float32([[20, 30], [100, 20], [5, 120], [115, 110]])
+
+        # Get the perspective transformation matrix
+        M = cv2.getPerspectiveTransform(pts1, pts2)
+
+        # Warp the image
+        transformed_image_path = "test_square_projective.png"
+        transformed_img = cv2.warpPerspective(img, M, (w, h))
+        cv2.imwrite(transformed_image_path, transformed_img)
+
+        # Extract Hu moments from the transformed image
+        transformed_hu = self._extract_hu_moments(transformed_image_path)
+        os.remove(transformed_image_path)
+
+        # Assert that the Hu moments are approximately equal
+        np.testing.assert_allclose(original_hu, transformed_hu, rtol=1e-2, atol=1e-2,
+                                   err_msg="Hu Moments should be invariant to projective transformations.")
+
 if __name__ == '__main__':
     unittest.main()
