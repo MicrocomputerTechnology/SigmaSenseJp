@@ -1,27 +1,42 @@
 # SigmaSenseJp
 経験を通じて自らスキルを獲得し、成長していく知的エージェントを目指しています。
 
-## セットアップ
+## クイックスタート
 
-本プロジェクトを実行するには、以下のライブラリが必要です。
-`pip install -r requirements.txt` を実行するか、個別にインストールしてください。
+本プロジェクトをセットアップし、実行するための手順は以下の通りです。Python 3.9以上を推奨します。
 
-```text:requirements.txt
-numpy
-scikit-learn
-scipy
-opencv-python
-tqdm
-PyYAML
-google-generativeai
-Pillow
-scikit-image
-tensorflow
-ollama
-RestrictedPython
-spacy
-ginza
-ja-ginza
+### 1. リポジトリのクローン
+```bash
+git clone https://github.com/user/SigmaSenseJp.git
+cd SigmaSenseJp
+```
+
+### 2. 仮想環境の構築と有効化
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+### 3. 依存ライブラリのインストール
+```bash
+pip install -r requirements.txt
+```
+`ja-ginza`のインストール中にエラーが発生した場合は、先に`spacy`と`ginza`をインストールしてから再度試してください。
+```bash
+pip install spacy ginza
+pip install -r requirements.txt
+```
+
+### 4. APIキーの設定
+本システムはGemini APIを使用します。環境変数にAPIキーを設定してください。
+```bash
+export GEMINI_API_KEY="YOUR_API_KEY"
+```
+
+### 5. 実行
+メインの思考サイクルを実行するには、以下のコマンドを実行します。
+```bash
+python scripts/run_sigma.py
 ```
 
 # Project Realize: 自己進化型意味照合システム
