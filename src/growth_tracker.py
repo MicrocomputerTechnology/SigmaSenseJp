@@ -19,12 +19,17 @@ class GrowthTracker:
         """GiNZAを使ってテキストから主要な概念（名詞、固有名詞、動詞）を抽出する"""
         if not self.nlp or not narrative_text:
             return set()
+        print("--- Analyzing text for concepts ---")
+        print(f"Text: {narrative_text}")
         doc = self.nlp(narrative_text)
-        # 語幹（lemma_）を基本の概念とする
+        for token in doc:
+            print(f"Token: {token.text}, Lemma: {token.lemma_}, POS: {token.pos_}")
         concepts = {
             token.lemma_ for token in doc 
             if token.pos_ in ['NOUN', 'PROPN', 'VERB', 'ADJ']
         }
+        print(f"Extracted concepts: {concepts}")
+        print("------------------------------------")
         return concepts
 
     def track(self, narratives: dict, memory_graph) -> dict:

@@ -29,6 +29,17 @@ class TestCategoryTheory(unittest.TestCase):
     def setUpClass(cls):
         """Set up a real SigmaSense instance for testing functor properties."""
         print("\n--- Setting up TestCategoryTheory ---")
+        
+        # Skip tests if models are not present
+        model_paths = [
+            'models/efficientnet_lite0.tflite',
+            'models/mobilenet_v1.tflite',
+            'models/mobilevit-tensorflow2-xxs-1k-256-v1',
+            'models/resnet_v2_50_saved_model'
+        ]
+        if not all(os.path.exists(p) for p in model_paths):
+            raise unittest.SkipTest("Skipping category theory tests: ML models not found.")
+
         cls.temp_dir = os.path.join(os.path.dirname(__file__), 'temp_test_cat_dir')
         os.makedirs(cls.temp_dir, exist_ok=True)
 
