@@ -42,7 +42,7 @@ class OpenCVEngine:
         
         # Hu Moments for shape invariance
         moments = cv2.moments(gray)
-        hu_moments = cv2.HuMoments(moments)
+        hu_moments = cv2.HuMoments(moments).flatten() # Flatten to a 1D array
 
         # Fourier Descriptors for shape invariance
         fourier_descriptors = self._extract_fourier_descriptors(gray)
@@ -59,14 +59,16 @@ class OpenCVEngine:
         s_hist_prob = s_hist.flatten() / s_hist.sum() if s_hist.sum() > 0 else np.zeros_like(s_hist.flatten())
 
         features = {
-            "opencv_hu_moment_1": float(hu_moments[0][0]),
-            "opencv_hu_moment_2": float(hu_moments[1][0]),
             "opencv_dominant_hue": int(np.argmax(h_hist)),
             "opencv_avg_saturation": float(np.mean(s_hist)),
             "opencv_edge_density": float(self._calculate_edge_density(image)),
             "opencv_h_hist_prob": h_hist_prob,
             "opencv_s_hist_prob": s_hist_prob,
         }
+
+        # Add all 7 Hu Moments
+        for i, hu_m in enumerate(hu_moments):
+            features[f"opencv_hu_moment_{i+1}"] = float(hu_m)
 
         # Add Fourier Descriptors (e.g., first few magnitudes as features)
         for i, fd_mag in enumerate(fourier_descriptors[:5]): # Take first 5 magnitudes
