@@ -17,5 +17,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install ruff pytest pytest-cov
+        python -m spacy download ja_ginza
     - name: Test with pytest
       run: pytest --cov=src --cov-report=xml
