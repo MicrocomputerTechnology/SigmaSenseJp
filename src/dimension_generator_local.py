@@ -49,17 +49,22 @@ class DimensionGenerator:
             # Convert image_data to the format expected by the engine
             if "OpenCV" in engine_name: # OpenCV engines expect NumPy array (BGR)
                 if isinstance(image_data, Image.Image):
-                    processed_image_data = np.array(image_data.convert('BGR'))
+                    # Convert PIL Image (RGB) to NumPy array (BGR)
+                    processed_image_data = np.array(image_data.convert('RGB')) # Ensure RGB first
+                    processed_image_data = cv2.cvtColor(processed_image_data, cv2.COLOR_RGB2BGR)
                 elif isinstance(image_data, np.ndarray):
-                    processed_image_data = image_data # Assume it's already BGR if from OpenCV
+                    # Assume NumPy array is RGB if coming from PIL.Image.open().convert('RGB')
+                    # Convert NumPy array (RGB) to NumPy array (BGR)
+                    processed_image_data = cv2.cvtColor(image_data, cv2.COLOR_RGB2BGR)
                 else:
                     print(f"Warning: Unsupported image_data type for OpenCV engine {engine_name}. Skipping.")
                     continue
-            else: # TensorFlow engines expect PIL Image
+            else: # TensorFlow engines expect PIL Image (RGB)
                 if isinstance(image_data, np.ndarray):
-                    processed_image_data = Image.fromarray(image_data)
+                    # Convert NumPy array (RGB) to PIL Image (RGB)
+                    processed_image_data = Image.fromarray(image_data.astype(np.uint8), 'RGB') # Ensure uint8 for PIL
                 elif isinstance(image_data, Image.Image):
-                    processed_image_data = image_data
+                    processed_image_data = image_data.convert('RGB') # Ensure RGB
                 else:
                     print(f"Warning: Unsupported image_data type for TensorFlow engine {engine_name}. Skipping.")
                     continue
