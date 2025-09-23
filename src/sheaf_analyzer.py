@@ -24,22 +24,15 @@ class SheafAnalyzer:
         指定された矩形領域から特徴ベクトルを抽出する。
         (x, y, w, h)
         """
-        # SigmaSenseが画像領域を直接扱えない場合、
-        # PILで画像をクロップして渡す。
+        # PILで画像をクロップして、SigmaSenseのprocess_experienceに直接渡す。
+        # これにより一時ファイルI/Oを排除する。
         cropped_image = self.image.crop((region_rect[0], region_rect[1], region_rect[0] + region_rect[2], region_rect[1] + region_rect[3]))
         
-        # process_experienceはPIL.Imageを受け取れないと仮定し、一時ファイルに保存する
-        # (これはsigma_functor.pyの実装に基づく推測)
-        import tempfile
-        import os
         vec = None
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-            cropped_image.save(tmp.name, "PNG")
-            # SigmaSenseのベクトル生成メソッドを呼び出す
-            result = self.sigma.process_experience(tmp.name)
-            if result and 'vector' in result:
-                vec = np.array(result['vector'])
-        os.remove(tmp.name)
+        # SigmaSenseのベクトル生成メソッドを呼び出す
+        result = self.sigma.process_experience(cropped_image) # Pass cropped_image directly
+        if result and 'vector' in result:
+            vec = np.array(result['vector'])
         return vec
 
     def assign_local_data(self):

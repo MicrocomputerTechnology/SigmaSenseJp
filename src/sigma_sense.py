@@ -209,15 +209,43 @@ class SigmaSense:
         print("--- Ethics Check Completed ---")
         return {"passed": True, "log": ethics_log, "narratives": narratives}
 
-    def process_experience(self, img_path: str):
+    def process_experience(self, image_input):
         """
         新しい経験を処理し、自己言及的な思考サイクルを実行する。
+        Args:
+            image_input (str or PIL.Image.Image or np.ndarray): 画像のパス、またはPIL Imageオブジェクト、またはNumPy配列。
         """
-        print(f"\n--- Processing New Experience: {img_path} ---")
+        print(f"\n--- Processing New Experience ---")
+
+        image_data = None
+        image_path = None
+
+        if isinstance(image_input, str):
+            image_path = image_input
+            # Load image from path
+            try:
+                image_data = Image.open(image_path).convert('RGB')
+            except FileNotFoundError:
+                print(f"Error: Image not found at {image_path}")
+                return None
+            except Exception as e:
+                print(f"Error loading image from {image_path}: {e}")
+                return None
+        elif isinstance(image_input, (Image.Image, np.ndarray)):
+            image_data = image_input
+            # If it's a PIL Image, convert to RGB if not already
+            if isinstance(image_data, Image.Image):
+                image_data = image_data.convert('RGB')
+            # If it's a numpy array, assume it's already in a usable format (e.g., RGB)
+            # No need to convert if it's already np.ndarray
+        else:
+            print(f"Error: Unsupported image_input type: {type(image_input)}")
+            return None
+
         # =================================================================
         # F0: 知覚 (Perception)
         # =================================================================
-        generation_result = self.generator.generate_dimensions(img_path)
+        generation_result = self.generator.generate_dimensions(image_data)
         features_dict = generation_result.get("features", {})
         
         # =================================================================

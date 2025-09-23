@@ -34,21 +34,21 @@ class EfficientNetEngine:
             print(f"Error: {e}")
             self.interpreter = None
 
-    def _preprocess_image(self, image_path):
-        img = Image.open(image_path).convert('RGB')
+    def _preprocess_image(self, image_data):
+        img = image_data.convert('RGB')
         img = img.resize((self.input_width, self.input_height))
         # Float model expects float32 input normalized to [0, 1]
         input_data = np.array(img, dtype=np.float32) / 255.0
         input_data = np.expand_dims(input_data, axis=0)
         return input_data
 
-    def extract_features(self, image_path):
+    def extract_features(self, image_data):
         if not self.interpreter:
-            print(f"EfficientNet-Lite: Model not loaded for {image_path}. Skipping feature extraction.")
+            print(f"EfficientNet-Lite: Model not loaded. Skipping feature extraction.")
             return {}
 
         try:
-            input_data = self._preprocess_image(image_path)
+            input_data = self._preprocess_image(image_data)
             self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
             self.interpreter.invoke()
             feature_vector = self.interpreter.get_tensor(self.output_details[0]['index'])[0]
@@ -59,5 +59,5 @@ class EfficientNetEngine:
                 "effnet_feature_max": float(np.max(feature_vector)),
             }
         except Exception as e:
-            print(f"Error during EfficientNet-Lite inference for {image_path}: {e}")
+            print(f"Error during EfficientNet-Lite inference: {e}")
             return {}

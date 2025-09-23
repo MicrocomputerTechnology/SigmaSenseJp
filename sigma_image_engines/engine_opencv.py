@@ -22,20 +22,17 @@ class OpenCVEngine:
         print("Initializing OpenCV Engine...")
         self.config = config if config else {}
 
-    def extract_features(self, image_path):
+    def extract_features(self, image_data):
         """
         Extracts a set of features from an image using OpenCV.
 
         Args:
-            image_path (str): The path to the image file.
+            image_data (np.ndarray): The image data as a NumPy array (BGR format).
 
         Returns:
             dict: A dictionary of extracted features with standard Python data types.
         """
-        image = cv2.imread(image_path)
-        if image is None:
-            print(f"Error: Could not read image at {image_path}")
-            return {}
+        image = image_data
 
         # --- Feature extraction methods (can be expanded) ---
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
