@@ -21,12 +21,17 @@ class MeaningAxisDesigner:
         """GiNZAを使ってテキストから主要な概念（名詞、固有名詞、動詞）を抽出する"""
         if not self.nlp:
             return set()
+        print("--- Analyzing text for concepts (MeaningAxisDesigner) ---")
+        print(f"Text: {text}")
         doc = self.nlp(text)
-        # 語幹（lemma_）を基本の概念とする
+        for token in doc:
+            print(f"Token: {token.text}, Lemma: {token.lemma_}, POS: {token.pos_}")
         concepts = {
             token.lemma_ for token in doc 
             if token.pos_ in ['NOUN', 'PROPN', 'VERB', 'ADJ']
         }
+        print(f"Extracted concepts: {concepts}")
+        print("-----------------------------------------------------")
         return concepts
 
     def check(self, narratives: dict, world_model) -> dict:
