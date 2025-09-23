@@ -9,6 +9,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.temporary_handler_base import BaseHandler
+import RestrictedPython # Add this line
 
 # --- グローバル定義 ---
 # メタ情報を英語に変換するマップ
@@ -56,14 +57,18 @@ def load_permanent_handlers(registry: dict):
 
 # --- サンドボックス実行環境の定義 (変更なし) ---
 def sandboxed_executor(handler_code: str, narrative: dict, result_queue: multiprocessing.Queue):
+    import sys
+    import os
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     import inspect
     from RestrictedPython import compile_restricted, safe_builtins, Eval
     from RestrictedPython.PrintCollector import PrintCollector
-    from temporary_handler_base import BaseHandler
+    from src.temporary_handler_base import BaseHandler
     try:
         safe_globals = {
             '__builtins__': safe_builtins, '__name__': '__restricted__', '__metaclass__': type,
             '_getiter_': Eval.default_guarded_getiter, '_print_': PrintCollector, 'dict': dict,
+            '_getitem_': auditing_getitem,
         }
         safe_globals['BaseHandler'] = BaseHandler
         byte_code = compile_restricted(handler_code, filename='<inline code>', mode='exec')
@@ -169,6 +174,13 @@ if __name__ == "__main__":
     }}
 
     print("==================================================================")
+    print("== SigmaSense 第十次実証実験：自己拡張ループの統合テスト ==")
+    print("==================================================================")
+
+    process_narrative(permanentized_narrative)
+    process_narrative(new_unknown_narrative)
+    
+    print("\n--- 実験終了 ---")======================")
     print("== SigmaSense 第十次実証実験：自己拡張ループの統合テスト ==")
     print("==================================================================")
 
