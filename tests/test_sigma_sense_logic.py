@@ -158,40 +158,30 @@ class TestProbabilisticImageComparison(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.engine = OpenCVEngine()
-        cls.test_dir = "./test_images_probabilistic"
-        os.makedirs(cls.test_dir, exist_ok=True)
+        # Remove test_dir creation and file paths
+        # cls.test_dir = "./test_images_probabilistic"
+        # os.makedirs(cls.test_dir, exist_ok=True)
 
-        # Create test images
-        cls.red_square_path = os.path.join(cls.test_dir, "red_square.png")
-        cls.blue_square_path = os.path.join(cls.test_dir, "blue_square.png")
-        cls.similar_red_square_path = os.path.join(cls.test_dir, "similar_red_square.png")
-
-        cls._create_colored_square(cls.red_square_path, (0, 0, 255)) # BGR for OpenCV
-        cls._create_colored_square(cls.blue_square_path, (255, 0, 0)) # BGR for OpenCV
-        cls._create_colored_square(cls.similar_red_square_path, (0, 0, 250)) # Slightly different red
+        # Create test images in-memory
+        cls.red_square_data = cls._create_colored_square((0, 0, 255)) # BGR for OpenCV
+        cls.blue_square_data = cls._create_colored_square((255, 0, 0)) # BGR for OpenCV
+        cls.similar_red_square_data = cls._create_colored_square((0, 0, 250)) # Slightly different red
 
     @classmethod
     def tearDownClass(cls):
-        # Clean up test images and directory
-        if os.path.exists(cls.red_square_path):
-            os.remove(cls.red_square_path)
-        if os.path.exists(cls.blue_square_path):
-            os.remove(cls.blue_square_path)
-        if os.path.exists(cls.similar_red_square_path):
-            os.remove(cls.similar_red_square_path)
-        if os.path.exists(cls.test_dir):
-            os.rmdir(cls.test_dir)
+        # No files to clean up
+        pass
 
     @staticmethod
-    def _create_colored_square(path, color, size=50):
+    def _create_colored_square(color, size=50):
         img = np.full((size, size, 3), color, dtype=np.uint8)
-        cv2.imwrite(path, img)
+        return img # Return NumPy array directly
 
     def test_different_colors_high_divergence(self):
         """
         Tests that images with very different colors have high probabilistic divergence.
         """
-        results = self.engine.compare_images_probabilistically(self.red_square_path, self.blue_square_path)
+        results = self.engine.compare_images_probabilistically(self.red_square_data, self.blue_square_data) # Pass image_data
         
         # Expect high divergence for hue histograms
         self.assertGreater(results["h_hist_kl_divergence"], 1.0, "KL divergence for different hues should be high.")
@@ -201,7 +191,7 @@ class TestProbabilisticImageComparison(unittest.TestCase):
         """
         Tests that images with very similar colors have low probabilistic divergence.
         """
-        results = self.engine.compare_images_probabilistically(self.red_square_path, self.similar_red_square_path)
+        results = self.engine.compare_images_probabilistically(self.red_square_data, self.similar_red_square_data) # Pass image_data
 
         # Expect low divergence for hue histograms
         self.assertLess(results["h_hist_kl_divergence"], 0.1, "KL divergence for similar hues should be low.")
