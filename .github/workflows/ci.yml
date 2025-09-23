@@ -15,9 +15,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install spacy==3.8 ginza==5.2.0 ja-ginza==5.2.0
-        python -m spacy download ja_ginza
         pip install -r requirements.txt
         pip install ruff pytest pytest-cov
+        pip install --no-cache-dir --force-reinstall spacy thinc
+        python -m spacy download ja_ginza
     - name: Test with pytest
       run: pytest --cov=src --cov-report=xml
