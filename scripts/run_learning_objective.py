@@ -43,13 +43,21 @@ def load_permanent_handlers(registry: dict):
 def sandboxed_executor(handler_code: str, objective: dict, result_queue: multiprocessing.Queue):
     import sys
     import os
+    # Add diagnostic prints
+    print(f"Sandbox: sys.path before RestrictedPython import: {sys.path}", file=sys.stderr)
+    try:
+        import RestrictedPython as rp_check
+        print(f"Sandbox: Successfully imported RestrictedPython: {rp_check.__file__}", file=sys.stderr)
+    except ModuleNotFoundError as e:
+        print(f"Sandbox: ModuleNotFoundError for RestrictedPython: {e}", file=sys.stderr)
+        result_queue.put({"status": "error", "message": f"サンドボックス実行エラー: RestrictedPythonが見つかりません: {e}"})
+        return
+    except Exception as e:
+        print(f"Sandbox: Unexpected error during RestrictedPython import: {e}", file=sys.stderr)
+        result_queue.put({"status": "error", "message": f"サンドボックス実行エラー: RestrictedPythonインポート中に予期せぬエラー: {e}"})
+        return
+
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-    import inspect
-    import cv2
-    from RestrictedPython import compile_restricted, safe_builtins, Eval, Guards
-    from RestrictedPython.PrintCollector import PrintCollector
-    from src.temporary_handler_base import BaseHandler
-    from RestrictedPython.Eval import default_guarded_getitem
 
     try:
         safe_globals = {
