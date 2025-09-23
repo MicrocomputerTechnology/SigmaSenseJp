@@ -9,6 +9,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.temporary_handler_base import BaseHandler
 from src.vetra_llm_core import VetraLLMCore # ヴェトラ先生の頭脳をインポート
+import RestrictedPython # Add this line
 
 # --- グローバル定義 ---
 translation_map = {
@@ -40,11 +41,14 @@ def load_permanent_handlers(registry: dict):
 
 # --- サンドボックス実行環境 ---
 def sandboxed_executor(handler_code: str, objective: dict, result_queue: multiprocessing.Queue):
+    import sys
+    import os
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     import inspect
     import cv2
     from RestrictedPython import compile_restricted, safe_builtins, Eval, Guards
     from RestrictedPython.PrintCollector import PrintCollector
-    from temporary_handler_base import BaseHandler
+    from src.temporary_handler_base import BaseHandler
     from RestrictedPython.Eval import default_guarded_getitem
 
     try:
@@ -57,7 +61,7 @@ def sandboxed_executor(handler_code: str, objective: dict, result_queue: multipr
             'dict': dict,
             'cv2': cv2,
             '_unpack_sequence_': Guards.guarded_unpack_sequence,
-            '_getitem_': default_guarded_getitem
+            '_getitem_': auditing_getitem
         }
         safe_globals['BaseHandler'] = BaseHandler
         byte_code = compile_restricted(handler_code, filename='<inline code>', mode='exec')
