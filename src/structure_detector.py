@@ -1,13 +1,13 @@
 import cv2
 import numpy as np
 
-def extract_structure_features(image_path):
+def extract_structure_features(image_data):
     """
     対象物の領域群を抽出する。
     距離変換とwatershedアルゴリズムを用いて、重なり合ったオブジェクトの分離を試みる。
     各領域は {"x": ..., "y": ..., "w": ..., "h": ...} の形式。
     """
-    img = cv2.imread(image_path)
+    img = image_data
     if img is None:
         return []
     if np.std(img) < 5: # Threshold for solid color

@@ -12,9 +12,9 @@ from src.sheaf_analyzer import SheafAnalyzer
 
 class MockSigmaSense:
     """ A mock of the SigmaSense class for testing purposes. """
-    def process_experience(self, image_path):
-        """ 
-        Returns a consistent, predefined vector regardless of the input image path.
+    def process_experience(self, image_data):
+        """
+        Returns a consistent, predefined vector regardless of the input image data.
         This simulates a scenario where all regions are perfectly consistent.
         """
         # The actual content of the vector doesn't matter, only its consistency.
@@ -25,21 +25,15 @@ class MockSigmaSense:
 class TestSheafAnalyzer(unittest.TestCase):
 
     def setUp(self):
-        """ Set up for the tests. """
-        # Create a dummy image file for the analyzer to use.
-        # We use a real image from the project to ensure file paths are correct.
-        self.test_image_path = os.path.join(os.path.dirname(__file__), '..', 'sigma_images', 'multi_object.jpg')
-        
-        # If the test image doesn't exist, create a placeholder
-        if not os.path.exists(self.test_image_path):
-            # Ensure the directory exists
-            os.makedirs(os.path.dirname(self.test_image_path), exist_ok=True)
-            # Create a simple black image
-            dummy_img = Image.new('RGB', (100, 100), 'black')
-            dummy_img.save(self.test_image_path)
+        """
+        Set up for the tests.
+        """
+        # Create a dummy in-memory image (NumPy array)
+        self.dummy_image_data = np.zeros((100, 100, 3), dtype=np.uint8)
+        self.dummy_image_data[:, :, 0] = 255 # Blue channel
 
         self.mock_sigma = MockSigmaSense()
-        self.analyzer = SheafAnalyzer(self.test_image_path, self.mock_sigma)
+        self.analyzer = SheafAnalyzer(self.dummy_image_data, self.mock_sigma)
 
     def test_01_assign_local_data(self):
         """ Test that local data is assigned correctly. """

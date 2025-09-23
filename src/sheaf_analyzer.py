@@ -8,14 +8,19 @@ class SheafAnalyzer:
     画像に層理論の考え方を適用し、局所的な特徴の整合性を検証するクラス。
     """
 
-    def __init__(self, image_path, sigma_instance):
+    def __init__(self, image_data, sigma_instance):
         """
         Args:
-            image_path (str): 分析対象の画像ファイルパス。
+            image_data (PIL.Image.Image or np.ndarray): 分析対象の画像データ。
             sigma_instance (SigmaSense): 特徴ベクトルを抽出するためのSigmaSenseインスタンス。
         """
-        self.image_path = image_path
-        self.image = Image.open(image_path).convert('RGB')
+        if isinstance(image_data, np.ndarray):
+            self.image = Image.fromarray(image_data.astype(np.uint8)).convert('RGB')
+        elif isinstance(image_data, Image.Image):
+            self.image = image_data.convert('RGB')
+        else:
+            raise ValueError(f"Unsupported image_data type: {type(image_data)}")
+
         self.sigma = sigma_instance
         self.local_data = {} # region -> feature_vector
 
@@ -39,7 +44,10 @@ class SheafAnalyzer:
         """
         structure_detectorを使って領域を検出し、各領域の特徴量を計算して保持する。
         """
-        regions = structure_detector.extract_structure_features(self.image_path)
+        # Pass self.image (PIL Image) to structure_detector.extract_structure_features
+        # It expects a NumPy array (BGR), so convert it.
+        image_np_bgr = np.array(self.image.convert('BGR'))
+        regions = structure_detector.extract_structure_features(image_np_bgr) # Pass image_np_bgr
         for region in regions:
             # structure_detectorの戻り値形式 {"x": ..., "y": ...} を (x, y, w, h) に変換
             region_rect = (region['x'], region['y'], region['w'], region['h'])
