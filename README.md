@@ -95,6 +95,22 @@ export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
 python scripts/run_sigma.py
 ```
 
+### 7. テストの実行
+
+プロジェクトのテストを実行するには、仮想環境を有効にした状態で、プロジェクトのルートディレクトリから以下のコマンドを実行します。
+
+```bash
+pytest
+```
+
+または
+
+```bash
+python -m pytest
+```
+
+これにより、`tests/`ディレクトリ内のすべてのテストが実行されます。
+
 # Project Realize: 自己進化型意味照合システム
 
 ## 1. 基本設計思想：SigmaSenseとは何か
