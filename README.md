@@ -21,13 +21,63 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-`ja-ginza`のインストール中にエラーが発生した場合は、先に`spacy`と`ginza`をインストールしてから再度試してください。
-```bash
-pip install spacy ginza
-pip install -r requirements.txt
+**注意:** `ginza`および関連ライブラリ（`ja-ginza`など）は、環境によってはインストールにRustコンパイラが必要となる場合があります。もしインストール中にエラーが発生し、`ginza`が必要な場合は、別途インストール方法を調べてください。本プロジェクトのCIでは、`ginza`がインストールされていない場合でもテストがスキップされるように設定されています。
+
+### 4. 機械学習モデルの準備
+
+SigmaSenseの機能の一部は、事前にダウンロードが必要な機械学習モデルに依存しています。以下の手順に従って、必要なモデルを`models/`ディレクトリに配置してください。
+
+#### 4.1. TFLiteモデルのダウンロード
+
+以下のTFLiteモデルは、`curl`または`wget`コマンドを使用して直接ダウンロードできます。
+
+-   **EfficientNet-Lite0 (`efficientnet_lite0.tflite`)**
+    ```bash
+    mkdir -p models
+    curl -L "https://tfhub.dev/tensorflow/efficientnet/lite0/classification/2?tf-hub-format=tflite" -o models/efficientnet_lite0.tflite
+    # または wget
+    # wget -O models/efficientnet_lite0.tflite "https://tfhub.dev/tensorflow/efficientnet/lite0/classification/2?tf-hub-format=tflite"
+    ```
+
+-   **MobileNet V1 (`mobilenet_v1.tflite`)**
+    ```bash
+    mkdir -p models
+    curl -L "https://tfhub.dev/tensorflow/lite-model/mobilenet_v1_1.0_224/1/default/1?lite-format=tflite" -o models/mobilenet_v1.tflite
+    # または wget
+    # wget -O models/mobilenet_v1.t1.0_224.tflite "https://tfhub.dev/tensorflow/lite-model/mobilenet_v1_1.0_224/1/default/1?lite-format=tflite"
+    ```
+
+#### 4.2. SavedModel形式のモデルのダウンロード
+
+以下のモデルはSavedModel形式であり、`tensorflow_hub`ライブラリを使用してダウンロードし、ローカルに保存する必要があります。以下のPythonスクリプトを実行して、モデルを`models/`ディレクトリに配置してください。
+
+```python
+import tensorflow as tf
+import tensorflow_hub as hub
+import os
+
+# モデルを保存するディレクトリ
+model_dir = "models"
+os.makedirs(model_dir, exist_ok=True)
+
+# MobileViTモデルのダウンロードと保存
+print("Downloading and saving MobileViT model...")
+mobilevit_url = "https://www.kaggle.com/models/google/mobilevit/TensorFlow2/xxs-1k-256-classification/2"
+mobilevit_model = hub.KerasLayer(mobilevit_url)
+tf.saved_model.save(mobilevit_model, os.path.join(model_dir, "mobilevit-tensorflow2-xxs-1k-256-v1"))
+print("MobileViT model saved.")
+
+# ResNet V2 50モデルのダウンロードと保存
+print("Downloading and saving ResNet V2 50 model...")
+resnet_url = "https://www.kaggle.com/models/google/resnet-v2/TensorFlow2/50-classification/2"
+resnet_model = hub.KerasLayer(resnet_url)
+tf.saved_model.save(resnet_model, os.path.join(model_dir, "resnet_v2_50_saved_model"))
+print("ResNet V2 50 model saved.")
+
+print("All models prepared successfully.")
 ```
 
-### 4. APIキーの設定
+### 5. APIキーの設定
 本システムは、外部のAPI（Geminiなど）を利用する機能があります。これらの機能を使用するには、実行するターミナルのセッションで環境変数としてAPIキーを設定する必要があります。
 
 **キーはファイルに保存せず、実行の都度、環境変数として設定することを強く推奨します。** これにより、キーの漏洩リスクを最小限に抑えることができます。
@@ -39,7 +89,7 @@ export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
 
 `GEMINI_API_KEY` は、Gemini APIを利用するために必要なキーです。他の外部サービスを利用する場合は、同様にそれぞれのキーを設定してください。
 
-### 5. 実行
+### 6. 実行
 メインの思考サイクルを実行するには、以下のコマンドを実行します。
 ```bash
 python scripts/run_sigma.py

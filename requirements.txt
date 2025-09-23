@@ -12,13 +12,11 @@ scikit-image==0.25.2
 
 # AI/ML
 tensorflow==2.20.0
+tensorflow_hub==0.16.0
+tf_keras
 # google-generativeai is deprecated and will be replaced by google-genai.
 google-generativeai==0.8.5
 ollama==0.5.4
-
-# NLP
-ginza==5.2.0
-ja-ginza==5.2.0
 
 # Utilities
 tqdm==4.67.1
