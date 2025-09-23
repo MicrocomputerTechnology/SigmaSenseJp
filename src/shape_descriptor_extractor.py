@@ -27,12 +27,22 @@ def extract_shape_features(contours, img_shape):
             "area_ratio": 0.0,
             "aspect_ratio": 0.0,
             "symmetry": 0.0,
+            # Add Hu Moments with default 0.0 values
+            **{f"hu_moment_{i+1}": 0.0 for i in range(7)}
         }
 
     img_area = img_shape[0] * img_shape[1]
     largest_contour = max(contours, key=cv2.contourArea)
     
     x, y, w, h = cv2.boundingRect(largest_contour)
+
+    # Calculate Hu Moments
+    moments = cv2.moments(largest_contour)
+    hu_moments = []
+    if moments["m00"] != 0: # Avoid division by zero for normalized moments
+        hu_moments = cv2.HuMoments(moments).flatten()
+    else:
+        hu_moments = np.zeros(7) # If m00 is zero, contour is just a point or line, Hu moments are undefined
 
     # 輪郭の複雑さ（頂点数で近似）
     perimeter = cv2.arcLength(largest_contour, True)
@@ -41,9 +51,15 @@ def extract_shape_features(contours, img_shape):
     # 0-1に正規化（最大50頂点と仮定）
     complexity = min(len(approx) / 50.0, 1.0)
 
-    return {
+    features = {
         "contour_complexity": complexity,
         "area_ratio": compute_area_ratio(largest_contour, img_area),
         "aspect_ratio": w / h if h > 0 else 0.0,
         "symmetry": compute_symmetry(largest_contour)
     }
+
+    # Add all 7 Hu Moments
+    for i, hu_m in enumerate(hu_moments):
+        features[f"hu_moment_{i+1}"] = float(hu_m)
+
+    return features
