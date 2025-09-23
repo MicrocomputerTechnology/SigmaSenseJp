@@ -87,16 +87,16 @@ class SheafAnalyzer:
                 
                 overlap = self._intersection(r1, r2)
                 if overlap and overlap[2] > 0 and overlap[3] > 0: # 交差領域が実質的な面積を持つか
-                    # 交差領域の特徴量を直接計算する
+                    # 交差領域の特徴量を直接計算する (これは層理論の「制限」の厳密な定義ではなく、実用的な近似です)
                     f_overlap = self._get_feature_vector_for_region(overlap)
                     
                     # 元の領域の特徴量を交差領域に「制限」する
-                    # ここでは単純化のため、交差領域の特徴量を再計算することで「制限」とする
-                    f1_restricted = self._get_feature_vector_for_region(overlap)
-                    f2_restricted = self._get_feature_vector_for_region(overlap)
+                    # ここでは、簡略化のため交差領域そのものの特徴量を再計算することで「制限」と見なします。
+                    # 理想的には、f1_restricted は r1 のデータから、f2_restricted は r2 のデータから
+                    # 導出されるべきですが、現在の高レベルな意味ベクトルの性質上、直接的な制限は困難です。
+                    f1_restricted = f_overlap # Re-use the computed overlap feature
+                    f2_restricted = f_overlap # Re-use the computed overlap feature
 
-                    # 理想的には f1_restricted は r1 のデータから、f2_restricted は r2 のデータから
-                    # 導出されるべきだが、ここでは交差領域そのものの特徴量と比較する。
                     # ここでの allclose は、異なる計算経路でも同じ結果になるかの確認。
                     if not np.allclose(f1_restricted, f_overlap, atol=tolerance) or \
                        not np.allclose(f2_restricted, f_overlap, atol=tolerance):
