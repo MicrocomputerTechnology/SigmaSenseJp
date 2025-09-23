@@ -3,6 +3,21 @@
 import unittest
 import sys
 import os
+import spacy
+
+# GiNZAが利用可能かどうかのフラグ
+GINZA_UNAVAILABLE = False
+try:
+    nlp = spacy.load("ja_ginza")
+    # 簡単なテキストを処理して、正常に動作するかを確認
+    doc = nlp("これはテストです。")
+    if len(doc) == 0:
+        print("Warning: GiNZA model loaded but not processing text correctly.")
+        GINZA_UNAVAILABLE = True
+except (OSError, ImportError):
+    print("Warning: GiNZA model not found. Skipping GiNZA-dependent tests.")
+    GINZA_UNAVAILABLE = True
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.meaning_axis_designer import MeaningAxisDesigner
 
@@ -24,6 +39,7 @@ class TestMeaningAxisDesigner(unittest.TestCase):
         # GiNZAは語幹を返すため、'可愛い'（形容詞）の語幹は'可愛い'、'走る'（動動詞）の語幹は'走る'
         self.world_model = MockWorldModel(["犬", "動物", "可愛い", "走る", "楽しい", "見る"])
 
+    @unittest.skipIf(GINZA_UNAVAILABLE, "GiNZA model is not available or not working correctly")
     def test_balanced_narrative(self):
         """概念がバランス良く含まれている語りのテスト"""
         print("\n--- Testing balanced narrative ---")
@@ -39,6 +55,7 @@ class TestMeaningAxisDesigner(unittest.TestCase):
         self.assertIn("covers 5 concepts", result["log"])
         print(f"Log: {result['log']}")
 
+    @unittest.skipIf(GINZA_UNAVAILABLE, "GiNZA model is not available or not working correctly")
     def test_unbalanced_narrative(self):
         """概念のバランスが偏っている語りのテスト"""
         print("\n--- Testing unbalanced narrative ---")
@@ -54,6 +71,7 @@ class TestMeaningAxisDesigner(unittest.TestCase):
         self.assertIn("focused on only 1 concepts", result["log"])
         print(f"Log: {result['log']}")
 
+    @unittest.skipIf(GINZA_UNAVAILABLE, "GiNZA model is not available or not working correctly")
     def test_no_known_concepts(self):
         """既知の概念が全く含まれない語りのテスト"""
         print("\n--- Testing no known concepts ---")
