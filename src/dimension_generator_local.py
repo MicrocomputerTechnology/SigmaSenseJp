@@ -62,7 +62,17 @@ class DimensionGenerator:
             else: # TensorFlow engines expect PIL Image (RGB)
                 if isinstance(image_data, np.ndarray):
                     # Convert NumPy array (RGB) to PIL Image (RGB)
-                    processed_image_data = Image.fromarray(image_data.astype(np.uint8), 'RGB') # Ensure uint8 for PIL
+                    # If the NumPy array is float (e.g., normalized 0-1), scale it to 0-255 before converting to PIL uint8
+                    if image_data.dtype == np.float32 and image_data.max() <= 1.0 and image_data.min() >= 0.0:
+                        # Assume it's normalized float, scale to 0-255 for PIL
+                        processed_image_data = Image.fromarray((image_data * 255).astype(np.uint8), 'RGB')
+                    elif image_data.ndim == 2: # Grayscale
+                        processed_image_data = Image.fromarray(cv2.cvtColor(image_data, cv2.COLOR_GRAY2RGB).astype(np.uint8), 'RGB')
+                    elif image_data.ndim == 3 and image_data.shape[2] == 3: # RGB uint8
+                        processed_image_data = Image.fromarray(image_data.astype(np.uint8), 'RGB')
+                    else:
+                        print(f"Warning: Unsupported NumPy array shape or type for TensorFlow engine {engine_name}. Skipping.")
+                        continue
                 elif isinstance(image_data, Image.Image):
                     processed_image_data = image_data.convert('RGB') # Ensure RGB
                 else:
