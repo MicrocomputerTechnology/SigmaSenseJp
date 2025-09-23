@@ -1,6 +1,21 @@
 import unittest
 import sys
 import os
+import spacy
+
+# GiNZAが利用可能かどうかのフラグ
+GINZA_UNAVAILABLE = False
+try:
+    nlp = spacy.load("ja_ginza")
+    # 簡単なテキストを処理して、正常に動作するかを確認
+    doc = nlp("これはテストです。")
+    if len(doc) == 0:
+        print("Warning: GiNZA model loaded but not processing text correctly.")
+        GINZA_UNAVAILABLE = True
+except (OSError, ImportError):
+    print("Warning: GiNZA model not found. Skipping GiNZA-dependent tests.")
+    GINZA_UNAVAILABLE = True
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.growth_tracker import GrowthTracker
 
@@ -24,6 +39,7 @@ class TestGrowthTracker(unittest.TestCase):
             }
         }
 
+    @unittest.skipIf(GINZA_UNAVAILABLE, "GiNZA model is not available or not working correctly")
     def test_growth_detected(self):
         """新しい概念が追加され、成長が検知されるテスト"""
         print("\n--- Testing growth detection ---")
@@ -43,6 +59,7 @@ class TestGrowthTracker(unittest.TestCase):
         self.assertIn("'可愛い'", result["log"])
         print(f"Log: {result['log']}")
 
+    @unittest.skipIf(GINZA_UNAVAILABLE, "GiNZA model is not available or not working correctly")
     def test_stagnation_detected(self):
         """新しい概念がなく、停滞と見なされるテスト"""
         print("\n--- Testing stagnation detection ---")
