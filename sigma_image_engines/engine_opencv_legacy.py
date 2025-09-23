@@ -14,15 +14,15 @@ class LegacyOpenCVEngine:
         print("Initializing Legacy OpenCV Engine (Selia & Lyra)...")
         self.config = config if config else {}
 
-    def extract_features(self, image_path):
+    def extract_features(self, image_data):
 
         """
         Extracts a comprehensive set of features from an image using legacy OpenCV logic.
         """
         try:
-            img = cv2.imread(image_path)
+            img = image_data
             if img is None:
-                raise FileNotFoundError(f"画像ファイルが読み込めませんでした: {image_path}")
+                raise ValueError("画像データがNoneです。")
 
             h, w, _ = img.shape
             img_area = h * w
@@ -49,7 +49,7 @@ class LegacyOpenCVEngine:
             return feature_map
 
         except Exception as e:
-            print(f"❗ LegacyOpenCVEngineでエラーが発生しました ({image_path}): {e}")
+            print(f"❗ LegacyOpenCVEngineでエラーが発生しました: {e}")
             return {}
 
     def _calculate_selia_features(self, feature_map, img, gray_img, hsv_img, l_channel, contours, img_area, w, h, diagonal_length):

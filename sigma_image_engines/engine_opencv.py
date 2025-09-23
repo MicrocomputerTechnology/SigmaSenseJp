@@ -160,12 +160,12 @@ class OpenCVEngine:
         resampled = np.vstack((interp_x, interp_y)).T
         return resampled.reshape(-1, 1, 2).astype(np.int32)
 
-    def compare_images_probabilistically(self, image_path1, image_path2):
+    def compare_images_probabilistically(self, image_data1, image_data2):
         """
         Compares two images based on their probabilistic feature distributions.
         """
-        features1 = self.extract_features(image_path1)
-        features2 = self.extract_features(image_path2)
+        features1 = self.extract_features(image_data1)
+        features2 = self.extract_features(image_data2)
 
         h_hist_prob1 = features1.get("opencv_h_hist_prob")
         s_hist_prob1 = features1.get("opencv_s_hist_prob")
