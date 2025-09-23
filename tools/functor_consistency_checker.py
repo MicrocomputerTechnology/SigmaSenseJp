@@ -55,25 +55,40 @@ def add_red_tint_on_vector(vector, dimension_loader):
         pass
     return new_vector
 
+def rotate_90_then_add_red_tint(image):
+    """画像を90度回転させてから赤色を付与する複合変換"""
+    rotated_image = it.rotate_90(image)
+    return it.add_red_tint(rotated_image)
+
+def identity_then_add_red_tint_on_vector(vector, dimension_loader):
+    """ベクトルを恒等変換してから色彩次元（赤）を増加させる複合変換"""
+    identity_vector = identity_vector_transform(vector)
+    return add_red_tint_on_vector(identity_vector, dimension_loader)
+
 # ----------------------------------------------------------------------------
 # 関手性検証の実行
 # ----------------------------------------------------------------------------
 
-def run_functoriality_check(functor, image_path, image_transform, vec_transform_func, description):
+def run_functoriality_check(functor, image_path, transform_f, transform_g, vector_transform_Ff, vector_transform_Fg, description):
     """
     指定された変換について関手性の検証を実行し、結果を表示する。
     """
     print(f"--- 関手性検証: {os.path.basename(image_path)} | 変換: {description} ---")
     
-    diff_norm, is_consistent, _, _ = functor.check_functoriality(
-        image_path,
-        image_transform,
-        vec_transform_func
+    result = functor.check_functoriality(
+        original_image=image_path,
+        transform_f=transform_f,
+        transform_g=transform_g,
+        vector_transform_Ff=vector_transform_Ff,
+        vector_transform_Fg=vector_transform_Fg
     )
 
-    if diff_norm is None:
+    if result is None:
         print("  🟡 結果: 検証不可 (画像のベクトル生成に失敗)")
         return False
+
+    is_consistent = result["is_consistent"]
+    diff_norm = result["difference"]
 
     if is_consistent:
         print(f"  ✅ 結果: 一貫性あり (差分ノルム: {diff_norm:.4f})")
@@ -103,23 +118,38 @@ def main():
     functor = SigmaFunctor(sigma)
     
     # --- テストケースの定義 ---
-    # (画像ファイル名, 画像変換関数, ベクトル変換関数, 説明)
+    # (画像ファイル名, 最初の画像変換関数 f, 次の画像変換関数 g,
+    #  fに対応するベクトル変換 F(f), gに対応するベクトル変換 F(g), 説明)
     test_cases = [
-        ("circle_center.jpg", it.rotate_90, identity_vector_transform, "90度回転（形状不変性の検証）"),
-        ("circle_center.jpg", it.add_red_tint, lambda v: add_red_tint_on_vector(v, dim_loader), "赤色化"),
-        ("pentagon_center.jpg", it.convert_to_grayscale, identity_vector_transform, "グレースケール化（色彩情報損失の検証）"),
+        (
+            "circle_center.jpg",
+            it.rotate_90,
+            it.add_red_tint,
+            identity_vector_transform,
+            lambda v: add_red_tint_on_vector(v, dim_loader),
+            "回転後に赤色化 (形状不変性と色彩変化の検証)"
+        ),
+        (
+            "pentagon_center.jpg",
+            it.convert_to_grayscale,
+            it.rotate_90, # Grayscale then rotate
+            identity_vector_transform, # Grayscale might not have a direct vector transform if color dimensions are removed
+            identity_vector_transform, # Rotation invariance
+            "グレースケール後に回転 (色彩情報損失と形状不変性の検証)"
+        ),
+        # Add more test cases as needed
     ]
 
     image_dir = os.path.join(project_root, "sigma_images")
     results = []
 
-    for base_image, img_transform, vec_transform, description in test_cases:
+    for base_image, transform_f, transform_g, vector_transform_Ff, vector_transform_Fg, description in test_cases:
         image_path = os.path.join(image_dir, base_image)
         if not os.path.exists(image_path):
             print(f"テスト画像が見つかりません: {image_path}")
             continue
         
-        is_consistent = run_functoriality_check(functor, image_path, img_transform, vec_transform, description)
+        is_consistent = run_functoriality_check(functor, image_path, transform_f, transform_g, vector_transform_Ff, vector_transform_Fg, description)
         results.append(is_consistent)
 
     # --- サマリーレポート ---
