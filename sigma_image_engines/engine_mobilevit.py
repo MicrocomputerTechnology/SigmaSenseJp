@@ -37,7 +37,8 @@ class MobileViTEngine:
 
     def extract_features(self, image_path):
         if not self.model:
-            return {"mobilevit_error": "Model not loaded"}
+            print(f"MobileViT: Model not loaded for {image_path}. Skipping feature extraction.")
+            return {}
 
         try:
             input_tensor = self._preprocess_image(image_path)
@@ -56,4 +57,4 @@ class MobileViTEngine:
             }
         except Exception as e:
             print(f"Error during MobileViT (SavedModel) inference for {image_path}: {e}")
-            return {"mobilevit_error": str(e)}
+            return {}

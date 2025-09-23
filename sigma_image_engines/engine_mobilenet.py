@@ -46,7 +46,8 @@ class MobileNetV1Engine:
 
     def extract_features(self, image_path):
         if not self.interpreter:
-            return {"mobilenet_error": "Model not loaded"}
+            print(f"MobileNetV1: Model not loaded for {image_path}. Skipping feature extraction.")
+            return {}
 
         try:
             input_data = self._preprocess_image(image_path)
@@ -61,4 +62,4 @@ class MobileNetV1Engine:
             }
         except Exception as e:
             print(f"Error during MobileNetV1 inference for {image_path}: {e}")
-            return {"mobilenet_error": str(e)}
+            return {}
