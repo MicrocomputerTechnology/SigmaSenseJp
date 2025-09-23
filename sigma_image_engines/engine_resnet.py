@@ -37,7 +37,8 @@ class ResNetEngine:
 
     def extract_features(self, image_path):
         if not self.model:
-            return {"resnet_error": "Model not loaded"}
+            print(f"ResNet: Model not loaded for {image_path}. Skipping feature extraction.")
+            return {}
 
         try:
             input_tensor = self._preprocess_image(image_path)
@@ -55,4 +56,4 @@ class ResNetEngine:
             }
         except Exception as e:
             print(f"Error during ResNet V2 50 (SavedModel) inference for {image_path}: {e}")
-            return {"resnet_error": str(e)}
+            return {}

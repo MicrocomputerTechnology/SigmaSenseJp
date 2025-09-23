@@ -44,7 +44,8 @@ class EfficientNetEngine:
 
     def extract_features(self, image_path):
         if not self.interpreter:
-            return {"effnet_error": "Model not loaded"}
+            print(f"EfficientNet-Lite: Model not loaded for {image_path}. Skipping feature extraction.")
+            return {}
 
         try:
             input_data = self._preprocess_image(image_path)
@@ -59,4 +60,4 @@ class EfficientNetEngine:
             }
         except Exception as e:
             print(f"Error during EfficientNet-Lite inference for {image_path}: {e}")
-            return {"effnet_error": str(e)}
+            return {}
