@@ -6,7 +6,7 @@ scikit-learn==1.7.2
 scipy==1.16.2
 
 # Image processing
-opencv-python==4.12.0.88
+opencv-python
 Pillow==11.3.0
 scikit-image==0.25.2
 
