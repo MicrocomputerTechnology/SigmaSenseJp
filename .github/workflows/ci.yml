@@ -15,7 +15,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -U ginza ja-ginza
+        pip install -U ginza
+        pip install https://github.com/megagonlabs/ginza/releases/download/v5.2.0/ja_ginza-5.2.0-py3-none-any.whl
         pip install -r requirements.txt
         pip install ruff pytest pytest-cov
     - name: Test with pytest
