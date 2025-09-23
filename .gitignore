@@ -9,3 +9,6 @@ models/
 
 # AI-generated temporary handlers
 temp_handler_*.py
+
+# Temporary files for gh issue bodies
+gh_issue_body_*.md
