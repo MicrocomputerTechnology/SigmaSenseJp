@@ -19,6 +19,8 @@ jobs:
         pip install https://github.com/megagonlabs/ginza/releases/download/v5.2.0/ja_ginza-5.2.0-py3-none-any.whl
         pip install -r requirements.txt
         pip install ruff pytest pytest-cov
+    - name: Check GiNZA functionality
+      run: python check_ginza.py
     - name: Verify model downloads
       run: python scripts/download_models.py
     - name: Create dummy files for tests
