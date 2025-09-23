@@ -44,9 +44,29 @@ class DimensionGenerator:
 
         for engine in self.engines:
             engine_name = engine.__class__.__name__
+            processed_image_data = None
+
+            # Convert image_data to the format expected by the engine
+            if "OpenCV" in engine_name: # OpenCV engines expect NumPy array (BGR)
+                if isinstance(image_data, Image.Image):
+                    processed_image_data = np.array(image_data.convert('BGR'))
+                elif isinstance(image_data, np.ndarray):
+                    processed_image_data = image_data # Assume it's already BGR if from OpenCV
+                else:
+                    print(f"Warning: Unsupported image_data type for OpenCV engine {engine_name}. Skipping.")
+                    continue
+            else: # TensorFlow engines expect PIL Image
+                if isinstance(image_data, np.ndarray):
+                    processed_image_data = Image.fromarray(image_data)
+                elif isinstance(image_data, Image.Image):
+                    processed_image_data = image_data
+                else:
+                    print(f"Warning: Unsupported image_data type for TensorFlow engine {engine_name}. Skipping.")
+                    continue
+
             try:
                 print(f"Querying {engine_name}")
-                features = engine.extract_features(image_data)
+                features = engine.extract_features(processed_image_data)
                 if features:
                     combined_features.update(features)
                     # Record the source engine for each feature
