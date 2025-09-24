@@ -3,7 +3,7 @@
 import json
 import os
 import uuid
-from datetime import datetime
+import datetime
 
 class PersonalMemoryGraph:
     """
@@ -39,7 +39,7 @@ class PersonalMemoryGraph:
         """
         memory_entry = {
             "memory_id": str(uuid.uuid4()),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
             "experience": experience_data
         }
 
