@@ -28,8 +28,11 @@ def reset_config_file(config_path, optimized_path):
     print(f"'{config_path}' has been reset.\nRemoved old '{optimized_path}' if it existed.")
 
 if __name__ == '__main__':
-    CONFIG_PATH = "vector_dimensions_mobile.yaml"
-    OPTIMIZED_CONFIG_PATH = "vector_dimensions_mobile_optimized.yaml"
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    config_dir = os.path.join(project_root, 'config')
+
+    CONFIG_PATH = os.path.join(config_dir, "vector_dimensions_mobile.yaml")
+    OPTIMIZED_CONFIG_PATH = os.path.join(config_dir, "vector_dimensions_mobile_optimized.yaml")
     
     IMG_CIRCLE = "sigma_images/circle_center.jpg"
     IMG_CAT = "sigma_images/cat_01.jpg"
