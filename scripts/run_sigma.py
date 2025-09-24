@@ -24,10 +24,10 @@ def convert_numpy_types(obj):
         return obj.tolist()
     return obj
 
+import argparse
+
 # --- 定数定義 ---
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-IMG_DIR = os.path.join(project_root, "sigma_images")
-DB_PATH = os.path.join(project_root, "config", "sigma_product_database_custom_ai_generated.json")
 
 def is_image_file(fname):
     return fname.lower().endswith((".png", ".jpg", ".jpeg"))
@@ -65,11 +65,26 @@ def display_unified_result(result):
     print(f"\n{'='*60}")
 
 def main():
+    parser = argparse.ArgumentParser(description="Run SigmaSense 16th Gen. Processing.")
+    parser.add_argument(
+        '--img_dir', 
+        type=str, 
+        default=os.path.join(project_root, "sigma_images"),
+        help='Directory containing the input images.'
+    )
+    parser.add_argument(
+        '--db_path', 
+        type=str, 
+        default=os.path.join(project_root, "config", "sigma_product_database_custom_ai_generated.json"),
+        help='Path to the Sigma product database JSON file.'
+    )
+    args = parser.parse_args()
+
     print("--- Starting SigmaSense 16th Gen. Processing ---")
     
     # 意味データベースと次元定義の読み込み
     loader = DimensionLoader()
-    database, ids, vectors = load_sigma_database(DB_PATH)
+    database, ids, vectors = load_sigma_database(args.db_path)
 
     # SigmaSenseの初期化
     sigma = SigmaSense(
@@ -83,13 +98,13 @@ def main():
     logger = ResponseLogger()
 
     # 対象画像群に対して思考サイクルを実行
-    image_files = sorted([f for f in os.listdir(IMG_DIR) if is_image_file(f)])
+    image_files = sorted([f for f in os.listdir(args.img_dir) if is_image_file(f)])
     if not image_files:
-        print(f"No images found in '{IMG_DIR}'. Halting.")
+        print(f"No images found in '{args.img_dir}'. Halting.")
         return
 
     for fname in image_files:
-        img_path = os.path.join(IMG_DIR, fname)
+        img_path = os.path.join(args.img_dir, fname)
 
         # 新しい思考サイクルを実行
         result = sigma.process_experience(img_path)
