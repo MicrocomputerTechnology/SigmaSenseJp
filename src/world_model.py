@@ -12,20 +12,35 @@ class WorldModel:
       さらには実験を通じて学習した新しい因果関係を、単一のグラフ構造として動的に管理する。
     """
 
-    def __init__(self, graph_path=None):
+    def __init__(self, config_path=None):
         """
         WorldModelを初期化する。
         指定されたパスにグラフファイルが存在すれば読み込み、なければ新しいグラフを作成する。
 
         Args:
-            graph_path (str): グラフを保存・読み込みするためのファイルパス。
+            config_path (str): 設定ファイルへのパス。
         """
-        if graph_path is None:
-            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-            config_dir = os.path.join(project_root, 'config')
-            self.graph_path = os.path.join(config_dir, "world_model.json")
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        config_dir = os.path.join(project_root, 'config')
+        default_graph_path = os.path.join(config_dir, "world_model.json")
+
+        if config_path is None:
+            self.config_path = os.path.join(config_dir, "world_model_profile.json")
         else:
-            self.graph_path = graph_path
+            self.config_path = config_path
+
+        graph_path_from_config = None
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                profile_config = json.load(f)
+                graph_path_from_config = profile_config.get("graph_path")
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: WorldModel config file not found or invalid at {self.config_path}. Using default graph path.")
+        
+        if graph_path_from_config:
+            self.graph_path = os.path.join(project_root, graph_path_from_config)
+        else:
+            self.graph_path = default_graph_path
             
         self.graph = {
             "nodes": {},
