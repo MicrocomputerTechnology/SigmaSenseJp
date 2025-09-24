@@ -310,7 +310,7 @@ class TestProbabilityDistributionConversion(unittest.TestCase):
         expected_dist = np.array([1/3, 1/3, 1/3])
 
         # Act
-        prob_dist = to_probability_distribution(data, bins=3) # Specify bins for predictability
+        prob_dist, _ = to_probability_distribution(data, bins=3) # Specify bins for predictability
 
         # Assert
         np.testing.assert_allclose(prob_dist, expected_dist, rtol=1e-4, atol=1e-4,
@@ -324,7 +324,7 @@ class TestProbabilityDistributionConversion(unittest.TestCase):
         data = np.random.rand(100)
 
         # Act
-        prob_dist = to_probability_distribution(data)
+        prob_dist, _ = to_probability_distribution(data)
 
         # Assert
         self.assertAlmostEqual(np.sum(prob_dist), 1.0, places=6,
@@ -338,10 +338,10 @@ class TestProbabilityDistributionConversion(unittest.TestCase):
         data = []
 
         # Act
-        prob_dist = to_probability_distribution(data)
+        prob_dist, _ = to_probability_distribution(data)
 
         # Assert
-        self.assertEqual(len(prob_dist), 0, "Empty data should result in an empty distribution.")
+        self.assertEqual(prob_dist.size, 0, "Empty data should result in an empty distribution.")
 
     def test_different_bin_numbers(self):
         """
@@ -355,7 +355,7 @@ class TestProbabilityDistributionConversion(unittest.TestCase):
         expected_dist = np.array([0.3, 0.2, 0.1, 0.4])
 
         # Act
-        prob_dist = to_probability_distribution(data, bins=4)
+        prob_dist, _ = to_probability_distribution(data, bins=4)
 
         # Assert
         np.testing.assert_allclose(prob_dist, expected_dist, rtol=1e-4, atol=1e-4,
