@@ -148,6 +148,25 @@ class TestSigmaSenseLogicIntegration(unittest.TestCase):
         self.sigma_sense.weights = original_weights
         print("--- Test finished successfully ---")
 
+    def test_publication_gatekeeper_uses_saphiel_config(self):
+        """
+        Test that PublicationGatekeeper uses forbidden_keywords from saphiel_mission_profile.json.
+        """
+        print("\n--- Running test_publication_gatekeeper_uses_saphiel_config ---")
+
+        # 1. Define a narrative that contains a forbidden keyword
+        self.sigma_sense.intent_justifier.justify_decision = MagicMock(return_value="これは機密データに関する報告です。")
+        self.sigma_sense.meta_narrator.narrate_growth = MagicMock(return_value="システムは順調に成長しています。")
+
+        # 2. Call the process_experience method with a dummy path
+        result = self.sigma_sense.process_experience("dummy_image.jpg")
+
+        # 3. Assert that the narrative was blocked
+        self.assertFalse(result["ethics_passed"])
+        self.assertIn("Blocked. Narrative conflicts with mission profile (found confidential keyword: '機密データ')", result["ethics_log"][-1])
+        self.assertIn("[REDACTED BY AEGIS", result["intent_narrative"])
+        print("--- Test finished successfully ---")
+
     def tearDown(self):
         """Clean up environment variables."""
         # No need to manage env vars anymore
