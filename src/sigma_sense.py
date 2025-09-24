@@ -209,15 +209,18 @@ class SigmaSense:
         print("--- Ethics Check Completed ---")
         return {"passed": True, "log": ethics_log, "narratives": narratives}
 
-    def process_experience(self, img_path: str):
+    def process_experience(self, image_path_or_obj):
         """
         新しい経験を処理し、自己言及的な思考サイクルを実行する。
+        Args:
+            image_path_or_obj (str or PIL.Image): The path to the image file or a PIL Image object.
         """
-        print(f"\n--- Processing New Experience: {img_path} ---")
+        image_name = os.path.basename(image_path_or_obj) if isinstance(image_path_or_obj, str) else "in-memory_image"
+        print(f"\n--- Processing New Experience: {image_name} ---")
         # =================================================================
         # F0: 知覚 (Perception)
         # =================================================================
-        generation_result = self.generator.generate_dimensions(img_path)
+        generation_result = self.generator.generate_dimensions(image_path_or_obj)
         features_dict = generation_result.get("features", {})
         
         # =================================================================
@@ -277,8 +280,8 @@ class SigmaSense:
             }
 
         current_experience = {
-            "image_path": img_path,
-            "source_image_name": os.path.basename(img_path),
+            "image_path": image_path_or_obj if isinstance(image_path_or_obj, str) else "in-memory_object",
+            "source_image_name": image_name,
             "vector": meaning_vector.tolist(),
             "best_match": {
                 "image_name": best_match_id,

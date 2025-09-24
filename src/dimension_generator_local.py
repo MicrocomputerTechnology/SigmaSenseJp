@@ -26,21 +26,19 @@ class DimensionGenerator:
         ]
         print(f"{len(self.engines)} engines loaded.")
 
-    def generate_dimensions(self, image_path):
+    def generate_dimensions(self, image_path_or_obj):
         """
-        Generates a comprehensive dimension object for a given image.
+        Generates a comprehensive dimension object for a given image path or object.
 
         Args:
-            image_path (str): The path to the image file.
+            image_path_or_obj (str or PIL.Image): The path to the image file or a PIL Image object.
 
         Returns:
             dict: A dictionary containing features, provenance, and engine info.
         """
-        if not os.path.exists(image_path):
-            print(f"Error: Image not found at {image_path}")
-            return {"features": {}, "provenance": {}, "engine_info": {}}
-
-        print(f"--- Generating Dimensions for {os.path.basename(image_path)} ---")
+        # Path existence is checked by individual engines if a path is provided.
+        image_name = os.path.basename(image_path_or_obj) if isinstance(image_path_or_obj, str) else "in-memory_image"
+        print(f"--- Generating Dimensions for {image_name} ---")
         
         combined_features = {}
         provenance = {}
@@ -50,7 +48,7 @@ class DimensionGenerator:
             engine_name = engine.__class__.__name__
             try:
                 print(f"Querying {engine_name}")
-                features = engine.extract_features(image_path)
+                features = engine.extract_features(image_path_or_obj)
                 if features:
                     combined_features.update(features)
                     # Record the source engine for each feature
