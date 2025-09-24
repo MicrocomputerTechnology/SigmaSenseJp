@@ -46,6 +46,9 @@ class TestCategoryTheory(unittest.TestCase):
         cls.db_path = os.path.join(cls.temp_dir, 'test_db.json')
         
         # Create a dummy image to ensure the database can be built
+        dummy_img_path = os.path.join(cls.temp_dir, 'dummy.png')
+        Image.new('RGB', (10, 10), 'green').save(dummy_img_path)
+
         # Build a database using the dummy image
         build_database(db_path=cls.db_path, img_dir=cls.temp_dir, dimension_config_path="config/vector_dimensions_mobile.yaml")
 
