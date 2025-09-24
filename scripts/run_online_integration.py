@@ -4,7 +4,9 @@ from gemini_client import GeminiClient # オリエン大賢者をインポート
 
 def run_integration_process():
     """Reads the offline log, has Orien review it, and prepares for permanentization."""
-    log_file = "offline_permanentization_log.jsonl"
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    log_dir = os.path.join(project_root, 'sigma_logs')
+    log_file = os.path.join(log_dir, "offline_permanentization_log.jsonl")
 
     if not os.path.exists(log_file):
         print(f"✅ 統合対象のログファイル ({log_file}) は見つかりませんでした。全ての学習が完了しています。")
