@@ -1,3 +1,4 @@
+import cv2
 import json
 import multiprocessing
 import time
@@ -41,56 +42,72 @@ def load_permanent_handlers(registry: dict):
 
 # --- サンドボックス実行環境 ---
 def sandboxed_executor(handler_code: str, objective: dict, result_queue: multiprocessing.Queue):
+    # Imports are moved inside for the multiprocessing context
     import sys
     import os
-    # Add diagnostic prints
-    print(f"Sandbox: sys.path before RestrictedPython import: {sys.path}", file=sys.stderr)
-    try:
-        import RestrictedPython as rp_check
-        print(f"Sandbox: Successfully imported RestrictedPython: {rp_check.__file__}", file=sys.stderr)
-    except ModuleNotFoundError as e:
-        print(f"Sandbox: ModuleNotFoundError for RestrictedPython: {e}", file=sys.stderr)
-        result_queue.put({"status": "error", "message": f"サンドボックス実行エラー: RestrictedPythonが見つかりません: {e}"})
-        return
-    except Exception as e:
-        print(f"Sandbox: Unexpected error during RestrictedPython import: {e}", file=sys.stderr)
-        result_queue.put({"status": "error", "message": f"サンドボックス実行エラー: RestrictedPythonインポート中に予期せぬエラー: {e}"})
-        return
-
+    import inspect
+    from RestrictedPython import compile_restricted, safe_builtins, PrintCollector
+    from RestrictedPython.Guards import guarded_unpack_sequence, safer_getattr
+    
+    # Add project root to sys.path for the sandbox process
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    from src.temporary_handler_base import BaseHandler
 
     try:
+        # Define a safe getitem function for the sandbox
+        def _safe_getitem(obj, key):
+            if obj.__class__ in (dict, list, tuple):
+                return obj[key]
+            raise TypeError(f"Subscripting not allowed for type: {type(obj).__name__}")
+
+        # Start with the default safe builtins and add necessary items
+        local_safe_builtins = safe_builtins.copy()
+        local_safe_builtins['type'] = type
+        local_safe_builtins['dict'] = dict
+        
         safe_globals = {
-            '__builtins__': safe_builtins,
-            '__name__': '__restricted__',
-            '__metaclass__': type,
-            '_getiter_': Eval.default_guarded_getiter,
-            '_print_': PrintCollector,
-            'dict': dict,
-            'cv2': cv2,
-            '_unpack_sequence_': Guards.guarded_unpack_sequence,
-            '_getitem_': auditing_getitem
+            "__builtins__": local_safe_builtins,
+            "__name__": "__restricted__",
+            "__metaclass__": type,
+            "_getiter_": iter,
+            "_getitem_": _safe_getitem,
+            "_print_": PrintCollector,
+            "_unpack_sequence_": guarded_unpack_sequence,
+            "_getattr_": safer_getattr,
         }
+        
+        safe_globals['cv2'] = cv2
         safe_globals['BaseHandler'] = BaseHandler
+
+        # Compile and execute the user code
         byte_code = compile_restricted(handler_code, filename='<inline code>', mode='exec')
         local_scope = {}
         exec(byte_code, safe_globals, local_scope)
+
+        # Find the generated handler class
         handler_class = None
         for name, obj in local_scope.items():
             if inspect.isclass(obj) and issubclass(obj, BaseHandler) and obj is not BaseHandler:
                 handler_class = obj
                 break
+        
         if handler_class:
             handler_instance = handler_class()
             result = handler_instance.execute(objective)
+            
             if '_print' in local_scope:
                 result['printed_output'] = local_scope['_print'].text
             else:
                 result['printed_output'] = ''
+            
             result_queue.put(result)
         else:
             result_queue.put({"status": "error", "message": "有効なハンドラクラスが見つかりません。"})
+
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Sandbox execution error: {type(e).__name__}: {e}\n{error_details}", file=sys.stderr)
         result_queue.put({"status": "error", "message": f"サンドボックス実行エラー: {type(e).__name__}: {e}"})
 
 # --- 構造化のためのログ記録 ---
@@ -186,7 +203,7 @@ if __name__ == "__main__":
       "title": "数字理解学習",
       "mode": "ヴェトラ",
       "goal": "画像から主要な数字を抽出し、その値を返すハンドラを生成せよ。OpenCVを使って画像をグレースケールに変換し、輪郭を見つけて、その輪郭の数を数えること。",
-      "image_path": "sigma_images/test_digit_8.png",
+      "image_path": "sigma_images/circle_center.jpg",
       "tools": ["内蔵LLM", "CodeGemma"],
       "log": True,
       "stage_hint": "即興から恒久化を想定"
