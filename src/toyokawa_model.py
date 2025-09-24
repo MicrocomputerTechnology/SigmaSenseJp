@@ -13,28 +13,48 @@ class ToyokawaModel:
     C(t) = Σₗ αₗ × Eₗ(t) + β × I(t) + γ × R(t)
     """
 
-    def __init__(self, log_path=None):
+    def __init__(self, log_path=None, config_path=None):
         print_header("Initializing Toyokawa Model")
         
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         if log_path is None:
-            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
             log_dir = os.path.join(project_root, 'sigma_logs')
             self.log_path = os.path.join(log_dir, "psyche_log.jsonl")
         else:
             self.log_path = log_path
 
+        if config_path is None:
+            config_dir = os.path.join(project_root, 'config')
+            self.config_path = os.path.join(config_dir, "toyokawa_model_profile.json")
+        else:
+            self.config_path = config_path
+
         self.agents = ["selia", "nova", "lyra", "saphiel", "orien", "vetra", "aegis"]
         
-        # Define the model's weighting coefficients
-        self.weights = {
-            "alpha": {f"E_{agent}": 1.0/len(self.agents) for agent in self.agents},
-            "beta": 0.5,  # Weight for coherence (positive impact)
-            "gamma": -0.5, # Weight for divergence (negative impact)
-        }
+        # Load model weights from config
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+                self.weights = config_data.get("weights", {})
+        except FileNotFoundError:
+            print(f"Warning: ToyokawaModel config file not found at {self.config_path}. Using default weights.")
+            self.weights = {
+                "alpha": {f"E_{agent}": 1.0/len(self.agents) for agent in self.agents},
+                "beta": 0.5,  # Weight for coherence (positive impact)
+                "gamma": -0.5, # Weight for divergence (negative impact)
+            }
+        except json.JSONDecodeError:
+            print(f"Warning: Could not decode JSON from {self.config_path}. Using default weights.")
+            self.weights = {
+                "alpha": {f"E_{agent}": 1.0/len(self.agents) for agent in self.agents},
+                "beta": 0.5,  # Weight for coherence (positive impact)
+                "gamma": -0.5, # Weight for divergence (negative impact)
+            }
+
         print("Model weights (α, β, γ) have been set.")
-        print(f"  - Alpha (αᵢ): {1.0/len(self.agents):.2f} for each agent")
-        print(f"  - Beta (β): {self.weights['beta']}")
-        print(f"  - Gamma (γ): {self.weights['gamma']}")
+        print(f"  - Alpha (αᵢ): {self.weights.get("alpha", {}).get(f"E_{self.agents[0]}", 0):.2f} for each agent")
+        print(f"  - Beta (β): {self.weights.get("beta", 0)}")
+        print(f"  - Gamma (γ): {self.weights.get("gamma", 0)}")
 
     def load_log(self):
         """Loads the psyche log file."""

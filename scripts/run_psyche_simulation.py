@@ -26,16 +26,22 @@ def print_grand_header():
 if __name__ == '__main__':
     print_grand_header()
 
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    config_dir = os.path.join(project_root, 'config')
+    
+    toyokawa_config_path = os.path.join(config_dir, "toyokawa_model_profile.json")
+    sigma_reactor_config_path = os.path.join(config_dir, "sigma_reactor_profile.json")
+
     # --- Phase 1: Generate Data ---
     logger = PsycheLogger()
     logger.generate_log()
 
     # --- Phase 2: Analyze Data ---
-    model = ToyokawaModel()
+    model = ToyokawaModel(config_path=toyokawa_config_path)
     analysis_results = model.run_analysis()
 
     # --- Phase 3: React to States ---
-    reactor = SigmaReactor()
+    reactor = SigmaReactor(config_path=sigma_reactor_config_path)
     
     if analysis_results:
         print("\n" + "="*70)
