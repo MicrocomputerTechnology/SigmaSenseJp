@@ -11,19 +11,36 @@ class PersonalMemoryGraph:
     時系列のログとして記録・管理する。
     """
 
-    def __init__(self, memory_path=None):
+    def __init__(self, config_path=None):
         """
         PersonalMemoryGraphを初期化する。
 
         Args:
-            memory_path (str): 経験を記録するJSON Lines形式のファイルパス。
+            config_path (str): 設定ファイルへのパス。
         """
-        if memory_path is None:
-            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-            log_dir = os.path.join(project_root, "sigma_logs")
-            self.memory_path = os.path.join(log_dir, "personal_memory.jsonl")
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        log_dir = os.path.join(project_root, "sigma_logs")
+        default_memory_path = os.path.join(log_dir, "personal_memory.jsonl")
+
+        if config_path is None:
+            config_dir = os.path.join(project_root, 'config')
+            self.config_path = os.path.join(config_dir, "personal_memory_graph_profile.json")
         else:
-            self.memory_path = memory_path
+            self.config_path = config_path
+
+        memory_path_from_config = None
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                profile_config = json.load(f)
+                memory_path_from_config = profile_config.get("memory_path")
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: PersonalMemoryGraph config file not found or invalid at {self.config_path}. Using default memory path.")
+        
+        if memory_path_from_config:
+            self.memory_path = os.path.join(project_root, memory_path_from_config)
+        else:
+            self.memory_path = default_memory_path
+            
         print(f"PersonalMemoryGraph: Initialized with memory path: {self.memory_path}")
 
     def add_experience(self, experience_data):
