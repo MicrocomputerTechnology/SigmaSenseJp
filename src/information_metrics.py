@@ -1,5 +1,4 @@
 import numpy as np
-import numpy as np
 from scipy.stats import wasserstein_distance
 from sklearn.metrics import mutual_info_score
 import math
@@ -90,11 +89,65 @@ def to_probability_distribution(data, bins=10):
         data = np.array(data)
 
     if data.size == 0:
-        return np.array([])
+        return np.array([]), np.array([])
 
     # ヒストグラムを作成し、度数分布を得る
     hist, bin_edges = np.histogram(data, bins=bins, density=False)
+    
+    # 度数が0の場合は空の分布を返す
+    if hist.sum() == 0:
+        return np.array([]), np.array([])
 
     # 度数分布を正規化して確率分布にする
     prob_dist = hist / hist.sum()
-    return prob_dist
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    return prob_dist, bin_centers
+
+def compute_kl_similarity(vec_a, vec_b, num_bins=10):
+    """
+    2つの連続値ベクトル間のKLダイバージェンスベースの類似度を計算する。
+    """
+    prob_a, _ = to_probability_distribution(vec_a, bins=num_bins)
+    prob_b, _ = to_probability_distribution(vec_b, bins=num_bins)
+
+    if prob_a.size == 0 or prob_b.size == 0:
+        return 0.0
+
+    kl_div_ab = compute_kl_divergence(prob_a, prob_b)
+    kl_div_ba = compute_kl_divergence(prob_b, prob_a)
+    
+    avg_kl_div = (kl_div_ab + kl_div_ba) / 2.0
+    return 1.0 / (1.0 + avg_kl_div)
+
+def compute_wasserstein_similarity(vec_a, vec_b, num_bins=10):
+    """
+    2つの連続値ベクトル間のWasserstein距離ベースの類似度を計算する。
+    """
+    # 共通のビンエッジを決定
+    all_data = np.concatenate((vec_a, vec_b))
+    if all_data.size == 0:
+        return 1.0 # 2つの空のベクトルは完全に類似している
+        
+    min_val, max_val = all_data.min(), all_data.max()
+    # データが単一の値を持つ場合、有効なビン範囲を作成
+    if min_val == max_val:
+        min_val = min_val - 0.5
+        max_val = max_val + 0.5
+        
+    common_bin_edges = np.linspace(min_val, max_val, num_bins + 1)
+
+    # 共通のビンエッジで確率分布を計算
+    prob_a, bin_centers_a = to_probability_distribution(vec_a, bins=common_bin_edges)
+    prob_b, bin_centers_b = to_probability_distribution(vec_b, bins=common_bin_edges)
+
+    # どちらかの分布が空の場合
+    if prob_a.size == 0 and prob_b.size == 0:
+        return 1.0 # 両方空なら類似
+    if prob_a.size == 0 or prob_b.size == 0:
+        return 0.0 # 片方だけ空なら非類似
+
+    # Wasserstein距離を計算
+    dist = compute_wasserstein_distance(bin_centers_a, bin_centers_b, u_weights=prob_a, v_weights=prob_b)
+    
+    # 距離を類似度に変換
+    return 1.0 / (1.0 + dist)

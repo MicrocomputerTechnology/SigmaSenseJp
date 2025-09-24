@@ -4,7 +4,7 @@ import numpy as np
 import os
 import json
 from .dimension_loader import DimensionLoader
-from .information_metrics import compute_kl_divergence, compute_wasserstein_distance, to_probability_distribution
+from .information_metrics import compute_kl_similarity, compute_wasserstein_similarity
 
 # --- 旧来のコンポーネント ---
 from .dimension_generator_local import DimensionGenerator
@@ -42,67 +42,6 @@ def weighted_cosine_similarity(vec_a, vec_b, weights):
     if denominator == 0:
         return 0.0
     return numerator / denominator
-
-def _compute_kl_similarity(vec_a, vec_b, num_bins=10):
-    # Convert continuous vectors to probability distributions
-    prob_a = to_probability_distribution(vec_a, bins=num_bins)
-    prob_b = to_probability_distribution(vec_b, bins=num_bins)
-
-    # Handle empty distributions (e.g., if all values are outside bins)
-    if prob_a.size == 0 or prob_b.size == 0:
-        return 0.0 # Or handle as an error/uncomparable
-
-    # KL divergence is not symmetric, so we can use average or just one direction
-    # For similarity, 1 / (1 + divergence) is a common approach
-    # Add a small epsilon to avoid log(0) if not already handled in compute_kl_divergence
-    kl_div_ab = compute_kl_divergence(prob_a, prob_b)
-    kl_div_ba = compute_kl_divergence(prob_b, prob_a)
-    
-    # Use the average of the two directions for a more symmetric "distance"
-    avg_kl_div = (kl_div_ab + kl_div_ba) / 2.0
-
-    # Convert divergence to similarity: higher divergence -> lower similarity
-    # Using 1 / (1 + distance) to map [0, inf) to (0, 1]
-    return 1.0 / (1.0 + avg_kl_div)
-
-def _compute_wasserstein_similarity(vec_a, vec_b, num_bins=10):
-    # Convert continuous vectors to probability distributions
-    # For Wasserstein, we need the values (bin centers) and weights (probabilities)
-    hist_a, bin_edges_a = np.histogram(vec_a, bins=num_bins, density=False)
-    hist_b, bin_edges_b = np.histogram(vec_b, bins=num_bins, density=False)
-
-    # Handle empty distributions
-    if hist_a.sum() == 0 or hist_b.sum() == 0:
-        return 0.0
-
-    prob_a = hist_a / hist_a.sum()
-    prob_b = hist_b / hist_b.sum()
-
-    # Use bin centers as the "values" for wasserstein_distance
-    # Ensure bin_edges are consistent for both histograms
-    all_data = np.concatenate((vec_a, vec_b))
-    min_val = all_data.min() if all_data.size > 0 else 0
-    max_val = all_data.max() if all_data.size > 0 else 1
-    common_bin_edges = np.linspace(min_val, max_val, num_bins + 1)
-
-    # Re-calculate histograms with common bin edges to get consistent bin_centers
-    hist_a, _ = np.histogram(vec_a, bins=common_bin_edges, density=False)
-    hist_b, _ = np.histogram(vec_b, bins=common_bin_edges, density=False)
-
-    prob_a = hist_a / hist_a.sum() if hist_a.sum() > 0 else np.zeros_like(hist_a)
-    prob_b = hist_b / hist_b.sum() if hist_b.sum() > 0 else np.zeros_like(hist_b)
-
-    bin_centers = (common_bin_edges[:-1] + common_bin_edges[1:]) / 2
-
-    # Ensure bin_centers and probabilities have the same size
-    if prob_a.size == 0 or prob_b.size == 0 or bin_centers.size == 0:
-        return 0.0
-
-    wasserstein_dist = compute_wasserstein_distance(bin_centers, bin_centers, u_weights=prob_a, v_weights=prob_b)
-
-    # Convert distance to similarity: higher distance -> lower similarity
-    # Using 1 / (1 + distance) to map [0, inf) to (0, 1]
-    return 1.0 / (1.0 + wasserstein_dist)
 
 class SigmaSense:
     """
@@ -342,9 +281,9 @@ class SigmaSense:
             if metric == 'cosine':
                 score = weighted_cosine_similarity(target_vector, db_vec, self.weights)
             elif metric == 'kl_divergence':
-                score = _compute_kl_similarity(target_vector, db_vec, num_bins)
+                score = compute_kl_similarity(target_vector, db_vec, num_bins=num_bins)
             elif metric == 'wasserstein':
-                score = _compute_wasserstein_similarity(target_vector, db_vec, num_bins)
+                score = compute_wasserstein_similarity(target_vector, db_vec, num_bins=num_bins)
             else:
                 raise ValueError(f"Unsupported metric: {metric}")
             scores.append((score, self.ids[i]))
