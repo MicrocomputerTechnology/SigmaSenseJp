@@ -1,0 +1,5 @@
+{
+  "config_path": "vector_dimensions_mobile.yaml",
+  "narrative_model": "lucas2024/gemma-2-2b-jpn-it:q8_0",
+  "code_gen_model": "codegemma:latest"
+}

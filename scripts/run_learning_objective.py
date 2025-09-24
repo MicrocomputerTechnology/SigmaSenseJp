@@ -8,6 +8,7 @@ import importlib.util
 import inspect
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src.config_loader import ConfigLoader
 from src.temporary_handler_base import BaseHandler
 from src.vetra_llm_core import VetraLLMCore # ヴェトラ先生の頭脳をインポート
 import RestrictedPython # Add this line
@@ -129,7 +130,26 @@ def log_for_structuring(objective: dict, result: dict):
 
 # --- コアロジック: 学習目標の三段階処理 ---
 handler_registry = {}
-vetra = VetraLLMCore()
+
+# VetraLLMCoreの初期化を動的に行う
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+config_dir = os.path.join(project_root, 'config')
+config_loader = ConfigLoader(config_dir)
+vetra_config = config_loader.get_config('vetra_llm_core_profile')
+
+if vetra_config:
+    # config_pathは絶対パスに変換する
+    config_path_relative = vetra_config.get('config_path', 'vector_dimensions_mobile.yaml')
+    config_path_absolute = os.path.join(config_dir, config_path_relative)
+    
+    vetra = VetraLLMCore(
+        config_path=config_path_absolute,
+        narrative_model=vetra_config.get('narrative_model'),
+        code_gen_model=vetra_config.get('code_gen_model')
+    )
+else:
+    # コンフィグファイルが見つからない場合はデフォルト値で初期化
+    vetra = VetraLLMCore()
 
 def process_learning_objective(objective: dict):
     print(f"\n--- 学習目標処理開始: {objective['title']} ---")
