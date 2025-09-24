@@ -14,8 +14,30 @@ class DimensionComparator:
     Orien (online/Gemini) and recommends integration actions.
     """
 
-    def __init__(self, vetra_config_path, orien_config_path):
+    def __init__(self, config_path=None):
         print_header("Initializing Dimension Comparator")
+        
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        if config_path is None:
+            config_dir = os.path.join(project_root, 'config')
+            self.config_path = os.path.join(config_dir, "dimension_comparator_profile.json")
+        else:
+            self.config_path = config_path
+
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                profile_config = json.load(f)
+                vetra_config_path = os.path.join(project_root, profile_config.get("vetra_config_path", "config/vector_dimensions_mobile_optimized.yaml"))
+                orien_config_path = os.path.join(project_root, profile_config.get("orien_config_path", "config/vector_dimensions_custom_ai.json"))
+        except FileNotFoundError:
+            print(f"Warning: DimensionComparator config file not found at {self.config_path}. Using default paths.")
+            vetra_config_path = os.path.join(project_root, "config/vector_dimensions_mobile_optimized.yaml")
+            orien_config_path = os.path.join(project_root, "config/vector_dimensions_custom_ai.json")
+        except json.JSONDecodeError:
+            print(f"Warning: Could not decode JSON from {self.config_path}. Using default paths.")
+            vetra_config_path = os.path.join(project_root, "config/vector_dimensions_mobile_optimized.yaml")
+            orien_config_path = os.path.join(project_root, "config/vector_dimensions_custom_ai.json")
+
         self.vetra_dims = self._load_yaml(vetra_config_path)
         self.orien_dims = self._load_json(orien_config_path)
         print("Vetra's and Orien's dimension models have been loaded.")
@@ -132,15 +154,16 @@ if __name__ == '__main__':
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     config_dir = os.path.join(project_root, 'config')
     
-    VETRA_PATH = os.path.join(config_dir, "vector_dimensions_mobile_optimized.yaml")
-    ORIEN_PATH = os.path.join(config_dir, "vector_dimensions_custom_ai.json")
+    DIMENSION_COMPARATOR_CONFIG_PATH = os.path.join(config_dir, "dimension_comparator_profile.json")
     OUTPUT_PATH = os.path.join(config_dir, "vector_dimensions_custom_ai_integrated.json")
 
-    if not os.path.exists(VETRA_PATH):
-        print(f"ERROR: Vetra's optimized config '{VETRA_PATH}' not found.")
-        print("Please run the offline evolution cycle first.")
+    # Note: VETRA_PATH and ORIEN_PATH are now loaded from DIMENSION_COMPARATOR_CONFIG_PATH
+    # So, we only need to check if the comparator's config itself exists.
+    if not os.path.exists(DIMENSION_COMPARATOR_CONFIG_PATH):
+        print(f"ERROR: Dimension Comparator config '{DIMENSION_COMPARATOR_CONFIG_PATH}' not found.")
+        print("Please ensure the config file exists.")
     else:
-        comparator = DimensionComparator(VETRA_PATH, ORIEN_PATH)
+        comparator = DimensionComparator(config_path=DIMENSION_COMPARATOR_CONFIG_PATH)
         comparison_report = comparator.compare_dimensions()
         final_model = comparator.integrate(comparison_report, output_path=OUTPUT_PATH)
         print(f"\nFinal integrated model contains {len(final_model)} dimensions.")
