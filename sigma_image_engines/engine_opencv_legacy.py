@@ -14,15 +14,18 @@ class LegacyOpenCVEngine:
         print("Initializing Legacy OpenCV Engine (Selia & Lyra)...")
         self.config = config if config else {}
 
-    def extract_features(self, image_path):
-
+    def extract_features(self, image_path_or_obj):
         """
         Extracts a comprehensive set of features from an image using legacy OpenCV logic.
         """
         try:
-            img = cv2.imread(image_path)
-            if img is None:
-                raise FileNotFoundError(f"画像ファイルが読み込めませんでした: {image_path}")
+            if isinstance(image_path_or_obj, str):
+                img = cv2.imread(image_path_or_obj)
+                if img is None:
+                    raise FileNotFoundError(f"画像ファイルが読み込めませんでした: {image_path_or_obj}")
+            else: # Assume PIL.Image object
+                img = cv2.cvtColor(np.array(image_path_or_obj.convert('RGB')), cv2.COLOR_RGB2BGR)
+
 
             h, w, _ = img.shape
             img_area = h * w

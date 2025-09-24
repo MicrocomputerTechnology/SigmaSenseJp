@@ -28,20 +28,24 @@ class ResNetEngine:
             print(f"Error: {e}")
             self.model = None
 
-    def _preprocess_image(self, image_path):
-        img = Image.open(image_path).convert('RGB')
+    def _preprocess_image(self, image_path_or_obj):
+        if isinstance(image_path_or_obj, str):
+            img = Image.open(image_path_or_obj).convert('RGB')
+        else:
+            img = image_path_or_obj.convert('RGB')
+
         img = img.resize((self.input_width, self.input_height))
         input_data = np.array(img, dtype=np.float32) / 255.0
         input_data = np.expand_dims(input_data, axis=0)
         return tf.constant(input_data)
 
-    def extract_features(self, image_path):
+    def extract_features(self, image_path_or_obj):
         if not self.model:
-            print(f"ResNet: Model not loaded for {image_path}. Skipping feature extraction.")
+            print(f"ResNet: Model not loaded. Skipping feature extraction.")
             return {}
 
         try:
-            input_tensor = self._preprocess_image(image_path)
+            input_tensor = self._preprocess_image(image_path_or_obj)
             
             # Call the inference function
             output_dict = self.infer(input_tensor)
@@ -55,5 +59,5 @@ class ResNetEngine:
                 "resnet_v2_50_feature_max": float(np.max(feature_vector)),
             }
         except Exception as e:
-            print(f"Error during ResNet V2 50 (SavedModel) inference for {image_path}: {e}")
+            print(f"Error during ResNet V2 50 (SavedModel) inference: {e}")
             return {}

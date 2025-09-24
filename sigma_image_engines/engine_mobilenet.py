@@ -36,21 +36,25 @@ class MobileNetV1Engine:
             print(f"Error: {e}")
             self.interpreter = None
 
-    def _preprocess_image(self, image_path):
-        img = Image.open(image_path).convert('RGB')
+    def _preprocess_image(self, image_path_or_obj):
+        if isinstance(image_path_or_obj, str):
+            img = Image.open(image_path_or_obj).convert('RGB')
+        else:
+            img = image_path_or_obj.convert('RGB')
+
         img = img.resize((self.input_width, self.input_height))
         # Quantized model expects uint8 input, not normalized float
         input_data = np.array(img, dtype=np.uint8)
         input_data = np.expand_dims(input_data, axis=0)
         return input_data
 
-    def extract_features(self, image_path):
+    def extract_features(self, image_path_or_obj):
         if not self.interpreter:
-            print(f"MobileNetV1: Model not loaded for {image_path}. Skipping feature extraction.")
+            print(f"MobileNetV1: Model not loaded. Skipping feature extraction.")
             return {}
 
         try:
-            input_data = self._preprocess_image(image_path)
+            input_data = self._preprocess_image(image_path_or_obj)
             self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
             self.interpreter.invoke()
             feature_vector = self.interpreter.get_tensor(self.output_details[0]['index'])[0]
@@ -61,5 +65,5 @@ class MobileNetV1Engine:
                 "mobilenet_v1_feature_max": float(np.max(feature_vector)),
             }
         except Exception as e:
-            print(f"Error during MobileNetV1 inference for {image_path}: {e}")
+            print(f"Error during MobileNetV1 inference: {e}")
             return {}
