@@ -63,7 +63,7 @@ def main():
     
     load_octasense_config(os.path.join(config_dir, 'octasense_config.yaml'))
 
-    db_path = os.path.join(config_dir, "sigma_product_database_custom_ai_generated.json")
+    db_path = os.path.join(config_dir, "sigma_product_database_stabilized.json")
     database, ids, vectors = load_sigma_database(db_path)
     
     dim_loader = DimensionLoader()
