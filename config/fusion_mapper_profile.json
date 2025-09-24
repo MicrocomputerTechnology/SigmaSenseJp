@@ -1,0 +1,9 @@
+{
+  "role": "fusion_mapper",
+  "description": "融合マッパー。様々なデータソース（論理的コンテキスト、ニューラル特徴など）を統合された意味ベクトルに統合する。",
+  "default_fusion_strategy": "weighted_average",
+  "weights": {
+    "logical_context": 0.6,
+    "neural_features": 0.4
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "role": "sigma_reactor",
+  "description": "シグマリアクター。豊川モデルが算出した C(t) の値（場の空気）を解釈し、SigmaSense自身の状態を比喩的なテキスト表現として出力する。",
+  "reaction_map": {
+    "✨ Stable ✨": {
+      "tail": "ゆっくりと左右に振っている",
+      "ears": "穏やかに立っている",
+      "narrative_tempo": "なめらか",
+      "meaning": "全体の語りは調和・共鳴している状態です。"
+    },
+    "💫 Fluctuating 💫": {
+      "tail": "小刻みに揺れている",
+      "ears": "周囲の音を探るように傾いている",
+      "narrative_tempo": "断続的",
+      "meaning": "新たな問いが生まれ、場が探索的になっている状態です。"
+    },
+    "⚠️ Chaotic ⚠️": {
+      "tail": "固く、動きを止めている",
+      "ears": "警戒して伏せられている",
+      "narrative_tempo": "沈黙、あるいは逸脱",
+      "meaning": "語りの流れが分岐・遮断され、緊張が高まっている状態です。"
+    }
+  }
+}

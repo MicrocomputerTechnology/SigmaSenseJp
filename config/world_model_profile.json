@@ -1,0 +1,5 @@
+{
+  "role": "world_model",
+  "description": "動的知識グラフ（ワールドモデル）を管理する。",
+  "graph_path": "config/world_model.json"
+}

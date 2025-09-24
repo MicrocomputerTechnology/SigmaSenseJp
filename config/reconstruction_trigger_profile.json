@@ -1,0 +1,6 @@
+{
+  "role": "reconstruction_trigger",
+  "description": "再構成トリガー。意味ベクトルの再構成を必要とする条件を検出する。",
+  "threshold_entropy": 2.5,
+  "threshold_kl": 1.0
+}

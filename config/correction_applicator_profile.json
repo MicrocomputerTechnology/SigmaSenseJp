@@ -1,0 +1,14 @@
+{
+  "role": "correction_applicator",
+  "description": "修正適用器。マッピングされた臨界構造に基づいて修正を適用する。",
+  "correction_strategies": {
+    "default": "reconstruct_vector",
+    "high_entropy": "re_evaluate_context",
+    "low_sparsity": "add_detail"
+  },
+  "parameters": {
+    "reconstruct_vector": {"method": "interpolation", "strength": 0.5},
+    "re_evaluate_context": {"depth": 2},
+    "add_detail": {"source": "llm_suggestion"}
+  }
+}

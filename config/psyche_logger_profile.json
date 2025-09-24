@@ -1,0 +1,18 @@
+{
+  "role": "psyche_logger",
+  "description": "心理ロガー。各エージェントの感情、一致度、逸脱度の時系列ログをシミュレーションによって生成する。",
+  "output_path": "sigma_logs/psyche_log.jsonl",
+  "agents": [
+    "selia", "nova", "lyra", "saphiel",
+    "orien", "vetra", "aegis"
+  ],
+  "base_emotions": {
+    "selia": 0.7,
+    "nova": 0.4,
+    "lyra": 0.5,
+    "saphiel": 0.8,
+    "orien": 0.9,
+    "vetra": 0.6,
+    "aegis": 0.7
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "role": "critical_structure_mapper",
+  "description": "臨界構造マッパー。意味空間内の臨界構造を特定し、マッピングする。",
+  "config_path": "common_sense_rulebase.json",
+  "thresholds": {
+    "entropy": 2.5,
+    "sparsity": 0.4,
+    "color_concentration": 0.5
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "role": "intent_justifier",
+  "description": "選択の意図を語る機能。特定の判断や選択に至った「なぜ？」に答えるため、その思考プロセスと根拠となった過去の経験を具体的に語る。",
+  "narrative_style": "analytical",
+  "max_reasoning_path_depth": 5,
+  "memory_search_criteria": {"key": "psyche_state", "value": "confused"}
+}

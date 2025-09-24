@@ -1,0 +1,11 @@
+{
+  "role": "dimension_comparator",
+  "description": "ヴェトラ先生がオフラインで学習した次元群と、オリエン大賢者のマスタープランを比較・検討し、統合アクションを推奨する。",
+  "vetra_config_path": "vector_dimensions_mobile_optimized.yaml",
+  "orien_config_path": "vector_dimensions_custom_ai.json",
+  "output_path": "vector_dimensions_custom_ai_integrated.json",
+  "similarity_thresholds": {
+    "merge_and_rename": 0.6,
+    "flag_for_review": 0.3
+  }
+}

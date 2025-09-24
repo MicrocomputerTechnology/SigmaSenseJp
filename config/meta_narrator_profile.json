@@ -1,0 +1,7 @@
+{
+  "role": "meta_narrator",
+  "description": "自己の成長を語る機能。過去の経験を俯瞰し、「私はどのように学習し、成長してきたか」というメタ的な語りを生成する。",
+  "narrative_style": "reflective",
+  "growth_keywords": ["confused", "calm"],
+  "min_memories_for_growth_story": 2
+}

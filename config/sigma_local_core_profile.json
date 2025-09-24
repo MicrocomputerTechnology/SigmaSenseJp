@@ -1,0 +1,10 @@
+{
+  "role": "sigma_local_core",
+  "description": "ヴェトラ先生の「脳」。オフライン環境での照合プロセス全体を制御する。",
+  "dimension_config_path": "vector_dimensions_mobile.yaml",
+  "vetra_llm_core_profile": {
+    "narrative_model": "lucas2024/gemma-2-2b-jpn-it:q8_0",
+    "code_gen_model": "codegemma:latest",
+    "config_path": "vector_dimensions_mobile.yaml"
+  }
+}

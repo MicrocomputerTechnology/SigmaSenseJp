@@ -1,0 +1,10 @@
+{
+  "role": "toyokawa_model",
+  "description": "豊川モデル。集団心理状態 C(t) を計算する数式モデル。",
+  "config_path": "octasense_config.yaml",
+  "model_params": {
+    "alpha": 0.5,
+    "beta": 0.3,
+    "gamma": 0.2
+  }
+}

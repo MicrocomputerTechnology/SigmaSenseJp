@@ -1,0 +1,5 @@
+{
+  "role": "temporal_reasoning",
+  "description": "時系列パターン学習。時間的パターンを発見する。",
+  "min_support": 2
+}
