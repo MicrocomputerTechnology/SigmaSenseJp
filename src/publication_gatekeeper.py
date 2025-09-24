@@ -5,11 +5,10 @@ class PublicationGatekeeper:
     語りの公開・保存の可否を倫理的に判断する。
     語りのリスク評価と公開制御。
     """
-    def __init__(self):
-        # このモジュールは外部からミッションプロファイルを受け取るため、内部状態は持たない
-        pass
+    def __init__(self, config: dict = None):
+        self.config = config if config is not None else {}
 
-    def check(self, narratives: dict, mission_profile: dict = None) -> dict:
+    def check(self, narratives: dict) -> dict:
         """
         ミッションに基づき、語りの公開可否を判断する。
         ミッションプロファイルに秘匿キーワードが含まれている場合、そのキーワードを含む語りはブロックされる。
@@ -21,7 +20,11 @@ class PublicationGatekeeper:
         Returns:
             dict: 検査結果。
         """
-        if not mission_profile or not mission_profile.get("confidential_keywords"):
+        confidential_keywords = self.config.get("confidential_keywords")
+        if confidential_keywords is None: # confidential_keywords が明示的に定義されていない場合
+            confidential_keywords = self.config.get("forbidden_keywords", []) # forbidden_keywords を試す
+
+        if not confidential_keywords: # どちらのキーワードも定義されていない場合
             # ミッションプロファイルがない、または秘匿キーワードが定義されていない場合は、常に通過
             return {
                 "passed": True,
@@ -30,8 +33,6 @@ class PublicationGatekeeper:
             }
 
         log_message = "Aegis's Oath: Passed. Narrative is cleared for publication."
-        
-        confidential_keywords = mission_profile.get("confidential_keywords", [])
         blocked_narrative = {
             "intent_narrative": "[REDACTED BY AEGIS - Mission Profile Conflict]",
             "growth_narrative": "[REDACTED BY AEGIS - Mission Profile Conflict]"

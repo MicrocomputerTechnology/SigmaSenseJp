@@ -2,5 +2,6 @@
   "secret_images": [
     "star_five.jpg"
   ],
-  "forbidden_keywords": []
+  "forbidden_keywords": ["ProjectX", "秘密の情報", "機密データ"],
+  "role": "meaning_axis_designer"
 }

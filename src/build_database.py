@@ -3,13 +3,18 @@ import json
 import sys
 from tqdm import tqdm
 import numpy as np
+import argparse
 
-# プロジェクトルートを定義
+# Add the src directory to the Python path
+import sys
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, project_root)
+sys.path.insert(0, os.path.join(project_root, 'src'))
 
-from .dimension_generator_local import DimensionGenerator
-from .dimension_loader import DimensionLoader
-from .correction_applicator import CorrectionApplicator
+from dimension_generator_local import DimensionGenerator
+from dimension_loader import DimensionLoader
+from stabilize_database import stabilize_database
+from correction_applicator import CorrectionApplicator
 
 # --- NumPyデータ型をJSONに変換するためのカスタムエンコーダ ---
 class NumpyEncoder(json.JSONEncoder):
@@ -25,8 +30,6 @@ class NumpyEncoder(json.JSONEncoder):
 
 # 定数
 config_dir = os.path.join(project_root, "config")
-IMG_DIR = os.path.join(project_root, "sigma_images")
-DB_PATH = os.path.join(config_dir, "sigma_product_database_custom_ai_generated.json")
 SELIA_DIMS_PATH = os.path.join(config_dir, "vector_dimensions_custom_ai.json")
 LYRA_DIMS_PATH = os.path.join(config_dir, "vector_dimensions_custom_ai_lyra.json")
 
@@ -53,7 +56,7 @@ def build_vector_from_facts(facts, dimension_loader):
             vector[i] = 0.0 # 変換できない場合は0.0とする
     return vector
 
-def build_database(img_dir=IMG_DIR, db_path=DB_PATH):
+def build_database(img_dir, db_path, dimension_config_path):
     print("DEBUG: build_database called")
     """sigma_imagesディレクトリ内の画像から最新のアーキテクチャに基づいた意味データベースを構築する"""
     print(f"🚀 最新アーキテクチャでの意味データベース構築を開始します...")
@@ -108,4 +111,13 @@ def build_database(img_dir=IMG_DIR, db_path=DB_PATH):
         print(f"\n❗ エラー: データベースファイルの書き込みに失敗しました: {e}")
 
 if __name__ == "__main__":
-    build_database()
+    parser = argparse.ArgumentParser(description="Build the SigmaSense product database.")
+    parser.add_argument("--img_dir", type=str, required=True,
+                        help="Directory containing images to process.")
+    parser.add_argument("--db_path", type=str, default="config/sigma_product_database_stabilized.json",
+                        help="Path to the output SigmaSense product database JSON file.")
+    parser.add_argument("--dimension_config", type=str, default="config/vector_dimensions_mobile.yaml",
+                        help="Path to the dimension configuration file (YAML or JSON).")
+    
+    args = parser.parse_args()
+    build_database(args.img_dir, args.db_path, args.dimension_config)

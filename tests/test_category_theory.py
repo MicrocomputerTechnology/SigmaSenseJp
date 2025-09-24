@@ -50,7 +50,7 @@ class TestCategoryTheory(unittest.TestCase):
         Image.new('RGB', (10, 10), 'green').save(dummy_img_path)
 
         # Build a database using the dummy image
-        build_database(db_path=cls.db_path, img_dir=cls.temp_dir)
+        build_database(db_path=cls.db_path, img_dir=cls.temp_dir, dimension_config_path="config/vector_dimensions_mobile.yaml")
 
         # Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader()
@@ -115,7 +115,7 @@ class TestFunctoriality(unittest.TestCase):
         Image.new('RGB', (10, 10), 'red').save(dummy_img_path)
 
         # Build a database using the dummy image
-        build_database(db_path=cls.db_path, img_dir=cls.temp_dir)
+        build_database(db_path=cls.db_path, img_dir=cls.temp_dir, dimension_config_path="config/vector_dimensions_mobile.yaml")
 
         # Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader()

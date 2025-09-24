@@ -44,10 +44,8 @@ class TestSheafAxiomsSimplified(unittest.TestCase):
         img_blue_bgr = cv2.cvtColor(img_blue_np, cv2.COLOR_RGB2BGR)
         cv2.imwrite(cls.blue_image_path, img_blue_bgr)
         
-        print(f"Created test images in: {cls.temp_dir}")
-
         # 2. Build a database from these images
-        build_database(db_path=cls.db_path, img_dir=cls.temp_dir)
+        build_database(db_path=cls.db_path, img_dir=cls.temp_dir, dimension_config_path="config/vector_dimensions_mobile.yaml")
 
         # 3. Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader()

@@ -54,6 +54,10 @@ class SigmaSense:
         config_dir = os.path.join(project_root, "config")
         log_dir = os.path.join(project_root, "sigma_logs")
 
+        # --- 設定ローダーの初期化 ---
+        from .config_loader import ConfigLoader
+        self.all_agent_configs = ConfigLoader(config_dir)
+
         # --- 基本的なデータベースと次元設定 ---
         self.db = database
         self.ids = ids
@@ -86,8 +90,8 @@ class SigmaSense:
         self.narrative_integrity = NarrativeIntegrity()
         self.growth_tracker = GrowthTracker()
         self.emotion_balancer = EmotionBalancer()
-        self.publication_gatekeeper = PublicationGatekeeper()
-        self.meaning_axis_designer = MeaningAxisDesigner()
+        self.publication_gatekeeper = PublicationGatekeeper(config=self.all_agent_configs.get_config("saphiel_mission_profile"))
+        self.meaning_axis_designer = MeaningAxisDesigner(config=self.all_agent_configs.get_config("saphiel_mission_profile"))
         self.instinct_monitor = InstinctMonitor()
 
         print("SigmaSense 16th Gen: All components initialized.")
@@ -181,10 +185,16 @@ class SigmaSense:
         for fact in list(logical_context.keys()):
             logical_context[fact] = fact in overridden_facts
 
-        meaning_vector = np.zeros(len(self.dimensions))
+        # 意味ベクトルを構築 (F1.5: 意味の統合)
+        meaning_vector = np.zeros(len(self.dimensions), dtype=np.float32)
         for i, dim_def in enumerate(self.dimensions):
-            if logical_context.get(dim_def.get('id'), False):
+            dim_id = dim_def.get('id')
+            # 論理コンテキストから値を取得、または生成された特徴から取得
+            if logical_context.get(dim_id, False):
                 meaning_vector[i] = 1.0
+            elif dim_id in features_dict: # 生成された特徴に存在する場合
+                meaning_vector[i] = features_dict[dim_id]
+            # それ以外の場合は0.0 (np.zerosで初期化済み)
 
         best_match_id, score, best_match_vector = self._find_best_match(meaning_vector, metric='cosine', num_bins=10)
 
@@ -271,7 +281,8 @@ class SigmaSense:
             "intent_narrative": final_narratives["intent_narrative"],
             "growth_narrative": final_narratives["growth_narrative"],
             "discovered_temporal_patterns": temporal_patterns,
-            "ethics_log": ethics_result["log"]
+            "ethics_log": ethics_result["log"],
+            "ethics_passed": ethics_result["passed"]
         })
         return final_result
 

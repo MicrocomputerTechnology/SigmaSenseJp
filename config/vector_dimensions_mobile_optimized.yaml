@@ -1,14 +1,14 @@
-symmetry_score:
+- id: symmetry_score
   description: Measures symmetry based on Hu Moments.
   method: '...'
   weight: 0.8
   parameters: []
-edge_density:
+- id: edge_density
   description: Calculates the density of edges.
   method: '...'
   weight: 0.6
   parameters: []
-gaze_curvature:
+- id: gaze_curvature
   description: Approximates the curvature of a dominant line.
   method: '...'
   weight: 0.5
