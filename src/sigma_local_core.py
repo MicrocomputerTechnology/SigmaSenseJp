@@ -26,12 +26,17 @@ class SigmaLocalCore:
             config_dir = os.path.join(project_root, 'config')
             config_path = os.path.join(config_dir, "vector_dimensions_mobile.yaml")
 
+        # Determine project root and config directory
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        config_dir = os.path.join(project_root, 'config')
+        vetra_config_path = os.path.join(config_dir, "vetra_llm_core_profile.json")
+
         self.generator = DimensionGenerator()
         self.suggester = DimensionSuggester()
         self.predictor = MatchPredictor()
         self.hint_generator = NarrativeHintGenerator()
         self.modulator = PsycheModulator()
-        self.narrator = VetraLLMCore(config_path)
+        self.narrator = VetraLLMCore(vetra_config_path) # Pass the correct Vetra config path
         print("SigmaLocalCore is ready for offline analysis.")
 
     def _cosine_similarity(self, vec1, vec2):
