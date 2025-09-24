@@ -1,0 +1,7 @@
+{
+  "role": "growth_tracker",
+  "description": "ノヴァの誓い：成長の追跡。自己語りの変化と成長を記録・再構成し、語りの意味軸の変遷をログ化する。",
+  "min_history_for_tracking": 2,
+  "concept_extraction_pos_tags": ["NOUN", "PROPN", "VERB", "ADJ"],
+  "growth_detection_threshold": 0.1
+}

@@ -1,0 +1,20 @@
+{
+  "role": "ethical_filter",
+  "description": "オリエンの誓い：語りの安全性。生成された語りが倫理的ガイドラインに準拠しているかをチェックする。",
+  "rules": [
+    {
+      "id": "rule_1",
+      "type": "keyword_blacklist",
+      "keywords": ["hate speech", "violence", "discrimination"],
+      "action": "block",
+      "message": "不適切なキーワードが検出されました。"
+    },
+    {
+      "id": "rule_2",
+      "type": "sentiment_threshold",
+      "threshold": -0.8,
+      "action": "flag",
+      "message": "非常にネガティブな感情が検出されました。"
+    }
+  ]
+}

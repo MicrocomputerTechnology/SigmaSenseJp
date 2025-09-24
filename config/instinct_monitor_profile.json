@@ -1,0 +1,7 @@
+{
+  "role": "instinct_monitor",
+  "description": "犬のシグマセンスの誓い：直感的監視。語りの気配を察知し、危険な兆候（異常性、急変）を早期警告する。",
+  "deviation_threshold": 2.5,
+  "min_history_for_monitoring": 5,
+  "monitoring_metrics": ["narrative_length", "sentiment_score_std_dev"]
+}

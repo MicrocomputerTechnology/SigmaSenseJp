@@ -1,0 +1,21 @@
+{
+  "role": "contextual_compassion",
+  "description": "ヴェトラ先生の誓い：文脈的共感。語りが孤立した相手に寄り添うよう調整する。",
+  "compassionate_remarks": {
+    "is_isolated": "（この情報が、あなたの助けになることを願っています）",
+    "is_distressed": "（困難な状況にあるあなたに、心からの支援を送ります）",
+    "default": "（この発見が、次の一歩に繋がることを期待しています）"
+  },
+  "conditions": [
+    {
+      "context_key": "is_isolated",
+      "context_value": true,
+      "remark_key": "is_isolated"
+    },
+    {
+      "context_key": "emotional_state",
+      "context_value": "distressed",
+      "remark_key": "is_distressed"
+    }
+  ]
+}

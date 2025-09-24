@@ -1,0 +1,7 @@
+{
+  "role": "narrative_integrity",
+  "description": "セリアの誓い：語りの完全性。語りの履歴が改ざんされないよう記録を保護し、語りの出典と照合履歴を追跡可能にする。",
+  "provenance_format": "full",
+  "max_key_concepts": 3,
+  "include_timestamp": true
+}
