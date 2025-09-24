@@ -106,6 +106,7 @@ class SheafAnalyzer:
     def glue(self):
         """
         整合性チェックが通った場合に、局所データを統合して大域的な特徴を返す。
+        各領域の面積で重み付けされた加重平均を計算する。
         """
         if not self.check_gluing_condition():
             raise ValueError("Local data is inconsistent and cannot be glued.")
@@ -113,6 +114,29 @@ class SheafAnalyzer:
         if not self.local_data:
             return None
 
-        # ここでは単純に全特徴量の平均を「大域データ」とする
-        global_vector = np.mean(list(self.local_data.values()), axis=0)
+        total_area = 0
+        weighted_sum = None
+        
+        # ベクトルがNoneでないことを確認し、最初の有効なベクトルで合計ベクトルを初期化
+        first_valid_vector = next((v for v in self.local_data.values() if v is not None), None)
+        if first_valid_vector is None:
+            return None # 有効なベクトルが一つもなければNoneを返す
+        
+        weighted_sum = np.zeros_like(first_valid_vector, dtype=np.float64)
+
+        for region_rect, vector in self.local_data.items():
+            if vector is None:
+                continue
+            
+            area = region_rect[2] * region_rect[3]
+            if area == 0:
+                continue
+
+            weighted_sum += vector * area
+            total_area += area
+
+        if total_area == 0:
+            return None
+
+        global_vector = weighted_sum / total_area
         return global_vector

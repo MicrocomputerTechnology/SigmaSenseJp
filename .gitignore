@@ -11,4 +11,4 @@ models/
 temp_handler_*.py
 
 # Temporary files for gh issue bodies
-gh_issue_body_*.md
+gh_issue_body_*.mdconfig/sigma_product_database_custom_ai_generated.json
