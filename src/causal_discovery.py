@@ -1,5 +1,8 @@
 # === 第十五次実験 実装ファイル ===
 
+import json
+import os
+
 from .world_model import WorldModel
 from .personal_memory_graph import PersonalMemoryGraph
 from collections import defaultdict
@@ -9,14 +12,32 @@ class CausalDiscovery:
     経験から因果関係を発見し、WorldModelを自律的に成長させる。
     """
 
-    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph):
+    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config_path=None):
         """
         WorldModelとPersonalMemoryGraphのインスタンスを受け取って初期化する。
         """
         self.world_model = world_model
         self.memory_graph = memory_graph
 
-    def discover_rules(self, correlation_threshold=0.8, confidence_threshold=0.9):
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        config_dir = os.path.join(project_root, 'config')
+        
+        if config_path is None:
+            self.config_path = os.path.join(config_dir, "causal_discovery_profile.json")
+        else:
+            self.config_path = config_path
+
+        profile_config = {}
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                profile_config = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: CausalDiscovery config file not found or invalid at {self.config_path}. Using default parameters.")
+        
+        self.correlation_threshold = profile_config.get("correlation_threshold", 0.8)
+        self.confidence_threshold = profile_config.get("confidence_threshold", 0.9)
+
+    def discover_rules(self):
         """
         記憶を分析し、新しい因果ルールを発見してWorldModelを更新する。
 
@@ -58,9 +79,9 @@ class CausalDiscovery:
                 p_a_given_b = count / occurrence[fact_b]
                 p_b_given_a = count / occurrence[fact_a]
 
-                if p_b_given_a >= correlation_threshold:
+                if p_b_given_a >= self.correlation_threshold:
                     hypotheses.append({"cause": fact_a, "effect": fact_b, "confidence": p_b_given_a})
-                if p_a_given_b >= correlation_threshold:
+                if p_a_given_b >= self.correlation_threshold:
                     hypotheses.append({"cause": fact_b, "effect": fact_a, "confidence": p_a_given_b})
 
         print(f"Found {len(hypotheses)} potential hypotheses.")
@@ -77,7 +98,7 @@ class CausalDiscovery:
                     counter_examples += 1
             
             # 反例がなければ、ルールとしてWorldModelに追加
-            if counter_examples == 0 and hypo["confidence"] >= confidence_threshold:
+            if counter_examples == 0 and hypo["confidence"] >= self.confidence_threshold:
                 print(f"  [Rule Confirmed] Found no counter-examples for {cause} -> {effect}. Adding to WorldModel.")
                 self.world_model.add_node(cause, type="property")
                 self.world_model.add_node(effect, type="property")
