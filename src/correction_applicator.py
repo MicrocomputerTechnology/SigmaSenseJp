@@ -7,14 +7,30 @@ class CorrectionApplicator:
     functor_consistency_failures.jsonl に基づいて、ベクトルまたはデータベース全体に
     一貫性補正を適用する責務を持つ。
     """
-    def __init__(self, failure_log_path=None, alpha=0.5):
-        if failure_log_path is None:
-            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-            log_dir = os.path.join(project_root, "sigma_logs")
-            failure_log_path = os.path.join(log_dir, "functor_consistency_failures.jsonl")
+    def __init__(self, failure_log_path=None, config_path=None):
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        log_dir = os.path.join(project_root, "sigma_logs")
 
-        self.failure_logs = self._load_failure_logs(failure_log_path)
-        self.alpha = alpha
+        if failure_log_path is None:
+            self.failure_log_path = os.path.join(log_dir, "functor_consistency_failures.jsonl")
+        else:
+            self.failure_log_path = failure_log_path
+
+        config_dir = os.path.join(project_root, 'config')
+        if config_path is None:
+            self.config_path = os.path.join(config_dir, "correction_applicator_profile.json")
+        else:
+            self.config_path = config_path
+
+        profile_config = {}
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                profile_config = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: CorrectionApplicator config file not found or invalid at {self.config_path}. Using default parameters.")
+        
+        self.alpha = profile_config.get("alpha", 0.5)
+        self.failure_logs = self._load_failure_logs(self.failure_log_path)
         if self.failure_logs:
             print(f"🌿 CorrectionApplicatorが {len(self.failure_logs)}件の補正ルールで初期化されました。")
 
