@@ -1,5 +1,6 @@
 # === 第十五次実験 実装ファイル ===
 
+import json
 import os
 
 from .personal_memory_graph import PersonalMemoryGraph
