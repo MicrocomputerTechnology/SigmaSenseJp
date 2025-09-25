@@ -1,5 +1,7 @@
 # === 第十五次実験 実装ファイル ===
 
+import os
+
 from .personal_memory_graph import PersonalMemoryGraph
 from collections import defaultdict
 
