@@ -286,6 +286,15 @@ class SigmaSense:
         })
         return final_result
 
+    def _get_vector_type(self, dimension_id: str) -> str:
+        """
+        指定された次元IDが属するレイヤー（ベクトルタイプ）を返す。
+        """
+        for dim_def in self.dimensions:
+            if dim_def.get('id') == dimension_id:
+                return dim_def.get('layer', 'unknown')
+        return 'unknown' # 見つからない場合はunknownを返す
+
     def _find_best_match(self, target_vector, metric='cosine', num_bins=10):
         scores = []
         for i, db_vec in enumerate(self.vectors):
