@@ -8,13 +8,30 @@ class TemporalReasoning:
     時系列データ（経験のログ）から、時間的な順序性やパターンを学習する。
     """
 
-    def __init__(self, memory_graph: PersonalMemoryGraph):
+    def __init__(self, memory_graph: PersonalMemoryGraph, config_path=None):
         """
         PersonalMemoryGraphのインスタンスを受け取って初期化する。
         """
         self.memory_graph = memory_graph
 
-    def find_temporal_patterns(self, min_support=2):
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        config_dir = os.path.join(project_root, 'config')
+        
+        if config_path is None:
+            self.config_path = os.path.join(config_dir, "temporal_reasoning_profile.json")
+        else:
+            self.config_path = config_path
+
+        profile_config = {}
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                profile_config = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: TemporalReasoning config file not found or invalid at {self.config_path}. Using default parameters.")
+        
+        self.min_support = profile_config.get("min_support", 2)
+
+    def find_temporal_patterns(self):
         """
         記憶ログを分析し、頻出する連続イベントのパターンを発見する。
 
@@ -47,7 +64,7 @@ class TemporalReasoning:
         # 支持度が閾値を超えたパターンを抽出
         found_patterns = []
         for (event_a, event_b), count in transitions.items():
-            if count >= min_support:
+            if count >= self.min_support:
                 print(f"  [Pattern Found] '{event_a}' -> '{event_b}' occurred {count} times.")
                 found_patterns.append((event_a, event_b))
         
