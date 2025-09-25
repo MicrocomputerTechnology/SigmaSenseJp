@@ -3,18 +3,46 @@
 from .world_model import WorldModel
 from .personal_memory_graph import PersonalMemoryGraph
 
+import json
+import os
+
 class IntentJustifier:
     """
     ある特定の判断や選択に至った「なぜ？」に答えるため、その思考プロセスと
     根拠となった過去の経験を具体的に語る。
     """
 
-    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph):
+    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config_path=None):
         """
         WorldModelとPersonalMemoryGraphのインスタンスを受け取って初期化する。
         """
         self.world_model = world_model
         self.memory_graph = memory_graph
+
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        config_dir = os.path.join(project_root, 'config')
+        
+        if config_path is None:
+            self.config_path = os.path.join(config_dir, "intent_justifier_profile.json")
+        else:
+            self.config_path = config_path
+
+        profile_config = {}
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                profile_config = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: IntentJustifier config file not found or invalid at {self.config_path}. Using default parameters.")
+        
+        self.narrative_templates = profile_config.get("narrative_templates", {
+            "initial_summary": "今回、入力された画像「{source_image}」について、最も類似度が高いと判断したのは「{best_match}」（スコア: {best_match_score:.2f}）です。",
+            "logical_reasoning_path": "私の知識グラフによれば、以下の思考パスをたどりました：",
+            "no_logical_reasoning": "今回の判断に直接利用できる、知識グラフ上の明確な上位概念は見つかりませんでした。",
+            "past_experience_summary": "また、私は過去に「{source_image}」を{num_past_experiences}回経験しています。",
+            "past_psyche_state": "直近の経験では、私の心理状態は「{last_psyche}」でした。この過去の経験が、今回の判断にも影響を与えている可能性があります。",
+            "no_past_experience": "「{source_image}」については、これが初めての経験のようです。",
+            "final_conclusion": "以上の論理的根拠と過去の経験の双方を考慮し、今回の最終的な判断を下しました。"
+        })
 
     def justify_decision(self, current_experience: dict):
         """
@@ -34,32 +62,44 @@ class IntentJustifier:
         best_match = current_experience.get("best_match", {}).get("image_name", "なし")
         best_match_score = current_experience.get("best_match", {}).get("score", 0.0)
         
-        narrative.append(f"今回、入力された画像「{source_image}」について、最も類似度が高いと判断したのは「{best_match}」（スコア: {best_match_score:.2f}）です。")
+        narrative.append(self.narrative_templates.get("initial_summary", "").format(
+            source_image=source_image,
+            best_match=best_match,
+            best_match_score=best_match_score
+        ))
 
         # 1. 論理的根拠をWorldModelから取得
         narrative.append("\n### 知識に基づく論理的根拠：")
         logical_context = current_experience.get("fusion_data", {}).get("logical_terms", {})
         reasoning_path = self._trace_reasoning_path(logical_context)
         if reasoning_path:
-            narrative.append("私の知識グラフによれば、以下の思考パスをたどりました：")
+            narrative.append(self.narrative_templates.get("logical_reasoning_path", ""))
             narrative.append(f"> `{' -> '.join(reasoning_path)}`")
         else:
-            narrative.append("今回の判断に直接利用できる、知識グラフ上の明確な上位概念は見つかりませんでした。")
+            narrative.append(self.narrative_templates.get("no_logical_reasoning", ""))
 
         # 2. 過去の経験をPersonalMemoryGraphから取得
         narrative.append("\n### 過去の経験に基づく文脈的根拠：")
         past_memories = self.memory_graph.search_memories(key="source_image_name", value=source_image)
         if len(past_memories) > 1: # 現在の経験も含まれるため、1より大きいかで判断
-            narrative.append(f"また、私は過去に「{source_image}」を{len(past_memories) - 1}回経験しています。")
+            num_past_experiences = len(past_memories) - 1
+            narrative.append(self.narrative_templates.get("past_experience_summary", "").format(
+                source_image=source_image,
+                num_past_experiences=num_past_experiences
+            ))
             # 最新の過去の記憶（最後から2番目）を取得
             last_memory = past_memories[-2]
             last_psyche = last_memory.get("experience", {}).get("auxiliary_analysis", {}).get("psyche_state", {}).get("state", "不明")
-            narrative.append(f"直近の経験では、私の心理状態は「{last_psyche}」でした。この過去の経験が、今回の判断にも影響を与えている可能性があります。")
+            narrative.append(self.narrative_templates.get("past_psyche_state", "").format(
+                last_psyche=last_psyche
+            ))
         else:
-            narrative.append(f"「{source_image}」については、これが初めての経験のようです。")
+            narrative.append(self.narrative_templates.get("no_past_experience", "").format(
+                source_image=source_image
+            ))
 
         narrative.append("\n---")
-        narrative.append("以上の論理的根拠と過去の経験の双方を考慮し、今回の最終的な判断を下しました。")
+        narrative.append(self.narrative_templates.get("final_conclusion", ""))
 
         return "\n".join(narrative)
 
