@@ -1,5 +1,6 @@
 # === 第十五次実験 実装ファイル ===
 
+import json
 import os
 
 from .world_model import WorldModel
