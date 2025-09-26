@@ -165,52 +165,55 @@ class WorldModel:
 
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
+    import tempfile
+
     print("--- WorldModel Self-Test --- ")
-    # テスト用のファイルパスを指定し、既存の場合は削除
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    test_graph_path = os.path.join(project_root, 'world_model_test.json')
+    # テスト用に安全な一時ファイルを作成
+    tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode='w')
+    test_graph_path = tmpfile.name
+    tmpfile.close() # ファイル名を確保するために一度閉じる
+
     test_config = {"graph_path": test_graph_path}
 
-    if os.path.exists(test_graph_path):
-        os.remove(test_graph_path)
+    try:
+        # 1. モデルの初期化
+        wm = WorldModel(config=test_config)
 
-    # 1. モデルの初期化
-    wm = WorldModel(config=test_config)
+        # 2. ノードの追加
+        wm.add_node('bird', name_ja="鳥", type="concept")
+        wm.add_node('penguin', name_ja="ペンギン", type="instance")
+        wm.add_node('can_fly', name_ja="飛べる", type="property")
+        wm.add_node('cannot_fly', name_ja="飛べない", type="property")
 
-    # 2. ノードの追加
-    wm.add_node('bird', name_ja="鳥", type="concept")
-    wm.add_node('penguin', name_ja="ペンギン", type="instance")
-    wm.add_node('can_fly', name_ja="飛べる", type="property")
-    wm.add_node('cannot_fly', name_ja="飛べない", type="property")
+        # 3. エッジの追加
+        wm.add_edge('penguin', 'bird', 'is_a', provenance="Initial Knowledge")
+        wm.add_edge('bird', 'can_fly', 'has_property', confidence=0.9)
+        wm.add_edge('penguin', 'cannot_fly', 'has_property', confidence=1.0, note="This is an exception.")
 
-    # 3. エッジの追加
-    wm.add_edge('penguin', 'bird', 'is_a', provenance="Initial Knowledge")
-    wm.add_edge('bird', 'can_fly', 'has_property', confidence=0.9)
-    wm.add_edge('penguin', 'cannot_fly', 'has_property', confidence=1.0, note="This is an exception.")
+        # 4. グラフの保存
+        wm.save_graph()
 
-    # 4. グラフの保存
-    wm.save_graph()
+        # 5. グラフの検索
+        print("\n--- Querying Graph ---")
+        penguin_node = wm.get_node('penguin')
+        print(f"Penguin Node: {penguin_node}")
 
-    # 5. グラフの検索
-    print("\n--- Querying Graph ---")
-    penguin_node = wm.get_node('penguin')
-    print(f"Penguin Node: {penguin_node}")
+        bird_properties = wm.find_related_nodes('bird', relationship='has_property')
+        print(f"Properties of Bird: {bird_properties}")
 
-    bird_properties = wm.find_related_nodes('bird', relationship='has_property')
-    print(f"Properties of Bird: {bird_properties}")
+        penguin_relations = wm.find_related_nodes('penguin')
+        print(f"All relations from Penguin: {penguin_relations}")
 
-    penguin_relations = wm.find_related_nodes('penguin')
-    print(f"All relations from Penguin: {penguin_relations}")
+        # 6. 新しいモデルインスタンスで読み込みテスト
+        print("\n--- Testing Persistence ---")
+        wm_new = WorldModel(config=test_config)
+        penguin_node_new = wm_new.get_node('penguin')
+        print(f"Penguin Node from new instance: {penguin_node_new}")
+        assert penguin_node == penguin_node_new
+        print("Persistence test passed.")
 
-    # 6. 新しいモデルインスタンスで読み込みテスト
-    print("\n--- Testing Persistence ---")
-    wm_new = WorldModel(config=test_config)
-    penguin_node_new = wm_new.get_node('penguin')
-    print(f"Penguin Node from new instance: {penguin_node_new}")
-    assert penguin_node == penguin_node_new
-    print("Persistence test passed.")
-
-    # クリーンアップ
-    if os.path.exists(test_graph_path):
-        os.remove(test_graph_path)
-    print("\n--- Self-Test Complete ---")
+    finally:
+        # クリーンアップ
+        if os.path.exists(test_graph_path):
+            os.remove(test_graph_path)
+        print("\n--- Self-Test Complete ---")
