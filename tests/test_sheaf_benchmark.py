@@ -89,17 +89,6 @@ class TestSheafBenchmark(unittest.TestCase):
         cls.loader = DimensionLoader(paths=[cls.merged_config_path])
         database, ids, vectors, _ = load_sigma_database(cls.db_path)
         cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader)
-
-        # SheafAnalyzerのconfigパスを構築
-        config_dir = os.path.join(project_root, "config")
-        cls.sheaf_config_path = os.path.join(config_dir, "sheaf_analyzer_profile.json")
-
-        # デフォルトのsheaf_analyzer_profile.jsonを作成（存在しない場合）
-        if not os.path.exists(cls.sheaf_config_path):
-            default_sheaf_config = {"tolerance": 0.6} # テストがパスするようデフォルト値を調整
-            with open(cls.sheaf_config_path, 'w', encoding='utf-8') as f:
-                json.dump(default_sheaf_config, f, indent=4)
-
         print("SigmaSense instance created for benchmark.")
 
     @classmethod
@@ -117,7 +106,7 @@ class TestSheafBenchmark(unittest.TestCase):
         
         # 1. Get the "glued" vector from SheafAnalyzer
         # This finds regions, gets their vectors, and computes a weighted average.
-        analyzer = SheafAnalyzer(self.test_image_path, self.sigma, config_path=self.sheaf_config_path)
+        analyzer = SheafAnalyzer(self.test_image_path, self.sigma)
         glued_vector = analyzer.glue()
         
         self.assertIsNotNone(glued_vector, "Glue method returned None. Regions might not have been detected.")
@@ -133,12 +122,12 @@ class TestSheafBenchmark(unittest.TestCase):
         # 3. Assert that the two vectors are approximately equal
         # This is the benchmark: it quantifies if the gluing logic is consistent
         # with the overall perception. A high tolerance might indicate issues.
-        # tolerance = 0.1 # Now loaded from config
-        are_close = np.allclose(glued_vector, whole_image_vector, atol=analyzer.tolerance)
+        tolerance = 0.1
+        are_close = np.allclose(glued_vector, whole_image_vector, atol=tolerance)
         
         if not are_close:
             diff = np.linalg.norm(glued_vector - whole_image_vector)
-            print(f"Vectors are not close! Tolerance={analyzer.tolerance}, Difference Norm={diff}")
+            print(f"Vectors are not close! Tolerance={tolerance}, Difference Norm={diff}")
 
         self.assertTrue(are_close, 
                         f"The glued vector should be a close approximation of the whole image's vector.")
