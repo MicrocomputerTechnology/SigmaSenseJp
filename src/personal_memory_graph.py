@@ -1,9 +1,6 @@
 # === 第十五次実験 実装ファイル ===
 
-import json
-import os
-import uuid
-import datetime
+from .config_loader import ConfigLoader
 
 class PersonalMemoryGraph:
     """
@@ -11,33 +8,28 @@ class PersonalMemoryGraph:
     時系列のログとして記録・管理する。
     """
 
-    def __init__(self, config_path=None):
+    def __init__(self, config: dict = None):
         """
         PersonalMemoryGraphを初期化する。
 
         Args:
-            config_path (str): 設定ファイルへのパス。
+            config (dict): 設定オブジェクト。
         """
+        if config is None:
+            config = {}
+
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         log_dir = os.path.join(project_root, "sigma_logs")
         default_memory_path = os.path.join(log_dir, "personal_memory.jsonl")
 
-        if config_path is None:
-            config_dir = os.path.join(project_root, 'config')
-            self.config_path = os.path.join(config_dir, "personal_memory_graph_profile.json")
-        else:
-            self.config_path = config_path
-
-        memory_path_from_config = None
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-                memory_path_from_config = profile_config.get("memory_path")
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: PersonalMemoryGraph config file not found or invalid at {self.config_path}. Using default memory path.")
+        memory_path_from_config = config.get("memory_path")
         
         if memory_path_from_config:
-            self.memory_path = os.path.join(project_root, memory_path_from_config)
+            # If the path from config is not absolute, join it with the project root
+            if not os.path.isabs(memory_path_from_config):
+                self.memory_path = os.path.join(project_root, memory_path_from_config)
+            else:
+                self.memory_path = memory_path_from_config
         else:
             self.memory_path = default_memory_path
             
@@ -61,6 +53,8 @@ class PersonalMemoryGraph:
         }
 
         try:
+            # Ensure the directory exists before writing
+            os.makedirs(os.path.dirname(self.memory_path), exist_ok=True)
             with open(self.memory_path, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(memory_entry, ensure_ascii=False) + '\n')
             print(f"PersonalMemoryGraph: Added new experience with ID {memory_entry['memory_id']}")
@@ -126,12 +120,16 @@ class PersonalMemoryGraph:
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
     print("---" + " PersonalMemoryGraph Self-Test " + "---")
-    test_memory_path = 'pmg_test.jsonl'
+    
+    # Create a temporary config for the test
+    test_config = {"memory_path": "pmg_test.jsonl"}
+    test_memory_path = test_config["memory_path"]
+
     if os.path.exists(test_memory_path):
         os.remove(test_memory_path)
 
     # 1. 記憶モデルの初期化
-    pmg = PersonalMemoryGraph(memory_path=test_memory_path)
+    pmg = PersonalMemoryGraph(config=test_config)
 
     # 2. 経験の追加
     print("\n---" + " Adding Experiences " + "---")

@@ -1,5 +1,3 @@
 {
-  "role": "personal_memory_graph",
-  "description": "統合的個人記憶。SigmaSense単体の経験を時系列のログとして記録・管理する。",
-  "memory_path": "sigma_logs/personal_memory.jsonl"
+    "memory_path": "sigma_logs/personal_memory.jsonl"
 }
