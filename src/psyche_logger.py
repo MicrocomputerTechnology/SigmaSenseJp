@@ -17,33 +17,20 @@ class PsycheLogger:
     This serves as the input data generator for the Toyokawa Model.
     """
 
-    def __init__(self, output_path=None, config_path=None):
+    def __init__(self, config: dict = None, output_path: str = None):
+        if config is None:
+            config = {}
+
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         log_dir = os.path.join(project_root, "sigma_logs")
         
-        if output_path is None:
-            self.output_path = os.path.join(log_dir, "psyche_log.jsonl")
-        else:
-            self.output_path = output_path
+        self.output_path = output_path or os.path.join(log_dir, "psyche_log.jsonl")
 
-        config_dir = os.path.join(project_root, 'config')
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "psyche_logger_profile.json")
-        else:
-            self.config_path = config_path
-
-        profile_config = {}
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: PsycheLogger config file not found or invalid at {self.config_path}. Using default parameters.")
-
-        self.agents = profile_config.get("agents", [
+        self.agents = config.get("agents", [
             "selia", "nova", "lyra", "saphiel",
             "orien", "vetra", "aegis"
         ])
-        self.base_emotions = profile_config.get("base_emotions", {
+        self.base_emotions = config.get("base_emotions", {
             "selia": 0.7,   # Orderly, so stable
             "nova": 0.4,    # Deviant, so more volatile
             "lyra": 0.5,    # Emotional, so average base but wide swings
@@ -52,11 +39,11 @@ class PsycheLogger:
             "vetra": 0.6,   # Memory/Ethics, thoughtful
             "aegis": 0.7    # Boundary, stable but firm
         })
-        self.time_steps = profile_config.get("time_steps", 10)
-        self.coherence_trend = profile_config.get("coherence_trend", [0.8, 0.9, 0.7, 0.5, 0.3, 0.4, 0.6, 0.8, 0.9, 0.9])
-        self.divergence_trend = profile_config.get("divergence_trend", [0.1, 0.1, 0.2, 0.4, 0.7, 0.6, 0.3, 0.2, 0.1, 0.1])
-        self.fluctuation_range = profile_config.get("fluctuation_range", {"min": -0.2, "max": 0.2})
-        self.fluctuation_multiplier_volatile_agents = profile_config.get("fluctuation_multiplier_volatile_agents", 2)
+        self.time_steps = config.get("time_steps", 10)
+        self.coherence_trend = config.get("coherence_trend", [0.8, 0.9, 0.7, 0.5, 0.3, 0.4, 0.6, 0.8, 0.9, 0.9])
+        self.divergence_trend = config.get("divergence_trend", [0.1, 0.1, 0.2, 0.4, 0.7, 0.6, 0.3, 0.2, 0.1, 0.1])
+        self.fluctuation_range = config.get("fluctuation_range", {"min": -0.2, "max": 0.2})
+        self.fluctuation_multiplier_volatile_agents = config.get("fluctuation_multiplier_volatile_agents", 2)
     def generate_log(self):
         """
         Generates a simulated log for a number of time steps.
