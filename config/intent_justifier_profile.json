@@ -1,7 +1,12 @@
 {
-  "role": "intent_justifier",
-  "description": "選択の意図を語る機能。特定の判断や選択に至った「なぜ？」に答えるため、その思考プロセスと根拠となった過去の経験を具体的に語る。",
-  "narrative_style": "analytical",
-  "max_reasoning_path_depth": 5,
-  "memory_search_criteria": {"key": "psyche_state", "value": "confused"}
+    "reasoning_path_depth": 5,
+    "narrative_templates": {
+        "initial_summary": "今回、入力された画像「{source_image}」について、最も類似度が高いと判断したのは「{best_match}」（スコア: {best_match_score:.2f}）です。",
+        "logical_reasoning_path": "私の知識グラフによれば、以下の思考パスをたどりました：",
+        "no_logical_reasoning": "今回の判断に直接利用できる、知識グラフ上の明確な上位概念は見つかりませんでした。",
+        "past_experience_summary": "また、私は過去に「{source_image}」を{num_past_experiences}回経験しています。",
+        "past_psyche_state": "直近の経験では、私の心理状態は「{last_psyche}」でした。この過去の経験が、今回の判断にも影響を与えている可能性があります。",
+        "no_past_experience": "「{source_image}」については、これが初めての経験のようです。",
+        "final_conclusion": "以上の論理的根拠と過去の経験の双方を考慮し、今回の最終的な判断を下しました。"
+    }
 }
