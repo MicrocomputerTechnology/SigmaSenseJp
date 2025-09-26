@@ -9,18 +9,30 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from src.critical_structure_mapper import map_critical_structure
+from src.config_loader import ConfigLoader
 
 def generate_critical_report():
-    criticals = map_critical_structure()
+    config_loader = ConfigLoader(os.path.join(project_root, 'config'))
+    cs_config = config_loader.get_config('critical_structure_mapper_profile')
+    if not cs_config:
+        print("Warning: critical_structure_mapper_profile.json not found. Using default threshold.")
+        cs_config = {}
+
+    criticals = map_critical_structure(cs_config)
+    
     print("\n🚨 臨界構造レポート（照合不能群）")
     print("-" * 40)
-    for c in criticals:
-        print(f"画像: {c['image']}")
-        print(f"  エントロピー: {c['entropy']}, スパース度: {c['sparsity']}")
-        print(f"  色集中度: {c['color_concentration']}, 空間距離: {c['spatial_distance']}")
-        print(f"  包含率: {c['inclusion_rate']}, 文脈距離: {c['context_score']}")
-        print(f"  群サイズ: {c['group_size']}, 明るさ: {c['brightness']}, 陰影強度: {c['shadow_strength']}")
-        print("-" * 40)
+    # Check if the function returned a report or a message
+    if criticals.get("unmatchable_count", 0) > 0:
+        # Assuming the function returns a dictionary with a specific structure
+        # This part might need adjustment based on the actual return value
+        print(f"照合不能群の数: {criticals.get('unmatchable_count')}")
+        print("臨界ベクトル（名前付き）:")
+        for dim, value in criticals.get("critical_structure_named", {}).items():
+            print(f"  {dim}: {value:.4f}")
+    else:
+        print(criticals.get("message", "臨界構造は見つかりませんでした。"))
+    print("-" * 40)
     print("このレポートは、意味空間の折れ目（照合不能が集中する構造）を記述するための基盤です。")
 
 if __name__ == "__main__":
