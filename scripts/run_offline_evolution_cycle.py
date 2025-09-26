@@ -67,7 +67,10 @@ if __name__ == '__main__':
 
     # === CYCLE 3: LEARNING FROM FEEDBACK ===
     print_header("Cycle 3: Learning from Feedback")
-    optimizer = DimensionOptimizer(config_path=CONFIG_PATH)
+    # Load the config from the YAML file to pass to the optimizer
+    with open(CONFIG_PATH, 'r') as f:
+        optimizer_config = yaml.safe_load(f)
+    optimizer = DimensionOptimizer(config=optimizer_config)
     print("Generating vectors for feedback using current architecture...")
     vec_circle = generator.generate_dimensions(IMG_CIRCLE)['features']
     vec_cat = generator.generate_dimensions(IMG_CAT)['features']
