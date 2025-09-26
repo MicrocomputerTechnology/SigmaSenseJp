@@ -102,12 +102,12 @@ class TestSelfCorrelationScore(unittest.TestCase):
         Tests a vector with no clear correlation between halves.
         """
         # Arrange
-        vec = [1, 5, 2, 8, 3, 7] # No obvious pattern
+        vec = [1, 2, 3, 5, 1, 8] # A vector with low correlation between halves
         # Act
         score = compute_self_correlation_score(vec)
         # Assert
         # The exact value is not critical, but it should not be close to 1 or -1.
-        self.assertLess(abs(score), 0.9)
+        self.assertLess(abs(score), 0.5) # Expecting a score around 0.427
 
     def test_odd_length_vector(self):
         """
