@@ -35,6 +35,7 @@ class VetraLLMCore:
     def _call_local_llm(self, model, system_prompt, user_prompt):
         """
         Calls the specified local LLM using the ollama library.
+        Returns a tuple (response_content, error_message).
         """
         try:
             print(f"\n--- Calling Local LLM '{model}' (Vetra) ---")
@@ -46,14 +47,15 @@ class VetraLLMCore:
                 ],
             )
             print("--- LLM Response Received ---")
-            return response['message']['content']
+            return response['message']['content'], None
         except Exception as e:
-            print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print(f"ERROR calling local LLM '{model}' via ollama: {e}")
-            print("Please ensure the Ollama server is running (`ollama serve`)")
-            print(f"and the model '{model}' is available (`ollama pull {model}`).")
-            print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            return f"エラー：ローカルLLM '{model}' の呼び出しに失敗しました。"
+            error_message = (
+                f"ERROR calling local LLM '{model}' via ollama: {e}\n"
+                f"Please check that Ollama is downloaded, running and accessible. https://ollama.com/download\n"
+                f"Please ensure the Ollama server is running (`ollama serve`)\n"
+                f"and the model '{model}' is available (`ollama pull {model}`)."
+            )
+            return None, error_message
 
     def explain_vector(self, vector):
         """
@@ -125,8 +127,11 @@ class VetraLLMCore:
             "```"
         )
         
-        raw_response = self._call_local_llm(self.code_gen_model, system_prompt, user_prompt)
+        raw_response, error = self._call_local_llm(self.code_gen_model, system_prompt, user_prompt)
         
+        if error:
+            return f"エラー: {error}"
+
         # Extract code from the markdown block
         if "```python" in raw_response:
             code = raw_response.split("```python")[1].split("```")[0].strip()

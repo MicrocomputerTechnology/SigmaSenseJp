@@ -191,8 +191,17 @@ def process_learning_objective(objective: dict):
             return
         
         generated_code = vetra.generate_handler_code(task_description)
-        if "エラー" in generated_code:
-            print(f"  - 失敗: コード生成中にエラーが発生しました。 ({generated_code})")
+        if generated_code.startswith("エラー:"):
+            print(f"  - 失敗: コード生成中にエラーが発生しました。")
+            print("--------------------------------------------------")
+            # エラーメッセージを整形して表示
+            error_lines = generated_code.split('\n')
+            for line in error_lines:
+                print(f"    {line}")
+            print("--------------------------------------------------")
+            print("\n[セットアップガイド]")
+            print("この機能を利用するには、Ollamaサーバーがローカルで実行されている必要があります。")
+            print("詳細はREADME.mdの「Note: オフライン知性（ヴェトラ）の利用」セクションを参照してください。")
             return
         
         print("  - ヴェトラ先生が以下のコードを生成しました:")
