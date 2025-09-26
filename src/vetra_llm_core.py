@@ -140,6 +140,45 @@ class VetraLLMCore:
             # If no markdown block is found, return the raw response and let the caller handle it
             return raw_response
 
+    def propose_new_dimension(self, features: dict):
+        """
+        Generates a new dimension definition based on a set of unexplainable features.
+        """
+        system_prompt = """
+        You are an expert AI analyst specializing in the SigmaSense project.
+        Your task is to define a new semantic dimension based on a set of raw features from an image.
+        The new dimension should capture a meaningful, abstract concept that these features might represent.
+        You must return a single JSON object with the following keys: 'id', 'name_ja', 'description', 'algorithm_idea'.
+        - 'id': A concise, snake_case identifier (e.g., 'texture_complexity').
+        - 'name_ja': A short, descriptive Japanese name (e.g., 'テクスチャの複雑さ').
+        - 'description': A brief explanation of what this dimension measures.
+        - 'algorithm_idea': A high-level description of how one might compute this value from an image using OpenCV or similar libraries.
+        The output must be ONLY the JSON object, enclosed in ```json ... ```.
+        """
+        
+        user_prompt = (
+            "Based on the following raw feature vector, propose a new semantic dimension that could explain these values.\n"
+            f'```json\n{json.dumps(features, indent=2)}\n```\n'
+        )
+
+        raw_response, error = self._call_local_llm(self.code_gen_model, system_prompt, user_prompt)
+
+        if error:
+            return {"error": error}
+
+        # Extract JSON from the markdown block
+        try:
+            if "```json" in raw_response:
+                json_str = raw_response.split("```json")[1].split("```")[0].strip()
+                return json.loads(json_str)
+            else:
+                # Attempt to parse the whole string if no markdown is found
+                return json.loads(raw_response)
+        except json.JSONDecodeError as e:
+            return {"error": f"Failed to parse LLM response as JSON: {e}", "raw_response": raw_response}
+        except Exception as e:
+            return {"error": f"An unexpected error occurred during parsing: {e}", "raw_response": raw_response}
+
 
 if __name__ == '__main__':
     print("--- Running Vetra's REAL LLM Core ---")
