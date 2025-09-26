@@ -3,6 +3,7 @@ import time
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src.config_loader import ConfigLoader
 from src.psyche_logger import PsycheLogger
 from src.toyokawa_model import ToyokawaModel
 from src.sigma_reactor import SigmaReactor
@@ -28,20 +29,23 @@ if __name__ == '__main__':
 
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     config_dir = os.path.join(project_root, 'config')
-    
-    toyokawa_config_path = os.path.join(config_dir, "toyokawa_model_profile.json")
-    sigma_reactor_config_path = os.path.join(config_dir, "sigma_reactor_profile.json")
+    config_loader = ConfigLoader(config_dir)
+
+    # Load configs for all components
+    psyche_config = config_loader.get_config('psyche_logger_profile') or {}
+    toyokawa_config = config_loader.get_config('toyokawa_model_profile') or {}
+    reactor_config = config_loader.get_config('sigma_reactor_profile') or {}
 
     # --- Phase 1: Generate Data ---
-    logger = PsycheLogger()
+    logger = PsycheLogger(config=psyche_config)
     logger.generate_log()
 
     # --- Phase 2: Analyze Data ---
-    model = ToyokawaModel(config_path=toyokawa_config_path)
+    model = ToyokawaModel(config=toyokawa_config)
     analysis_results = model.run_analysis()
 
     # --- Phase 3: React to States ---
-    reactor = SigmaReactor(config_path=sigma_reactor_config_path)
+    reactor = SigmaReactor(config=reactor_config)
     
     if analysis_results:
         print("\n" + "="*70)

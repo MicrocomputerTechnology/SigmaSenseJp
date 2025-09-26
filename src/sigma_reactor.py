@@ -12,44 +12,14 @@ class SigmaReactor:
     group psychological state C(t) calculated by the Toyokawa Model.
     """
 
-    def __init__(self, config_path=None):
+    def __init__(self, config: dict = None):
         print_header("Initializing Sigma Reactor")
-        
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        if config_path is None:
-            config_dir = os.path.join(project_root, 'config')
-            self.config_path = os.path.join(config_dir, "sigma_reactor_profile.json")
-        else:
-            self.config_path = config_path
+        if config is None:
+            config = {}
 
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                config_data = json.load(f)
-                self.reaction_map = config_data.get("reaction_map", {})
-        except FileNotFoundError:
-            print(f"Warning: SigmaReactor config file not found at {self.config_path}. Using default reaction map.")
-            self.reaction_map = {
-                "✨ Stable ✨": {
-                    "tail": "ゆっくりと左右に振っている",
-                    "ears": "穏やかに立っている",
-                    "narrative_tempo": "なめらか",
-                    "meaning": "全体の語りは調和・共鳴している状態です。"
-                },
-                "💫 Fluctuating 💫": {
-                    "tail": "小刻みに揺れている",
-                    "ears": "周囲の音を探るように傾いている",
-                    "narrative_tempo": "断続的",
-                    "meaning": "新たな問いが生まれ、場が探索的になっている状態です。"
-                },
-                "⚠️ Chaotic ⚠️": {
-                    "tail": "固く、動きを止めている",
-                    "ears": "警戒して伏せられている",
-                    "narrative_tempo": "沈黙、あるいは逸脱",
-                    "meaning": "語りの流れが分岐・遮断され、緊張が高まっている状態です。"
-                }
-            }
-        except json.JSONDecodeError:
-            print(f"Warning: Could not decode JSON from {self.config_path}. Using default reaction map.")
+        self.reaction_map = config.get("reaction_map")
+        if not self.reaction_map:
+            print("Warning: SigmaReactor reaction_map not found in config. Using default reaction map.")
             self.reaction_map = {
                 "✨ Stable ✨": {
                     "tail": "ゆっくりと左右に振っている",
