@@ -117,25 +117,34 @@ class IntentJustifier:
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
     import os
+    import tempfile
 
     print("--- IntentJustifier Self-Test --- ")
     # 1. モックと設定の準備
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    config_dir = os.path.join(project_root, 'config')
-    config_loader = ConfigLoader(config_dir)
-    justifier_config = config_loader.get_config("intent_justifier_profile")
-
-    # WorldModelのモック
-    wm = WorldModel('ij_test_wm.json')
+    # WorldModel用の一時ファイル
+    tmp_wm_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode='w')
+    tmp_wm_path = tmp_wm_file.name
+    tmp_wm_file.close()
+    wm_config = {"graph_path": tmp_wm_path}
+    wm = WorldModel(config=wm_config)
     wm.add_node('penguin', name_ja="ペンギン")
     wm.add_node('bird', name_ja="鳥")
     wm.add_edge('penguin', 'bird', 'is_a')
+    wm.save_graph()
 
-    # PersonalMemoryGraphのモック
-    pmg = PersonalMemoryGraph('ij_test_pmg.jsonl')
+    # PersonalMemoryGraph用の一時ファイル
+    tmp_pmg_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jsonl", mode='w')
+    tmp_pmg_path = tmp_pmg_file.name
+    tmp_pmg_file.close()
+    pmg_config = {"memory_path": tmp_pmg_path}
+    pmg = PersonalMemoryGraph(config=pmg_config)
+
     # 過去の経験を追加
     past_exp = {"source_image_name": "penguin.jpg", "auxiliary_analysis": {"psyche_state": {"state": "confused"}}}
     pmg.add_experience(past_exp)
+
+    # Justifier用の設定
+    justifier_config = {}
 
     # 2. Justifierの初期化
     justifier = IntentJustifier(world_model=wm, memory_graph=pmg, config=justifier_config)
@@ -167,9 +176,9 @@ if __name__ == '__main__':
     print("\nAssertions passed. Narrative contains references to both knowledge and memory.")
 
     # クリーンアップ
-    if os.path.exists('ij_test_wm.json'):
-        os.remove('ij_test_wm.json')
-    if os.path.exists('ij_test_pmg.jsonl'):
-        os.remove('ij_test_pmg.jsonl')
+    if os.path.exists(tmp_wm_path):
+        os.remove(tmp_wm_path)
+    if os.path.exists(tmp_pmg_path):
+        os.remove(tmp_pmg_path)
 
     print("\n--- Self-Test Complete ---")

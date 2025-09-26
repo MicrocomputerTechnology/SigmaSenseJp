@@ -100,18 +100,26 @@ class CausalDiscovery:
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
     import os
+    import tempfile
 
     print("--- CausalDiscovery Self-Test --- ")
     # 1. モックと設定の準備
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    config_dir = os.path.join(project_root, 'config')
-    config_loader = ConfigLoader(config_dir)
-    causal_config = config_loader.get_config("causal_discovery_profile")
+    # WorldModel用の一時ファイル
+    tmp_wm_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode='w')
+    tmp_wm_path = tmp_wm_file.name
+    tmp_wm_file.close()
+    wm_config = {"graph_path": tmp_wm_path}
+    wm = WorldModel(config=wm_config)
 
-    wm = WorldModel('cd_test_wm.json')
-    # PersonalMemoryGraph now requires a config object
-    pmg_config = {"memory_path": "cd_test_pmg.jsonl"}
+    # PersonalMemoryGraph用の一時ファイル
+    tmp_pmg_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jsonl", mode='w')
+    tmp_pmg_path = tmp_pmg_file.name
+    tmp_pmg_file.close()
+    pmg_config = {"memory_path": tmp_pmg_path}
     pmg = PersonalMemoryGraph(config=pmg_config)
+
+    # CausalDiscovery用の設定
+    causal_config = {"correlation_threshold": 0.8, "confidence_threshold": 0.9}
 
     # 2. テスト用の記憶を準備
     # 仮説（鳥→飛ぶ）を支持する経験
@@ -137,9 +145,9 @@ if __name__ == '__main__':
     print("\n[PASS] Rule 'is_bird -> can_fly' was correctly rejected.")
 
     # クリーンアップ
-    if os.path.exists('cd_test_wm.json'):
-        os.remove('cd_test_wm.json')
-    if os.path.exists('cd_test_pmg.jsonl'):
-        os.remove('cd_test_pmg.jsonl')
+    if os.path.exists(tmp_wm_path):
+        os.remove(tmp_wm_path)
+    if os.path.exists(tmp_pmg_path):
+        os.remove(tmp_pmg_path)
 
     print("\n--- Self-Test Complete ---")

@@ -76,7 +76,8 @@ class SigmaSense:
         self.psyche_modulator = PsycheModulator(log_path=os.path.join(log_dir, "psyche_log.jsonl"))
 
         # --- 第十五次実験の中核コンポーネント ---
-        self.world_model = WorldModel(os.path.join(config_dir, "world_model.json"))
+        self.world_model_config = self.config_loader.get_config('world_model_profile')
+        self.world_model = WorldModel(config=self.world_model_config)
         self.memory_graph = PersonalMemoryGraph(os.path.join(log_dir, "personal_memory.jsonl"))
         self.reasoner = SymbolicReasoner(self.world_model)
         self.causal_discovery = CausalDiscovery(self.world_model, self.memory_graph)

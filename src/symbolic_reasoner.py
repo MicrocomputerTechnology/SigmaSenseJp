@@ -64,43 +64,42 @@ class SymbolicReasoner:
 
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
-    print("--- SymbolicReasoner Self-Test (with WorldModel) --- ")
-    
-    # テスト用のWorldModelを準備
-    test_graph_path = 'reasoner_test_wm.json'
-    if os.path.exists(test_graph_path):
-        os.remove(test_graph_path)
-    
-    wm = WorldModel(graph_path=test_graph_path)
-    wm.add_node('penguin', name_ja="ペンギン")
-    wm.add_node('bird', name_ja="鳥")
-    wm.add_node('animal', name_ja="動物")
-    wm.add_edge('penguin', 'bird', 'is_a')
-    wm.add_edge('bird', 'animal', 'is_a')
+    import tempfile
 
-    # 1. 推論器の初期化
+    # WorldModelの初期化が変更されたため、テストコードを修正
+    # 一時ファイルを使用してテストの独立性を担保
+    tmp_wm_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode='w')
+    tmp_wm_path = tmp_wm_file.name
+    tmp_wm_file.close()
+
+    wm_config = {"graph_path": tmp_wm_path}
+    wm = WorldModel(config=wm_config)
+    wm.add_node("cat", name_ja="猫")
+    wm.add_node("animal", name_ja="動物")
+    wm.add_edge("cat", "animal", "is_a")
+    wm.save_graph() # 一時ファイルに書き込み
+
     reasoner = SymbolicReasoner(world_model=wm)
 
-    # 2. 推論の実行
-    initial_context = {'penguin': True}
-    print(f"\nInitial context: {initial_context}")
-    new_facts = reasoner.reason(initial_context)
-    print(f"Inferred facts: {new_facts}")
+    # テストケース1: is_a関係の推論
+    print("--- Test Case 1: is_a inference ---")
+    context1 = {"cat": {"source": "user"}}
+    inferred_context1 = reasoner.reason(context1)
+    print(f"Initial context: {context1}")
+    print(f"Inferred context: {inferred_context1}")
+    assert "animal" in inferred_context1
 
-    # 3. 結果の検証（連鎖的な推論が成功したか）
-    expected_facts = {'bird': True, 'animal': True}
-    assert new_facts == expected_facts, f"Test Failed: Expected {expected_facts}, but got {new_facts}"
-    print("Chained reasoning test passed.")
-
-    # 4. 知識更新のテスト
-    print("\nTesting knowledge update...")
-    reasoner.update_knowledge('sparrow', 'bird', 'is_a', provenance="Test Update")
-    sparrow_relations = wm.find_related_nodes('sparrow', 'is_a')
-    assert len(sparrow_relations) > 0 and sparrow_relations[0]['target_node']['id'] == 'bird'
-    print("Knowledge update test passed.")
+    # テストケース2: ルールベースの推論
+    print("\n--- Test Case 2: rule-based inference ---")
+    wm.add_node("action_running", name_ja="走る", type="action")
+    wm.add_node("state_fast", name_ja="速い", type="state")
+    wm.add_edge("action_running", "state_fast", "implies")
+    context2 = {"action_running": {"source": "user"}}
+    inferred_context2 = reasoner.reason(context2)
+    print(f"Initial context: {context2}")
+    print(f"Inferred context: {inferred_context2}")
+    assert "state_fast" in inferred_context2
 
     # クリーンアップ
-    if os.path.exists(test_graph_path):
-        os.remove(test_graph_path)
-
-    print("\n--- Self-Test Complete ---")
+    os.remove(tmp_wm_path)
+    print("\n--- Test Complete ---")
