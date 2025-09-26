@@ -5,6 +5,9 @@ from sigma_image_engines.engine_efficientnet import EfficientNetEngine
 from sigma_image_engines.engine_mobilenet import MobileNetV1Engine
 from sigma_image_engines.engine_mobilevit import MobileViTEngine
 from sigma_image_engines.engine_resnet import ResNetEngine
+from src.vetra_llm_core import VetraLLMCore
+import numpy as np
+import yaml
 
 class DimensionGenerator:
     """
@@ -25,6 +28,11 @@ class DimensionGenerator:
             ResNetEngine()
         ]
         print(f"{len(self.engines)} engines loaded.")
+
+        # Initialize VetraLLMCore and the path for discovered dimensions
+        self.vetra = VetraLLMCore()
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        self.discovered_dims_path = os.path.join(project_root, 'config', 'vector_dimensions_discovered.yaml')
 
     def generate_dimensions(self, image_path_or_obj):
         """
@@ -66,11 +74,73 @@ class DimensionGenerator:
         
         print(f"--- Total Dimensions Generated: {len(combined_features)} ---")
         
+        # --- Autonomous Discovery of New Dimensions ---
+        if self._is_unknown(combined_features):
+            print("\n🔬 Unknown characteristics detected. Attempting to propose a new dimension...")
+            self._propose_and_save_new_dimension(combined_features)
+
         return {
             "features": combined_features,
             "provenance": provenance,
             "engine_info": engine_info
         }
+
+    def _is_unknown(self, features: dict) -> bool:
+        """
+        Determines if a feature set is \"unknown\".
+        Simple heuristic: if the average absolute value of all features is low.
+        """
+        if not features:
+            return False
+        
+        values = np.array(list(features.values()))
+        # If all dimensions show low values
+        if np.mean(np.abs(values)) < 0.05: # Threshold may need adjustment
+            print(f"  - Unknownness Assessment: All features have low activity (Avg. Abs. Value: {np.mean(np.abs(values)):.4f})")
+            return True
+            
+        return False
+
+    def _propose_and_save_new_dimension(self, features: dict):
+        """
+        Asks Vetra to propose a new dimension and saves it to a file.
+        """
+        print("  - Asking Vetra to propose a new dimension...")
+        new_dim = self.vetra.propose_new_dimension(features)
+
+        if not new_dim or "error" in new_dim or "id" not in new_dim:
+            print(f"  - Failure: Could not get a valid new dimension proposal. ({new_dim.get('error', 'Invalid format')})")
+            return
+
+        print(f"  - Proposed new dimension: {new_dim.get('name_ja', 'N/A')} (id: {new_dim['id']})")
+
+        # Load existing discovered dimensions
+        if os.path.exists(self.discovered_dims_path):
+            try:
+                with open(self.discovered_dims_path, 'r', encoding='utf-8') as f:
+                    discovered_dims = yaml.safe_load(f) or []
+            except (IOError, yaml.YAMLError) as e:
+                print(f"  - Warning: Could not load existing discovered dimensions file. Starting fresh. Error: {e}")
+                discovered_dims = []
+        else:
+            discovered_dims = []
+            
+        # Check for duplicates
+        if any(d.get('id') == new_dim['id'] for d in discovered_dims if isinstance(d, dict)):
+            print(f"  - Skip: Dimension '{new_dim['id']}' already exists.")
+            return
+
+        # Append the new dimension
+        discovered_dims.append(new_dim)
+
+        # Write back to the file
+        try:
+            with open(self.discovered_dims_path, 'w', encoding='utf-8') as f:
+                yaml.dump(discovered_dims, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+            print(f"  - Success: Saved new dimension to {self.discovered_dims_path}")
+        except Exception as e:
+            print(f"  - Failure: Error saving the new dimension: {e}")
+
 
 if __name__ == '__main__':
     import cv2
