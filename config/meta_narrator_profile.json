@@ -1,7 +1,11 @@
 {
-  "role": "meta_narrator",
-  "description": "自己の成長を語る機能。過去の経験を俯瞰し、「私はどのように学習し、成長してきたか」というメタ的な語りを生成する。",
-  "narrative_style": "reflective",
-  "growth_keywords": ["confused", "calm"],
-  "min_memories_for_growth_story": 2
+    "learning_state_transition": {
+        "from": "confused",
+        "to": "calm"
+    },
+    "narrative_templates": {
+        "initial_summary": "これまでに、私は {num_experiences} 回の経験をしました。その中から、特に私の学習と成長が見られた経験について語ります。",
+        "no_learning": "明確な学習の軌跡は見つかりませんでした。すべての経験が、さらなる成長の糧となるでしょう。",
+        "learning_story": "- **「{image_name}」について**：最初の経験では、私の心理状態は「{first_psyche}」でした。しかし、{num_experiences}回の経験を経て、最終的には「{last_psyche}」へと変化しました。これは、私がこの対象について理解を深めた証です。"
+    }
 }

@@ -1,6 +1,7 @@
 # === 第十五次実験 実装ファイル ===
 
 from .personal_memory_graph import PersonalMemoryGraph
+from .config_loader import ConfigLoader
 from collections import defaultdict
 
 import json
@@ -11,28 +12,17 @@ class MetaNarrator:
     PersonalMemoryGraphに記録された過去の経験を俯瞰し、
     「私はどのように学習し、成長してきたか」というメタ的な語りを生成する。
     """
-    def __init__(self, config_path=None):
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        config_dir = os.path.join(project_root, 'config')
+    def __init__(self, config: dict = None):
+        if config is None:
+            config = {}
         
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "meta_narrator_profile.json")
-        else:
-            self.config_path = config_path
-
-        profile_config = {}
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: MetaNarrator config file not found or invalid at {self.config_path}. Using default parameters.")
-        
-        self.learning_state_transition = profile_config.get("learning_state_transition", {"from": "confused", "to": "calm"})
-        self.narrative_templates = profile_config.get("narrative_templates", {
+        self.learning_state_transition = config.get("learning_state_transition", {"from": "confused", "to": "calm"})
+        self.narrative_templates = config.get("narrative_templates", {
             "initial_summary": "これまでに、私は {num_experiences} 回の経験をしました。その中から、特に私の学習と成長が見られた経験について語ります。",
             "no_learning": "明確な学習の軌跡は見つかりませんでした。すべての経験が、さらなる成長の糧となるでしょう。",
             "learning_story": "- **「{image_name}」について**：最初の経験では、私の心理状態は「{first_psyche}」でした。しかし、{num_experiences}回の経験を経て、最終的には「{last_psyche}」へと変化しました。これは、私がこの対象について理解を深めた証です。"
         })
+
     def narrate_growth(self, memory_graph: PersonalMemoryGraph):
         """
         記憶全体を分析し、成長の物語を生成する。
@@ -106,7 +96,12 @@ if __name__ == '__main__':
     if os.path.exists(test_memory_path):
         os.remove(test_memory_path)
 
-    # 1. 記憶モデルの準備
+    # 1. 記憶モデルと設定の準備
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    config_dir = os.path.join(project_root, 'config')
+    config_loader = ConfigLoader(config_dir)
+    narrator_config = config_loader.get_config("meta_narrator_profile")
+
     pmg = PersonalMemoryGraph(memory_path=test_memory_path)
 
     # 2. 学習パターンを示す一連の経験を追加
@@ -138,7 +133,7 @@ if __name__ == '__main__':
     pmg.add_experience(exp3)
 
     # 3. ナレーターの初期化と語りの生成
-    narrator = MetaNarrator()
+    narrator = MetaNarrator(config=narrator_config)
     print("\n--- Generating Growth Narrative ---")
     growth_narrative = narrator.narrate_growth(pmg)
     print(growth_narrative)
