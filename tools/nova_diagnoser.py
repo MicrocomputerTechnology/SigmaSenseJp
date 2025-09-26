@@ -92,9 +92,9 @@ def analyze_self_correlation_trends(memory_graph: PersonalMemoryGraph, window_si
             if std_sc > 0:
                 z_score = abs((score - mean_sc) / std_sc)
                 if z_score >= deviation_threshold:
-                    anomalies.append(f"  ❗ 経験 {i+1} ({mem.get("experience", {}).get("source_image_name", "N/A")}): 自己相関スコアが異常 ({score:.2f}, 平均: {mean_sc:.2f}, 標準偏差: {std_sc:.2f})")
+                    anomalies.append(f"  ❗ 経験 {i+1} ({mem.get("experience", {}).get('source_image_name', "N/A')}): 自己相関スコアが異常 ({score:.2f}, 平均: {mean_sc:.2f}, 標準偏差: {std_sc:.2f})")
             elif score != mean_sc: # std_sc == 0だがスコアが異なる場合
-                 anomalies.append(f"  ❗ 経験 {i+1} ({mem.get("experience", {}).get("source_image_name", "N/A")}): 自己相関スコアが異常 ({score:.2f}, 過去は常に {mean_sc:.2f})")
+                 anomalies.append(f"  ❗ 経験 {i+1} ({mem.get("experience", {}).get('source_image_name', "N/A')}): 自己相関スコアが異常 ({score:.2f}, 過去は常に {mean_sc:.2f})")
 
     if anomalies:
         print("--- 自己相関スコアの異常トレンドが検出されました ---")
