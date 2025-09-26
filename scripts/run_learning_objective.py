@@ -149,7 +149,13 @@ if vetra_config:
     )
 else:
     # コンフィグファイルが見つからない場合はデフォルト値で初期化
-    vetra = VetraLLMCore()
+    print("Warning: vetra_llm_core_profile.json not found. Initializing VetraLLMCore with default values.")
+    default_config_path = os.path.join(config_dir, 'vector_dimensions_mobile.yaml')
+    vetra = VetraLLMCore(
+        config_path=default_config_path,
+        narrative_model="lucas2024/gemma-2-2b-jpn-it:q8_0",
+        code_gen_model="codegemma:latest"
+    )
 
 def process_learning_objective(objective: dict):
     print(f"\n--- 学習目標処理開始: {objective['title']} ---")
