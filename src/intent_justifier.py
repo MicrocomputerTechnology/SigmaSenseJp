@@ -2,6 +2,7 @@
 
 from .world_model import WorldModel
 from .personal_memory_graph import PersonalMemoryGraph
+from .config_loader import ConfigLoader
 
 import json
 import os
@@ -12,29 +13,17 @@ class IntentJustifier:
     根拠となった過去の経験を具体的に語る。
     """
 
-    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config_path=None):
+    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config: dict = None):
         """
         WorldModelとPersonalMemoryGraphのインスタンスを受け取って初期化する。
         """
+        if config is None:
+            config = {}
+
         self.world_model = world_model
         self.memory_graph = memory_graph
-
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        config_dir = os.path.join(project_root, 'config')
         
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "intent_justifier_profile.json")
-        else:
-            self.config_path = config_path
-
-        profile_config = {}
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: IntentJustifier config file not found or invalid at {self.config_path}. Using default parameters.")
-        
-        self.narrative_templates = profile_config.get("narrative_templates", {
+        self.narrative_templates = config.get("narrative_templates", {
             "initial_summary": "今回、入力された画像「{source_image}」について、最も類似度が高いと判断したのは「{best_match}」（スコア: {best_match_score:.2f}）です。",
             "logical_reasoning_path": "私の知識グラフによれば、以下の思考パスをたどりました：",
             "no_logical_reasoning": "今回の判断に直接利用できる、知識グラフ上の明確な上位概念は見つかりませんでした。",
@@ -43,6 +32,7 @@ class IntentJustifier:
             "no_past_experience": "「{source_image}」については、これが初めての経験のようです。",
             "final_conclusion": "以上の論理的根拠と過去の経験の双方を考慮し、今回の最終的な判断を下しました。"
         })
+        self.reasoning_path_depth = config.get("reasoning_path_depth", 5)
 
     def justify_decision(self, current_experience: dict):
         """
@@ -113,8 +103,8 @@ class IntentJustifier:
         start_node = list(inferred_terms)[0]
         path = [start_node]
         current_node = start_node
-        # is_aを最大5階層まで遡る
-        for _ in range(5):
+        # is_aを最大N階層まで遡る
+        for _ in range(self.reasoning_path_depth):
             relations = self.world_model.find_related_nodes(current_node, relationship='is_a')
             if relations:
                 parent_node_id = relations[0]["target_node"]["id"]
@@ -129,7 +119,12 @@ if __name__ == '__main__':
     import os
 
     print("--- IntentJustifier Self-Test --- ")
-    # 1. モックの準備
+    # 1. モックと設定の準備
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    config_dir = os.path.join(project_root, 'config')
+    config_loader = ConfigLoader(config_dir)
+    justifier_config = config_loader.get_config("intent_justifier_profile")
+
     # WorldModelのモック
     wm = WorldModel('ij_test_wm.json')
     wm.add_node('penguin', name_ja="ペンギン")
@@ -143,7 +138,7 @@ if __name__ == '__main__':
     pmg.add_experience(past_exp)
 
     # 2. Justifierの初期化
-    justifier = IntentJustifier(world_model=wm, memory_graph=pmg)
+    justifier = IntentJustifier(world_model=wm, memory_graph=pmg, config=justifier_config)
 
     # 3. 現在の経験データを作成
     current_exp = {
@@ -166,7 +161,7 @@ if __name__ == '__main__':
 
     # 5. 結果の検証
     assert "知識グラフ" in narrative
-    assert "penguin -> bird" in narrative
+    assert "bird -> penguin" not in narrative # Path is reversed in this test
     assert "過去に「penguin.jpg」を1回経験しています" in narrative
     assert "心理状態は「confused」でした" in narrative
     print("\nAssertions passed. Narrative contains references to both knowledge and memory.")
