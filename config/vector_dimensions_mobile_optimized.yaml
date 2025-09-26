@@ -1,15 +1,75 @@
-- id: symmetry_score
-  description: Measures symmetry based on Hu Moments.
-  method: '...'
-  weight: 0.8
+- id: group_size
+  description: Number of objects in the group.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: brightness
+  description: Average brightness of the image.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: shadow_strength
+  description: Strength of shadows in the image.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: color_concentration
+  description: Concentration of color in a specific area.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: spatial_distance
+  description: Spatial distance from the center.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: inclusion_rate
+  description: Rate of inclusion of one object within another.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: context_score
+  description: Score based on contextual placement.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: aspect_ratio
+  description: Aspect ratio of the main object.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: convexity
+  description: Convexity of the shape.
+  method: placeholder
+  weight: 1.0
   parameters: []
 - id: edge_density
-  description: Calculates the density of edges.
-  method: '...'
-  weight: 0.6
+  description: Density of edges in the image.
+  method: placeholder
+  weight: 1.0
   parameters: []
-- id: gaze_curvature
-  description: Approximates the curvature of a dominant line.
-  method: '...'
-  weight: 0.5
+- id: vertex_count
+  description: Number of vertices in the main shape.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: circularity
+  description: How close the shape is to a perfect circle.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: dominant_color_r
+  description: R channel of the dominant color.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: dominant_color_g
+  description: G channel of the dominant color.
+  method: placeholder
+  weight: 1.0
+  parameters: []
+- id: dominant_color_b
+  description: B channel of the dominant color.
+  method: placeholder
+  weight: 1.0
   parameters: []
