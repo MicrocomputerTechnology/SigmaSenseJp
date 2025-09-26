@@ -7,32 +7,23 @@ class CorrectionApplicator:
     functor_consistency_failures.jsonl に基づいて、ベクトルまたはデータベース全体に
     一貫性補正を適用する責務を持つ。
     """
-    def __init__(self, failure_log_path=None, config_path=None):
+    def __init__(self, config: dict = None, failure_log_path: str = None):
+        if config is None:
+            config = {}
+
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         log_dir = os.path.join(project_root, "sigma_logs")
 
-        if failure_log_path is None:
-            self.failure_log_path = os.path.join(log_dir, "functor_consistency_failures.jsonl")
-        else:
-            self.failure_log_path = failure_log_path
+        self.failure_log_path = failure_log_path or os.path.join(log_dir, "functor_consistency_failures.jsonl")
 
-        config_dir = os.path.join(project_root, 'config')
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "correction_applicator_profile.json")
-        else:
-            self.config_path = config_path
-
-        profile_config = {}
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: CorrectionApplicator config file not found or invalid at {self.config_path}. Using default parameters.")
+        # Load strategy and parameters from config
+        self.strategy = config.get("strategy", "multiplicative")
+        self.alpha = config.get("alpha", 0.5)
         
-        self.alpha = profile_config.get("alpha", 0.5)
         self.failure_logs = self._load_failure_logs(self.failure_log_path)
         if self.failure_logs:
             print(f"🌿 CorrectionApplicatorが {len(self.failure_logs)}件の補正ルールで初期化されました。")
+            print(f"   - 戦略: {self.strategy}, Alpha: {self.alpha}")
 
     def _load_failure_logs(self, path):
         if not os.path.exists(path):
@@ -66,8 +57,15 @@ class CorrectionApplicator:
                     diff = vector_diff[i]
                     attenuation = diff * self.alpha
                     original_value = corrected_vector[i]
-                    corrected_value = max(0.0, original_value * (1 - attenuation))
-                    corrected_vector[i] = corrected_value
+
+                    if self.strategy == 'multiplicative':
+                        corrected_value = original_value * (1 - attenuation)
+                    elif self.strategy == 'subtractive':
+                        corrected_value = original_value - attenuation
+                    else: # Default to multiplicative if strategy is unknown
+                        corrected_value = original_value * (1 - attenuation)
+
+                    corrected_vector[i] = max(0.0, corrected_value)
         
         return corrected_vector
 
