@@ -49,8 +49,8 @@ class TestSheafAxiomsSimplified(unittest.TestCase):
 
         # 3. Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader()
-        database, ids, vectors = load_sigma_database(cls.db_path)
-        cls.sigma = SigmaSense(database, ids, vectors, dimension_loader=cls.loader)
+        database, ids, vectors, _ = load_sigma_database(cls.db_path)
+        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader)
         cls.ids = ids
         cls.vectors = vectors
         print("SigmaSense instance created with test database.")

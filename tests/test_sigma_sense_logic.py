@@ -28,12 +28,14 @@ class TestSigmaSenseLogicIntegration(unittest.TestCase):
         self.dummy_db = {}
         self.dummy_ids = []
         self.dummy_vectors = np.array([])
+        self.dummy_layers = []
 
         # 4. Instantiate SigmaSense, injecting the test loader and mock generator
         self.sigma_sense = SigmaSense(
             self.dummy_db, 
             self.dummy_ids, 
             self.dummy_vectors,
+            self.dummy_layers,
             generator=self.mock_generator,
             dimension_loader=self.test_dim_loader
         )
