@@ -4,7 +4,7 @@ import numpy as np
 import os
 import json
 from .dimension_loader import DimensionLoader
-from .information_metrics import compute_kl_similarity, compute_wasserstein_similarity
+from .information_metrics import compute_kl_similarity, compute_wasserstein_similarity, compute_self_correlation_score
 
 # --- 旧来のコンポーネント ---
 from .dimension_generator_local import DimensionGenerator
@@ -203,6 +203,9 @@ class SigmaSense:
 
         best_match_id, score, best_match_vector = self._find_best_match(meaning_vector, metric='cosine', num_bins=10)
 
+        # 意味ベクトルの自己相関場スコアを計算
+        self_correlation = compute_self_correlation_score(meaning_vector)
+
         # =================================================================
         # F2: 経験の記録 (Memory Consolidation)
         # =================================================================
@@ -242,7 +245,10 @@ class SigmaSense:
                 "score": float(score) if score is not None else 0.0,
             },
             "fusion_data": {"logical_terms": logical_terms_with_types},
-            "auxiliary_analysis": {"psyche_state": self.psyche_modulator.get_current_state()}
+            "auxiliary_analysis": {
+                "psyche_state": self.psyche_modulator.get_current_state(),
+                "self_correlation_score": self_correlation
+            }
         }
         
         memory_entry = self.memory_graph.add_experience(current_experience)

@@ -151,3 +151,36 @@ def compute_wasserstein_similarity(vec_a, vec_b, num_bins=10):
     
     # 距離を類似度に変換
     return 1.0 / (1.0 + dist)
+
+def compute_self_correlation_score(vector):
+    """
+    ベクトルの前半と後半のピアソン相関係数を計算する。
+    これにより、ベクトルの内部的な構造的連続性・安定性を評価する。
+    """
+    vec = np.asarray(vector, dtype=float)
+    n = len(vec)
+    if n < 2:
+        return 0.0  # 2要素未満のベクトルでは相関は計算できない
+
+    # ベクトルを前半と後半に分割
+    mid = n // 2
+    v1 = vec[:mid]
+    v2 = vec[n-mid:] # 後半を末尾から取得することで、奇数長の場合に中央要素を自然に無視
+
+    # 平均を計算
+    mean1, mean2 = np.mean(v1), np.mean(v2)
+
+    # 標準偏差を計算
+    std1, std2 = np.std(v1), np.std(v2)
+
+    # 標準偏差がゼロの場合、相関は計算できない（またはゼロとする）
+    if std1 == 0 or std2 == 0:
+        return 0.0
+
+    # 共分散を計算
+    covariance = np.mean((v1 - mean1) * (v2 - mean2))
+
+    # ピアソン相関係数を計算
+    correlation = covariance / (std1 * std2)
+    
+    return round(float(correlation), 4)

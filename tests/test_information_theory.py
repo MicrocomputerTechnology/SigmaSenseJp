@@ -7,7 +7,7 @@ import collections
 # Add the src directory to the Python path to import the module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance, compute_mutual_information, to_probability_distribution
+from information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance, compute_mutual_information, to_probability_distribution, compute_self_correlation_score
 
 class TestInformationTheory(unittest.TestCase):
 
@@ -72,6 +72,75 @@ class TestInformationTheory(unittest.TestCase):
         # Assert
         self.assertEqual(entropy_empty, 0.0, "An empty vector should have zero entropy.")
         self.assertEqual(entropy_zero, 0.0, "A zero vector should have zero entropy.")
+
+class TestSelfCorrelationScore(unittest.TestCase):
+
+    def test_perfectly_correlated_vector(self):
+        """
+        Tests a vector where the second half is identical to the first half.
+        """
+        # Arrange
+        vec = [1, 2, 3, 1, 2, 3]
+        # Act
+        score = compute_self_correlation_score(vec)
+        # Assert
+        self.assertAlmostEqual(score, 1.0, places=4)
+
+    def test_perfectly_anti_correlated_vector(self):
+        """
+        Tests a vector where the second half is the inverse of the first half.
+        """
+        # Arrange
+        vec = [1, 2, 3, -1, -2, -3]
+        # Act
+        score = compute_self_correlation_score(vec)
+        # Assert
+        self.assertAlmostEqual(score, -1.0, places=4)
+
+    def test_uncorrelated_vector(self):
+        """
+        Tests a vector with no clear correlation between halves.
+        """
+        # Arrange
+        vec = [1, 5, 2, 8, 3, 7] # No obvious pattern
+        # Act
+        score = compute_self_correlation_score(vec)
+        # Assert
+        # The exact value is not critical, but it should not be close to 1 or -1.
+        self.assertLess(abs(score), 0.9)
+
+    def test_odd_length_vector(self):
+        """
+        Tests that an odd-length vector is handled correctly (middle element ignored).
+        """
+        # Arrange
+        vec = [1, 2, 3, 99, 1, 2, 3] # Middle element 99 should be ignored
+        # Act
+        score = compute_self_correlation_score(vec)
+        # Assert
+        self.assertAlmostEqual(score, 1.0, places=4)
+
+    def test_zero_variance_vector(self):
+        """
+        Tests a vector where one half has zero variance.
+        """
+        # Arrange
+        vec = [1, 2, 3, 5, 5, 5]
+        # Act
+        score = compute_self_correlation_score(vec)
+        # Assert
+        self.assertEqual(score, 0.0)
+
+    def test_short_vector(self):
+        """
+        Tests that a vector with less than 2 elements returns 0.
+        """
+        # Arrange
+        vec = [1]
+        # Act
+        score = compute_self_correlation_score(vec)
+        # Assert
+        self.assertEqual(score, 0.0)
 
 class TestKLDivergence(unittest.TestCase):
 
