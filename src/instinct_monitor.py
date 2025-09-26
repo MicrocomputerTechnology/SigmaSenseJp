@@ -1,7 +1,7 @@
 # instinct_monitor.py - 犬のシグマセンスの誓い
 
 import numpy as np
-from information_metrics import compute_self_correlation_score
+from .information_metrics import compute_self_correlation_score
 
 class InstinctMonitor:
     """
