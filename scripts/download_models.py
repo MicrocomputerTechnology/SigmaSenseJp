@@ -24,7 +24,7 @@ else:
     print(f"EfficientNet-Lite0 already exists at {efficientnet_path}. Skipping download.")
 
 # MobileNet V1
-mobilenet_url = "https://tfhub.dev/tensorflow/lite-model/mobilenet_v1_1.0_224/1/default/1?lite-format=tflite"
+mobilenet_url = "https://storage.googleapis.com/download.tensorflow.org/models/tflite/mobilenet_v1_1.0_224.tflite"
 mobilenet_path = os.path.join(model_dir, "mobilenet_v1.tflite")
 if not os.path.exists(mobilenet_path):
     print(f"Downloading MobileNet V1 to {mobilenet_path}...")
