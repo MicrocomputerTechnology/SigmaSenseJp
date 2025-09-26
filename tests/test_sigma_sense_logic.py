@@ -113,15 +113,18 @@ class TestSigmaSenseLogicIntegration(unittest.TestCase):
 
         dummy_ids = ["vec_a", "vec_b", "vec_c"]
         dummy_vectors = np.array([db_vec_a, db_vec_b, db_vec_c], dtype=np.float32)
-        dummy_weights = np.array([1.0, 1.0, 1.0], dtype=np.float32) # All dimensions equally important
+        dummy_layers = ["semantic", "semantic", "semantic"]  # Add dummy layers
+        dummy_weights = np.array([1.0, 1.0, 1.0], dtype=np.float32)
 
         # Temporarily override sigma_sense's database for this test
         original_vectors = self.sigma_sense.vectors
         original_ids = self.sigma_sense.ids
+        original_layers = self.sigma_sense.layers
         original_weights = self.sigma_sense.weights
 
         self.sigma_sense.vectors = dummy_vectors
         self.sigma_sense.ids = dummy_ids
+        self.sigma_sense.layers = dummy_layers
         self.sigma_sense.weights = dummy_weights
 
         # 2. Test with 'cosine' metric
@@ -147,6 +150,7 @@ class TestSigmaSenseLogicIntegration(unittest.TestCase):
         # Restore original sigma_sense database
         self.sigma_sense.vectors = original_vectors
         self.sigma_sense.ids = original_ids
+        self.sigma_sense.layers = original_layers
         self.sigma_sense.weights = original_weights
         print("--- Test finished successfully ---")
 
