@@ -121,9 +121,9 @@ class PersonalMemoryGraph:
 if __name__ == '__main__':
     print("---" + " PersonalMemoryGraph Self-Test " + "---")
     
-    # CI環境でも安定して動作するよう、テストファイルへの絶対パスを生成
-    script_dir = os.path.dirname(__file__)
-    test_memory_path = os.path.abspath(os.path.join(script_dir, 'pmg_test.jsonl'))
+    # CI環境で書き込み権限があるプロジェクトルートにテストファイルを作成
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    test_memory_path = os.path.join(project_root, 'pmg_test.jsonl')
     test_config = {"memory_path": test_memory_path}
 
     if os.path.exists(test_memory_path):
