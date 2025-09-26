@@ -25,6 +25,7 @@ def convert_numpy_types(obj):
     return obj
 
 import argparse
+import time
 
 # --- 定数定義 ---
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -78,6 +79,17 @@ def main():
         default=os.path.join(project_root, "config", "sigma_product_database_custom_ai_generated.json"),
         help='Path to the Sigma product database JSON file.'
     )
+    parser.add_argument(
+        '--continuous', 
+        action='store_true', 
+        help='Run in continuous mode, monitoring img_dir for new images.'
+    )
+    parser.add_argument(
+        '--interval', 
+        type=int, 
+        default=5, 
+        help='Interval in seconds to check for new images in continuous mode.'
+    )
     args = parser.parse_args()
 
     print("--- Starting SigmaSense 16th Gen. Processing ---")
@@ -98,27 +110,53 @@ def main():
     # ロガーの初期化
     logger = ResponseLogger()
 
-    # 対象画像群に対して思考サイクルを実行
-    image_files = sorted([f for f in os.listdir(args.img_dir) if is_image_file(f)])
-    if not image_files:
-        print(f"No images found in '{args.img_dir}'. Halting.")
-        return
+    processed_files = set() # 処理済みのファイルを追跡
 
-    for fname in image_files:
-        img_path = os.path.join(args.img_dir, fname)
+    def process_images_in_directory():
+        nonlocal processed_files
+        current_image_files = sorted([f for f in os.listdir(args.img_dir) if is_image_file(f)])
+        new_files_found = False
 
-        # 新しい思考サイクルを実行
-        result = sigma.process_experience(img_path)
+        for fname in current_image_files:
+            if fname not in processed_files:
+                img_path = os.path.join(args.img_dir, fname)
+                print(f"\n--- Processing new image: {fname} ---")
+                
+                # 新しい思考サイクルを実行
+                result = sigma.process_experience(img_path)
 
-        # 結果をコンソールに表示
-        display_unified_result(result)
+                if result:
+                    # 結果をコンソールに表示
+                    display_unified_result(result)
 
-        # 完全な結果をログに記録
-        cleaned_result = convert_numpy_types(result)
-        logger.log(cleaned_result)
+                    # 完全な結果をログに記録
+                    cleaned_result = convert_numpy_types(result)
+                    logger.log(cleaned_result)
+                
+                processed_files.add(fname)
+                new_files_found = True
+        return new_files_found
 
-    print(f"\n✅ All {len(image_files)} images processed.")
-    print(f"Log saved to {logger.log_path}")
+    # 初回実行
+    print("--- Initial image processing ---")
+    process_images_in_directory()
+    print(f"✅ Initial processing complete. {len(processed_files)} images processed.")
+
+    if args.continuous:
+        print(f"--- Continuous mode enabled. Monitoring '{args.img_dir}' for new images every {args.interval} seconds ---")
+        try:
+            while True:
+                time.sleep(args.interval)
+                print(f"--- Checking for new images in '{args.img_dir}' ---")
+                new_files_processed = process_images_in_directory()
+                if not new_files_processed:
+                    print("No new images found.")
+        except KeyboardInterrupt:
+            print("\n--- Continuous mode interrupted by user. Shutting down. ---")
+    else:
+        print("--- Batch processing complete. ---")
+
+    print(f"\n✅ All processed images logged to {logger.log_path}")
     print(f"Knowledge graph saved to {sigma.world_model.graph_path}")
     print(f"Memory log saved to {sigma.memory_graph.memory_path}")
 
