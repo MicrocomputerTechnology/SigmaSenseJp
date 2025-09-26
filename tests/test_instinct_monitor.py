@@ -36,8 +36,8 @@ class TestInstinctMonitor(unittest.TestCase):
         narratives = {"intent_narrative": "a" * 102}
         result = self.monitor.monitor(narratives, self.memory_graph)
         
-        self.assertIn("Passed", result["log"])
-        self.assertIn("normal", result["log"])
+        self.assertIn("Dog's Oath (Length): Narrative length is normal.", result["log"])
+        self.assertIn("Dog's Oath (Self-Correlation): No past self-correlation scores found.", result["log"])
         print(f"Log: {result['log']}")
 
     def test_anomalous_long_narrative(self):
@@ -48,8 +48,7 @@ class TestInstinctMonitor(unittest.TestCase):
         narratives = {"intent_narrative": "a" * 130}
         result = self.monitor.monitor(narratives, self.memory_graph)
 
-        self.assertIn("Warning", result["log"])
-        self.assertIn("Unusual narrative length", result["log"])
+        self.assertIn("Dog's Oath (Length): Warning. Unusual narrative length", result["log"])
         print(f"Log: {result['log']}")
 
     def test_anomalous_short_narrative(self):
@@ -58,8 +57,7 @@ class TestInstinctMonitor(unittest.TestCase):
         narratives = {"intent_narrative": "a" * 70}
         result = self.monitor.monitor(narratives, self.memory_graph)
 
-        self.assertIn("Warning", result["log"])
-        self.assertIn("Unusual narrative length", result["log"])
+        self.assertIn("Dog's Oath (Length): Warning. Unusual narrative length", result["log"])
         print(f"Log: {result['log']}")
 
     def test_not_enough_data(self):
@@ -71,6 +69,40 @@ class TestInstinctMonitor(unittest.TestCase):
 
         self.assertIn("Not enough historical data", result["log"])
         print(f"Log: {result['log']}")
+
+    def test_self_correlation_anomaly_detection(self):
+        """
+        自己相関スコアの異常が正しく検出されるテスト。
+        """
+        print("\n--- Testing self-correlation anomaly detection ---")
+
+        # 過去の自己相関スコアが安定しているデータを作成
+        past_memories_with_sc = [
+            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.8}}},
+            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.85}}},
+            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.75}}},
+            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.82}}},
+            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.78}}},
+        ]
+        sc_memory_graph = MockMemoryGraph(past_memories_with_sc)
+
+        # 正常な自己相関スコアの語り
+        normal_sc_narratives = {
+            "intent_narrative": "a" * 100,
+            "auxiliary_analysis": {"self_correlation_score": 0.81}
+        }
+        result_normal = self.monitor.monitor(normal_sc_narratives, sc_memory_graph)
+        self.assertIn("Dog's Oath (Self-Correlation): Self-correlation score is normal.", result_normal["log"])
+        print(f"Normal SC Log: {result_normal['log']}")
+
+        # 異常な自己相関スコアの語り (大きく逸脱)
+        anomalous_sc_narratives = {
+            "intent_narrative": "a" * 100,
+            "auxiliary_analysis": {"self_correlation_score": 0.1}
+        }
+        result_anomaly = self.monitor.monitor(anomalous_sc_narratives, sc_memory_graph)
+        self.assertIn("Dog's Oath (Self-Correlation): Warning. Unusual self-correlation score detected", result_anomaly["log"])
+        print(f"Anomaly SC Log: {result_anomaly['log']}")
 
 if __name__ == '__main__':
     unittest.main()

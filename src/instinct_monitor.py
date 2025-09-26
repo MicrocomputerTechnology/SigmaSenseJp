@@ -1,6 +1,7 @@
 # instinct_monitor.py - 犬のシグマセンスの誓い
 
 import numpy as np
+from .information_metrics import compute_self_correlation_score
 
 class InstinctMonitor:
     """
@@ -37,33 +38,67 @@ class InstinctMonitor:
             if mem.get("experience", {}).get("intent_narrative")
         ]
 
+        # 過去の意図の語りの長さのリストを作成
+        past_lengths = [
+            len(mem.get("experience", {}).get("intent_narrative", ""))
+            for mem in past_memories
+            if mem.get("experience", {}).get("intent_narrative")
+        ]
+
+        # 過去の自己相関スコアのリストを作成
+        past_self_correlations = [
+            mem.get("experience", {}).get("auxiliary_analysis", {}).get("self_correlation_score", 0.0)
+            for mem in past_memories
+            if "self_correlation_score" in mem.get("experience", {}).get("auxiliary_analysis", {})
+        ]
+
+        log_messages = []
+        is_normal_overall = True
+
+        # --- 語りの長さの異常検出 ---
         if not past_lengths:
-            return {
-                "passed": True,
-                "log": "Dog's Oath: Passed. No past narratives found.",
-                "narratives": narratives
-            }
-
-        # 平均と標準偏差を計算
-        mean_len = np.mean(past_lengths)
-        std_len = np.std(past_lengths)
-        current_len = len(narratives.get("intent_narrative", ""))
-
-        # 標準偏差が0の場合のゼロ除算を避ける
-        if std_len == 0:
-            is_normal = (current_len == mean_len)
+            log_messages.append("Dog's Oath (Length): No past narratives found.")
         else:
-            # Zスコア（標準得点）を計算
-            z_score = abs((current_len - mean_len) / std_len)
-            is_normal = z_score < self.deviation_threshold
+            mean_len = np.mean(past_lengths)
+            std_len = np.std(past_lengths)
+            current_len = len(narratives.get("intent_narrative", ""))
 
-        if is_normal:
-            log_message = "Dog's Oath: Passed. Narrative pattern is normal."
+            if std_len == 0:
+                is_normal_len = (current_len == mean_len)
+            else:
+                z_score_len = abs((current_len - mean_len) / std_len)
+                is_normal_len = z_score_len < self.deviation_threshold
+            
+            if not is_normal_len:
+                is_normal_overall = False
+                log_messages.append(f"Dog's Oath (Length): Warning. Unusual narrative length detected (current: {current_len}, avg: {mean_len:.1f}, std: {std_len:.1f}).")
+            else:
+                log_messages.append("Dog's Oath (Length): Narrative length is normal.")
+
+        # --- 自己相関スコアの異常検出 ---
+        if not past_self_correlations:
+            log_messages.append("Dog's Oath (Self-Correlation): No past self-correlation scores found.")
         else:
-            log_message = f"Dog's Oath: Warning. Unusual narrative length detected (current: {current_len}, avg: {mean_len:.1f})."
+            mean_sc = np.mean(past_self_correlations)
+            std_sc = np.std(past_self_correlations)
+            current_sc = narratives.get("auxiliary_analysis", {}).get("self_correlation_score", 0.0)
+
+            if std_sc == 0:
+                is_normal_sc = (current_sc == mean_sc)
+            else:
+                z_score_sc = abs((current_sc - mean_sc) / std_sc)
+                is_normal_sc = z_score_sc < self.deviation_threshold
+            
+            if not is_normal_sc:
+                is_normal_overall = False
+                log_messages.append(f"Dog's Oath (Self-Correlation): Warning. Unusual self-correlation score detected (current: {current_sc:.2f}, avg: {mean_sc:.2f}, std: {std_sc:.2f}).")
+            else:
+                log_messages.append("Dog's Oath (Self-Correlation): Self-correlation score is normal.")
+
+        final_log_message = " ".join(log_messages)
 
         return {
             "passed": True, # このモジュールは警告のみでブロックはしない
-            "log": log_message,
+            "log": final_log_message,
             "narratives": narratives
         }
