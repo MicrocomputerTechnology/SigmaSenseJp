@@ -4,6 +4,7 @@ import json
 import os
 
 from .personal_memory_graph import PersonalMemoryGraph
+from .config_loader import ConfigLoader
 from collections import defaultdict
 
 class TemporalReasoning:
@@ -11,40 +12,23 @@ class TemporalReasoning:
     時系列データ（経験のログ）から、時間的な順序性やパターンを学習する。
     """
 
-    def __init__(self, memory_graph: PersonalMemoryGraph, config_path=None):
+    def __init__(self, memory_graph: PersonalMemoryGraph, config: dict = None):
         """
         PersonalMemoryGraphのインスタンスを受け取って初期化する。
         """
+        if config is None:
+            config = {}
         self.memory_graph = memory_graph
-
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        config_dir = os.path.join(project_root, 'config')
-        
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "temporal_reasoning_profile.json")
-        else:
-            self.config_path = config_path
-
-        profile_config = {}
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: TemporalReasoning config file not found or invalid at {self.config_path}. Using default parameters.")
-        
-        self.min_support = profile_config.get("min_support", 2)
+        self.min_support = config.get("min_support", 2)
 
     def find_temporal_patterns(self):
         """
         記憶ログを分析し、頻出する連続イベントのパターンを発見する。
 
-        Args:
-            min_support (int): パターンとして見なすための最小出現回数（支持度）。
-
         Returns:
             list: 発見された時間的パターンのリスト。各パターンは(イベントA, イベントB)のタプル。
         """
-        print("--- Finding Temporal Patterns ---")
+        print(f"--- Finding Temporal Patterns (min_support={self.min_support}) ---")
         all_memories = self.memory_graph.get_all_memories()
         
         # 記憶は追記された順（時系列順）になっていると仮定
@@ -86,8 +70,11 @@ if __name__ == '__main__':
     if os.path.exists(test_memory_path):
         os.remove(test_memory_path)
 
-    # 1. 記憶モデルの準備
-    pmg = PersonalMemoryGraph(memory_path=test_memory_path)
+    # 1. 記憶モデルと設定の準備
+    # Note: The test requires PersonalMemoryGraph, which now also takes a config.
+    # For this self-contained test, we pass a config directly to PMG.
+    pmg_config = {"memory_path": test_memory_path}
+    pmg = PersonalMemoryGraph(config=pmg_config)
 
     # 2. パターンを含む一連の経験を追加
     # A -> B というパターンを3回繰り返す
@@ -98,9 +85,10 @@ if __name__ == '__main__':
         time.sleep(0.01) # タイムスタンプを確実ずらす
 
     # 3. パターン発見エンジンの実行
-    engine = TemporalReasoning(memory_graph=pmg)
-    # 3回以上出現するパターンを探す
-    patterns = engine.find_temporal_patterns(min_support=3)
+    # Test with a specific min_support
+    engine_config = {"min_support": 3}
+    engine = TemporalReasoning(memory_graph=pmg, config=engine_config)
+    patterns = engine.find_temporal_patterns()
 
     # 4. 結果の検証
     expected_pattern = ("A.jpg", "B.jpg")
