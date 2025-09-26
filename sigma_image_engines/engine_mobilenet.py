@@ -43,8 +43,8 @@ class MobileNetV1Engine:
             img = image_path_or_obj.convert('RGB')
 
         img = img.resize((self.input_width, self.input_height))
-        # Quantized model expects uint8 input, not normalized float
-        input_data = np.array(img, dtype=np.uint8)
+        # The model expects float32 input, normalized to [0, 1]
+        input_data = np.array(img, dtype=np.float32) / 255.0
         input_data = np.expand_dims(input_data, axis=0)
         return input_data
 
