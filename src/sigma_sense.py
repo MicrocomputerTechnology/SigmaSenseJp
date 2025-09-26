@@ -58,13 +58,19 @@ class SigmaSense:
         from .config_loader import ConfigLoader
         self.all_agent_configs = ConfigLoader(config_dir)
 
-        # --- 基本的なデータベースと次元設定 ---
+        # --- 基本的なデータベース設定 --- 
         self.db = database
         self.ids = ids
         self.vectors = np.array(vectors, dtype=np.float32)
+
+        # --- レイヤー分離戦略のための複数次元ローダー --- 
+        print("Initializing DimensionLoaders for layer separation strategy...")
+        self.dimension_loaders = {
+            'selia': DimensionLoader(layer='selia'),
+            'lyra': DimensionLoader(layer='lyra')
+        }
+        # 後方互換性のためのデフォルトローダー
         self.dimension_loader = dimension_loader
-        self.dimensions = self.dimension_loader.get_dimensions()
-        self.weights = np.array([dim.get('weight', 1.0) for dim in self.dimensions], dtype=np.float32)
 
         # --- 思考と知覚のエンジン ---
         if generator:
@@ -75,16 +81,22 @@ class SigmaSense:
         self.override_engine = ContextualOverrideEngine()
         self.psyche_modulator = PsycheModulator(log_path=os.path.join(log_dir, "psyche_log.jsonl"))
 
-        # --- 第十五次実験の中核コンポーネント ---
-        self.world_model = WorldModel(os.path.join(config_dir, "world_model.json"))
-        self.memory_graph = PersonalMemoryGraph(os.path.join(log_dir, "personal_memory.jsonl"))
+        # --- 第十五次実験の中核コンポーネント --- 
+        self.world_model_config = self.all_agent_configs.get_config('world_model_profile')
+        self.world_model = WorldModel(config=self.world_model_config)
+        self.pmg_config = self.all_agent_configs.get_config('personal_memory_graph_profile')
+        self.memory_graph = PersonalMemoryGraph(config=self.pmg_config)
+        self.causal_config = self.all_agent_configs.get_config('causal_discovery_profile')
+        self.causal_discovery = CausalDiscovery(self.world_model, self.memory_graph, config=self.causal_config)
+        self.temporal_config = self.all_agent_configs.get_config('temporal_reasoning_profile')
+        self.temporal_reasoning = TemporalReasoning(self.memory_graph, config=self.temporal_config)
+        self.intent_justifier_config = self.all_agent_configs.get_config('intent_justifier_profile')
+        self.intent_justifier = IntentJustifier(self.world_model, self.memory_graph, config=self.intent_justifier_config)
+        self.meta_narrator_config = self.all_agent_configs.get_config('meta_narrator_profile')
+        self.meta_narrator = MetaNarrator(config=self.meta_narrator_config)
         self.reasoner = SymbolicReasoner(self.world_model)
-        self.causal_discovery = CausalDiscovery(self.world_model, self.memory_graph)
-        self.temporal_reasoning = TemporalReasoning(self.memory_graph)
-        self.intent_justifier = IntentJustifier(self.world_model, self.memory_graph)
-        self.meta_narrator = MetaNarrator()
 
-        # --- 第十六次実験の中核コンポーネント（八人の誓い） ---
+        # --- 第十六次実験の中核コンポーネント（八人の誓い） --- 
         self.ethical_filter = EthicalFilter()
         self.contextual_compassion = ContextualCompassion()
         self.narrative_integrity = NarrativeIntegrity()
@@ -95,7 +107,6 @@ class SigmaSense:
         self.instinct_monitor = InstinctMonitor()
 
         print("SigmaSense 16th Gen: All components initialized.")
-
     def run_ethics_check(self, narratives: dict, experience: dict) -> dict:
         """
         八人の誓いに基づき、生成された語りの倫理チェックを実行する。
@@ -152,6 +163,20 @@ class SigmaSense:
         print("--- Ethics Check Completed ---")
         return {"passed": True, "log": ethics_log, "narratives": narratives}
 
+    def _determine_vector_type(self, features: dict) -> str:
+        """
+        画像の特徴量から、それがSeliaレイヤー（幾何学的）かLyraレイヤー（複雑）かを判断する。
+        """
+        # LegacyOpenCVEngineから得られる特徴量を使う
+        edge_density = features.get('opencv_edge_density', 0.0)
+        color_cluster_count = features.get('color_cluster_count', 0)
+
+        # 判定ロジック：エッジが密で、色のクラスタが多い場合は「Lyra」と判断
+        if edge_density > 0.1 and color_cluster_count > 5:
+            return 'lyra'
+        else:
+            return 'selia'
+
     def process_experience(self, image_path_or_obj):
         """
         新しい経験を処理し、自己言及的な思考サイクルを実行する。
@@ -167,6 +192,15 @@ class SigmaSense:
         features_dict = generation_result.get("features", {})
         
         # =================================================================
+        # F0.5: レイヤー分離戦略 (Layer Separation Strategy)
+        # =================================================================
+        vector_type = self._determine_vector_type(features_dict)
+        print(f"Vector Type Determined: {vector_type.upper()}")
+        active_loader = self.dimension_loaders.get(vector_type, self.dimension_loader) # fallback
+        active_dimensions = active_loader.get_dimensions()
+        active_weights = np.array([dim.get('weight', 1.0) for dim in active_dimensions], dtype=np.float32)
+
+        # =================================================================
         # F1: 判断と推論 (Judgment and Reasoning)
         # =================================================================
         initial_feature_ids = {k for k, v in features_dict.items() if v > 0.5}
@@ -178,7 +212,7 @@ class SigmaSense:
         inferred_facts = self.reasoner.reason({k: v for k, v in logical_context.items() if v})
         logical_context.update(inferred_facts)
 
-        for dim_def in self.dimensions:
+        for dim_def in active_dimensions:
             if 'logical_rule' in dim_def:
                 logical_context[dim_def['id']] = parse_expression(dim_def['logical_rule']).evaluate(logical_context)
         overridden_facts = self.override_engine.apply({k for k, v in logical_context.items() if v})
@@ -186,8 +220,8 @@ class SigmaSense:
             logical_context[fact] = fact in overridden_facts
 
         # 意味ベクトルを構築 (F1.5: 意味の統合)
-        meaning_vector = np.zeros(len(self.dimensions), dtype=np.float32)
-        for i, dim_def in enumerate(self.dimensions):
+        meaning_vector = np.zeros(len(active_dimensions), dtype=np.float32)
+        for i, dim_def in enumerate(active_dimensions):
             dim_id = dim_def.get('id')
             # 論理コンテキストから値を取得、または生成された特徴から取得
             if logical_context.get(dim_id, False):
@@ -196,7 +230,7 @@ class SigmaSense:
                 meaning_vector[i] = features_dict[dim_id]
             # それ以外の場合は0.0 (np.zerosで初期化済み)
 
-        best_match_id, score, best_match_vector = self._find_best_match(meaning_vector, metric='cosine', num_bins=10)
+        best_match_id, score, best_match_vector = self._find_best_match(meaning_vector, metric='cosine', weights=active_weights)
 
         # =================================================================
         # F2: 経験の記録 (Memory Consolidation)
@@ -232,6 +266,7 @@ class SigmaSense:
             "image_path": image_path_or_obj if isinstance(image_path_or_obj, str) else "in-memory_object",
             "source_image_name": image_name,
             "vector": meaning_vector.tolist(),
+            "vector_type": vector_type,
             "best_match": {
                 "image_name": best_match_id,
                 "score": float(score) if score is not None else 0.0,
@@ -295,7 +330,7 @@ class SigmaSense:
                 return dim_def.get('layer', 'unknown')
         return 'unknown' # 見つからない場合はunknownを返す
 
-    def _find_best_match(self, target_vector, metric='cosine', num_bins=10):
+    def _find_best_match(self, target_vector, weights, metric='cosine', num_bins=10):
         scores = []
         for i, db_vec in enumerate(self.vectors):
             if metric == 'cosine':
