@@ -7,24 +7,12 @@ class ReconstructionTrigger:
     再構成トリガーの発火条件を判定するクラス。
     """
 
-    def __init__(self, config_path=None):
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        config_dir = os.path.join(project_root, 'config')
+    def __init__(self, config: dict = None):
+        if config is None:
+            config = {}
         
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "reconstruction_trigger_profile.json")
-        else:
-            self.config_path = config_path
-
-        profile_config = {}
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: ReconstructionTrigger config file not found or invalid at {self.config_path}. Using default parameters.")
-        
-        self.threshold_entropy = profile_config.get("threshold_entropy", 2.5)
-        self.threshold_kl = profile_config.get("threshold_kl", 1.0)
+        self.threshold_entropy = config.get("threshold_entropy", 2.5)
+        self.threshold_kl = config.get("threshold_kl", 1.0)
 
     def should_trigger_reconstruction(self, vector_p, vector_q=None):
         """
