@@ -11,7 +11,7 @@ os.makedirs(model_dir, exist_ok=True)
 print("--- Downloading TFLite models ---")
 
 # EfficientNet-Lite0
-efficientnet_url = "https://tfhub.dev/tensorflow/efficientnet/lite0/classification/2?tf-hub-format=tflite"
+efficientnet_url = "https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/image_classification/lite-model_efficientnet_lite0_int8_1.tflite"
 efficientnet_path = os.path.join(model_dir, "efficientnet_lite0.tflite")
 if not os.path.exists(efficientnet_path):
     print(f"Downloading EfficientNet-Lite0 to {efficientnet_path}...")
@@ -67,7 +67,7 @@ else:
 resnet_path = os.path.join(model_dir, "resnet_v2_50_saved_model")
 if not os.path.exists(resnet_path):
     print("Downloading and saving ResNet V2 50 model...")
-    resnet_url = "https://www.kaggle.com/models/google/resnet-v2/TensorFlow2/50-classification/2"
+    resnet_url = "https://tfhub.dev/google/imagenet/resnet_v2_50/classification/5"
     try:
         resnet_model = hub.KerasLayer(resnet_url)
         tf.saved_model.save(resnet_model, resnet_path)

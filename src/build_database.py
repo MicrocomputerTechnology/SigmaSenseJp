@@ -78,7 +78,14 @@ def build_database(img_dir, db_path, dimension_config_path):
 
     # 最新の次元生成器と次元定義ローダーを初期化
     dim_generator = DimensionGenerator()
-    dim_loader = DimensionLoader() # 引数なしで初期化し、デフォルトの全次元ファイルを読み込む
+    
+    # dimension_config_path を使ってDimensionLoaderを初期化
+    if dimension_config_path:
+        print(f"   指定された次元ファイルを使用: {dimension_config_path}")
+        dim_loader = DimensionLoader(paths=[dimension_config_path])
+    else:
+        print("   デフォルトの全次元ファイルを使用します。")
+        dim_loader = DimensionLoader() # 指定がない場合はデフォルト
 
     database = []
     if not os.path.isdir(img_dir):
@@ -133,8 +140,8 @@ if __name__ == "__main__":
                         help="Directory containing images to process.")
     parser.add_argument("--db_path", type=str, default="config/sigma_product_database_stabilized.json",
                         help="Path to the output SigmaSense product database JSON file.")
-    parser.add_argument("--dimension_config", type=str, default="config/vector_dimensions_mobile.yaml",
-                        help="Path to the dimension configuration file (YAML or JSON).")
+    parser.add_argument("--dimension_config", type=str, default=None,
+                        help="Path to a specific dimension configuration file (YAML or JSON). If not provided, all default dimension files will be used.")
     
     args = parser.parse_args()
     build_database(args.img_dir, args.db_path, args.dimension_config)
