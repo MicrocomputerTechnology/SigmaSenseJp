@@ -1,8 +1,8 @@
-
 import yaml
 import json
 import os
 from difflib import SequenceMatcher
+from src.config_loader import ConfigLoader
 
 def print_header(title):
     bar = "="*60
@@ -14,29 +14,15 @@ class DimensionComparator:
     Orien (online/Gemini) and recommends integration actions.
     """
 
-    def __init__(self, config_path=None):
+    def __init__(self, config: dict = None):
         print_header("Initializing Dimension Comparator")
-        
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        if config_path is None:
-            config_dir = os.path.join(project_root, 'config')
-            self.config_path = os.path.join(config_dir, "dimension_comparator_profile.json")
-        else:
-            self.config_path = config_path
+        if config is None:
+            config = {}
 
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-                vetra_config_path = os.path.join(project_root, profile_config.get("vetra_config_path", "config/vector_dimensions_mobile_optimized.yaml"))
-                orien_config_path = os.path.join(project_root, profile_config.get("orien_config_path", "config/vector_dimensions_custom_ai.json"))
-        except FileNotFoundError:
-            print(f"Warning: DimensionComparator config file not found at {self.config_path}. Using default paths.")
-            vetra_config_path = os.path.join(project_root, "config/vector_dimensions_mobile_optimized.yaml")
-            orien_config_path = os.path.join(project_root, "config/vector_dimensions_custom_ai.json")
-        except json.JSONDecodeError:
-            print(f"Warning: Could not decode JSON from {self.config_path}. Using default paths.")
-            vetra_config_path = os.path.join(project_root, "config/vector_dimensions_mobile_optimized.yaml")
-            orien_config_path = os.path.join(project_root, "config/vector_dimensions_custom_ai.json")
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        
+        vetra_config_path = os.path.join(project_root, config.get("vetra_config_path", "config/vector_dimensions_mobile_optimized.yaml"))
+        orien_config_path = os.path.join(project_root, config.get("orien_config_path", "config/vector_dimensions_custom_ai.json"))
 
         self.vetra_dims = self._load_yaml(vetra_config_path)
         self.orien_dims = self._load_json(orien_config_path)
@@ -153,17 +139,16 @@ class DimensionComparator:
 if __name__ == '__main__':
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     config_dir = os.path.join(project_root, 'config')
+    config_loader = ConfigLoader(config_dir)
     
-    DIMENSION_COMPARATOR_CONFIG_PATH = os.path.join(config_dir, "dimension_comparator_profile.json")
+    comparator_config = config_loader.get_config("dimension_comparator_profile")
     OUTPUT_PATH = os.path.join(config_dir, "vector_dimensions_custom_ai_integrated.json")
 
-    # Note: VETRA_PATH and ORIEN_PATH are now loaded from DIMENSION_COMPARATOR_CONFIG_PATH
-    # So, we only need to check if the comparator's config itself exists.
-    if not os.path.exists(DIMENSION_COMPARATOR_CONFIG_PATH):
-        print(f"ERROR: Dimension Comparator config '{DIMENSION_COMPARATOR_CONFIG_PATH}' not found.")
+    if not comparator_config:
+        print(f"ERROR: Dimension Comparator config 'dimension_comparator_profile.json' not found.")
         print("Please ensure the config file exists.")
     else:
-        comparator = DimensionComparator(config_path=DIMENSION_COMPARATOR_CONFIG_PATH)
+        comparator = DimensionComparator(config=comparator_config)
         comparison_report = comparator.compare_dimensions()
         final_model = comparator.integrate(comparison_report, output_path=OUTPUT_PATH)
         print(f"\nFinal integrated model contains {len(final_model)} dimensions.")
