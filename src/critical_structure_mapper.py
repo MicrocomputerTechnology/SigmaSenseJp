@@ -1,18 +1,17 @@
 import os
 import json
 import numpy as np
+from src.config_loader import ConfigLoader
 from dimension_loader import DimensionLoader
-
-# 照合不能と見なすスコアの閾値
-UNMATCHABLE_THRESHOLD = 0.6
 
 # DimensionLoaderのインスタンスを生成
 loader = DimensionLoader()
 
-def map_critical_structure(log_dir="sigma_logs"):
+def map_critical_structure(config: dict, log_dir="sigma_logs"):
     """
     照合不能群のログを抽出し、その平均ベクトル（臨界構造）を動的に計算する。
     """
+    unmatchable_threshold = config.get("unmatchable_threshold", 0.6)
     unmatchable_vectors = []
 
     for fname in sorted(os.listdir(log_dir)):
@@ -28,7 +27,7 @@ def map_critical_structure(log_dir="sigma_logs"):
                     continue
 
                 score = log.get("best_match", {}).get("score", 0.0)
-                if score < UNMATCHABLE_THRESHOLD:
+                if score < unmatchable_threshold:
                     vector = log.get("vector", [])
                     if len(vector) == loader.vector_size:
                         unmatchable_vectors.append(vector)
@@ -57,6 +56,14 @@ def map_critical_structure(log_dir="sigma_logs"):
 
 if __name__ == '__main__':
     # テスト実行用
-    report = map_critical_structure()
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    config_dir = os.path.join(project_root, 'config')
+    config_loader = ConfigLoader(config_dir)
+    cs_config = config_loader.get_config('critical_structure_mapper_profile')
+    if not cs_config:
+        print("Warning: critical_structure_mapper_profile.json not found. Using default threshold.")
+        cs_config = {}
+
+    report = map_critical_structure(cs_config)
     import pprint
     pprint.pprint(report)
