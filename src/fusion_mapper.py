@@ -1,5 +1,6 @@
 import json
 import os
+from src.config_loader import ConfigLoader
 
 class FusionMapper:
     """
@@ -7,29 +8,17 @@ class FusionMapper:
     neural features and logical terms.
     """
 
-    def __init__(self, config_path=None):
+    def __init__(self, config: dict = None):
         """
-        Initializes the mapper with fusion data loaded from a config file.
+        Initializes the mapper with fusion data loaded from a config object.
 
         Args:
-            config_path (str): Path to the config file containing fusion data.
+            config (dict): A dictionary containing the configuration.
         """
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        config_dir = os.path.join(project_root, 'config')
-        
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "fusion_mapper_profile.json")
-        else:
-            self.config_path = config_path
+        if config is None:
+            config = {}
 
-        profile_config = {}
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: FusionMapper config file not found or invalid at {self.config_path}. Using default fusion data.")
-        
-        self.fusion_data = profile_config.get("fusion_data", {
+        self.fusion_data = config.get("fusion_data", {
             "logical_terms": {
                 "is_dog": {
                     "source_engine": "engine_resnet",
@@ -98,13 +87,12 @@ class FusionMapper:
 
 if __name__ == '__main__':
     # Example Usage:
-    # This data is a placeholder representing how logical terms might be
-    # derived from the outputs of different neural network engines.
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     config_dir = os.path.join(project_root, 'config')
-    fusion_mapper_config_path = os.path.join(config_dir, "fusion_mapper_profile.json")
+    config_loader = ConfigLoader(config_dir)
+    fusion_config = config_loader.get_config("fusion_mapper_profile")
 
-    mapper = FusionMapper(config_path=fusion_mapper_config_path)
+    mapper = FusionMapper(config=fusion_config)
     dot_string = mapper.generate_dot_graph()
 
     print("--- Generated DOT Graph ---")
