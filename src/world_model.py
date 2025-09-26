@@ -1,7 +1,6 @@
 # === 第十五次実験 実装ファイル ===
 
-import json
-import os
+from .config_loader import ConfigLoader
 
 class WorldModel:
     """
@@ -12,33 +11,28 @@ class WorldModel:
       さらには実験を通じて学習した新しい因果関係を、単一のグラフ構造として動的に管理する。
     """
 
-    def __init__(self, config_path=None):
+    def __init__(self, config: dict = None):
         """
         WorldModelを初期化する。
         指定されたパスにグラフファイルが存在すれば読み込み、なければ新しいグラフを作成する。
 
         Args:
-            config_path (str): 設定ファイルへのパス。
+            config (dict): 設定オブジェクト。
         """
+        if config is None:
+            config = {}
+
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        config_dir = os.path.join(project_root, 'config')
-        default_graph_path = os.path.join(config_dir, "world_model.json")
+        default_graph_path = os.path.join(project_root, 'config', "world_model.json")
 
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "world_model_profile.json")
-        else:
-            self.config_path = config_path
-
-        graph_path_from_config = None
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-                graph_path_from_config = profile_config.get("graph_path")
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: WorldModel config file not found or invalid at {self.config_path}. Using default graph path.")
+        graph_path_from_config = config.get("graph_path")
         
         if graph_path_from_config:
-            self.graph_path = os.path.join(project_root, graph_path_from_config)
+            # If the path from config is not absolute, join it with the project root
+            if not os.path.isabs(graph_path_from_config):
+                self.graph_path = os.path.join(project_root, graph_path_from_config)
+            else:
+                self.graph_path = graph_path_from_config
         else:
             self.graph_path = default_graph_path
             
@@ -62,6 +56,7 @@ class WorldModel:
     def save_graph(self):
         """現在のグラフをJSONファイルに保存する。"""
         try:
+            os.makedirs(os.path.dirname(self.graph_path), exist_ok=True)
             with open(self.graph_path, 'w', encoding='utf-8') as f:
                 json.dump(self.graph, f, indent=4, ensure_ascii=False)
             print(f"WorldModel: Graph saved to {self.graph_path}")
@@ -172,12 +167,15 @@ class WorldModel:
 if __name__ == '__main__':
     print("--- WorldModel Self-Test --- ")
     # テスト用のファイルパスを指定し、既存の場合は削除
-    test_graph_path = 'world_model_test.json'
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    test_graph_path = os.path.join(project_root, 'world_model_test.json')
+    test_config = {"graph_path": test_graph_path}
+
     if os.path.exists(test_graph_path):
         os.remove(test_graph_path)
 
     # 1. モデルの初期化
-    wm = WorldModel(graph_path=test_graph_path)
+    wm = WorldModel(config=test_config)
 
     # 2. ノードの追加
     wm.add_node('bird', name_ja="鳥", type="concept")
@@ -206,7 +204,7 @@ if __name__ == '__main__':
 
     # 6. 新しいモデルインスタンスで読み込みテスト
     print("\n--- Testing Persistence ---")
-    wm_new = WorldModel(graph_path=test_graph_path)
+    wm_new = WorldModel(config=test_config)
     penguin_node_new = wm_new.get_node('penguin')
     print(f"Penguin Node from new instance: {penguin_node_new}")
     assert penguin_node == penguin_node_new
