@@ -5,6 +5,7 @@ import os
 
 from .world_model import WorldModel
 from .personal_memory_graph import PersonalMemoryGraph
+from .config_loader import ConfigLoader
 from collections import defaultdict
 
 class CausalDiscovery:
@@ -12,38 +13,21 @@ class CausalDiscovery:
     経験から因果関係を発見し、WorldModelを自律的に成長させる。
     """
 
-    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config_path=None):
+    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config: dict = None):
         """
         WorldModelとPersonalMemoryGraphのインスタンスを受け取って初期化する。
         """
+        if config is None:
+            config = {}
         self.world_model = world_model
         self.memory_graph = memory_graph
-
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        config_dir = os.path.join(project_root, 'config')
         
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "causal_discovery_profile.json")
-        else:
-            self.config_path = config_path
-
-        profile_config = {}
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: CausalDiscovery config file not found or invalid at {self.config_path}. Using default parameters.")
-        
-        self.correlation_threshold = profile_config.get("correlation_threshold", 0.8)
-        self.confidence_threshold = profile_config.get("confidence_threshold", 0.9)
+        self.correlation_threshold = config.get("correlation_threshold", 0.8)
+        self.confidence_threshold = config.get("confidence_threshold", 0.9)
 
     def discover_rules(self):
         """
         記憶を分析し、新しい因果ルールを発見してWorldModelを更新する。
-
-        Args:
-            correlation_threshold (float): 仮説を立てるための相関の閾値。
-            confidence_threshold (float): ルールを確立するための信頼度の閾値（反例がないか）。
         """
         print("\n--- Starting Causal Discovery Process ---")
         all_memories = self.memory_graph.get_all_memories()
@@ -118,9 +102,16 @@ if __name__ == '__main__':
     import os
 
     print("--- CausalDiscovery Self-Test --- ")
-    # 1. モックの準備
+    # 1. モックと設定の準備
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    config_dir = os.path.join(project_root, 'config')
+    config_loader = ConfigLoader(config_dir)
+    causal_config = config_loader.get_config("causal_discovery_profile")
+
     wm = WorldModel('cd_test_wm.json')
-    pmg = PersonalMemoryGraph('cd_test_pmg.jsonl')
+    # PersonalMemoryGraph now requires a config object
+    pmg_config = {"memory_path": "cd_test_pmg.jsonl"}
+    pmg = PersonalMemoryGraph(config=pmg_config)
 
     # 2. テスト用の記憶を準備
     # 仮説（鳥→飛ぶ）を支持する経験
@@ -135,7 +126,7 @@ if __name__ == '__main__':
         pmg.add_experience(exp)
 
     # 3. 発見プロセスの実行
-    discoverer = CausalDiscovery(world_model=wm, memory_graph=pmg)
+    discoverer = CausalDiscovery(world_model=wm, memory_graph=pmg, config=causal_config)
     discoverer.discover_rules()
 
     # 4. 結果の検証

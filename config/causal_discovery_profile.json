@@ -1,6 +1,4 @@
 {
-  "role": "causal_discovery",
-  "description": "因果推論エンジン。経験から因果関係を学習する。",
-  "min_cooccurrence_count": 2,
-  "min_confidence": 0.8
+    "correlation_threshold": 0.8,
+    "confidence_threshold": 0.9
 }
