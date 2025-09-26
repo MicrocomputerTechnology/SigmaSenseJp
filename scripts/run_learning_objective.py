@@ -121,10 +121,15 @@ def log_for_structuring(objective: dict, result: dict):
         "execution_result": result, "review_status": "pending", "reviewer_comment": ""
     }
     try:
+        # ログディレクトリを定義し、存在しない場合は作成する
+        log_dir = os.path.join(project_root, 'sigma_logs')
+        os.makedirs(log_dir, exist_ok=True)
+        log_file_path = os.path.join(log_dir, "offline_permanentization_log.jsonl")
+
         log_entry["temporary_handler_code"] = objective.get("temporary_handler", "")
-        with open("offline_permanentization_log.jsonl", "a", encoding="utf-8") as f:
+        with open(log_file_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
-        print("  - 成功した即興処理を `offline_permanentization_log.jsonl` に記録しました。")
+        print(f"  - 成功した即興処理を `{log_file_path}` に記録しました。")
     except Exception as e:
         print(f"   - ログ記録エラー: {e}")
 
