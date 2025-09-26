@@ -121,9 +121,10 @@ class PersonalMemoryGraph:
 if __name__ == '__main__':
     print("---" + " PersonalMemoryGraph Self-Test " + "---")
     
-    # Create a temporary config for the test
-    test_config = {"memory_path": "pmg_test.jsonl"}
-    test_memory_path = test_config["memory_path"]
+    # CI環境でも安定して動作するよう、テストファイルへの絶対パスを生成
+    script_dir = os.path.dirname(__file__)
+    test_memory_path = os.path.abspath(os.path.join(script_dir, 'pmg_test.jsonl'))
+    test_config = {"memory_path": test_memory_path}
 
     if os.path.exists(test_memory_path):
         os.remove(test_memory_path)
