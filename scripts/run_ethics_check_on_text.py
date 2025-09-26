@@ -52,7 +52,7 @@ def main():
     except FileNotFoundError:
         print("Warning: Main database not found. Proceeding with empty DB for ethics check.")
 
-    sigma = SigmaSense(database, ids, vectors, dimension_loader=loader)
+    sigma = SigmaSense(database, ids, vectors)
 
     # --- テストケース1: 安全なテキスト ---
     safe_text = "本日、新しい公園が開園し、多くの家族連れで賑わいました。子供たちは笑顔で遊具に向かって走る様子が見られました。"

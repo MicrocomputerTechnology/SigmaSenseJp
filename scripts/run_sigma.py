@@ -88,10 +88,10 @@ def main():
 
     # SigmaSenseの初期化
     sigma = SigmaSense(
-        database,
-        ids,
-        vectors,
-        dimension_loader=loader
+        database=database,
+        ids=ids,
+        vectors=vectors,
+        generator=generator
     )
 
     # ロガーの初期化

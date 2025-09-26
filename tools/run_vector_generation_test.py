@@ -36,7 +36,7 @@ def test_single_image_vector(image_path):
     dummy_vectors = np.empty((0, vector_size), dtype=np.float32)
 
     # Loaderを注入してSigmaSenseをインスタンス化
-    sigma = SigmaSense([], [], dummy_vectors, dimension_loader=dim_loader)
+    sigma = SigmaSense([], [], dummy_vectors)
 
     # --- ベクトルを計算 ---
     # 再構成は詳細な値を見る上でノイズになるため無効化

@@ -27,7 +27,7 @@ def main(image_path):
 
     database, ids, vectors = load_sigma_database(db_path)
     dim_loader = DimensionLoader() 
-    sigma = SigmaSense(database, ids, vectors, dimension_loader=dim_loader)
+    sigma = SigmaSense(database, ids, vectors)
     print("SigmaSense initialized successfully.")
 
     # 2. Initialize the SheafAnalyzer

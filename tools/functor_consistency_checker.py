@@ -67,7 +67,7 @@ def main():
     database, ids, vectors = load_sigma_database(db_path)
     
     dim_loader = DimensionLoader()
-    sigma = SigmaSense(database, ids, vectors, dimension_loader=dim_loader)
+    sigma = SigmaSense(database, ids, vectors)
     
     # Instantiate VectorTransforms and SigmaFunctor correctly
     vector_transforms = VectorTransforms(dim_loader)

@@ -34,8 +34,7 @@ class TestSigmaSenseLogicIntegration(unittest.TestCase):
             self.dummy_db, 
             self.dummy_ids, 
             self.dummy_vectors,
-            generator=self.mock_generator,
-            dimension_loader=self.test_dim_loader
+            generator=self.mock_generator
         )
 
     def test_dog_inference_and_logic(self):

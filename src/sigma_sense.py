@@ -48,7 +48,7 @@ class SigmaSense:
     自己意識、因果推論、時間理解、そして倫理基盤を持つ、第十六次実験段階の統合知性。
     思考のオーケストレーターとして、すべてのコンポーネントを協調動作させる。
     """
-    def __init__(self, database, ids, vectors, dimension_loader: DimensionLoader, generator=None):
+    def __init__(self, database, ids, vectors, generator=None):
         # --- プロジェクトルートとデータディレクトリの定義 ---
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         config_dir = os.path.join(project_root, "config")
