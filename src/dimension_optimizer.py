@@ -2,6 +2,7 @@
 import yaml
 import numpy as np
 import os
+from src.config_loader import ConfigLoader
 
 class DimensionOptimizer:
     """
@@ -9,17 +10,14 @@ class DimensionOptimizer:
     comparison results. This simulates Vetra's learning and optimization process.
     """
 
-    def __init__(self, config_path="vector_dimensions_mobile.yaml"):
+    def __init__(self, config: dict):
         """
         Initializes the optimizer by loading the dimension configuration.
         """
         print("DimensionOptimizer (Vetra's Learning Module) initializing...")
-        self.config_path = config_path
-        if not os.path.exists(config_path):
-            raise FileNotFoundError(f"Config file not found at {config_path}")
-        
-        with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
+        self.config = config
+        if not config:
+            raise ValueError("DimensionOptimizer requires a non-empty config.")
         
         self.current_weights = {dim: data.get('weight', 1.0) for dim, data in self.config.items()}
         print("DimensionOptimizer: Initial weights loaded.")
@@ -73,7 +71,14 @@ class DimensionOptimizer:
 
 if __name__ == '__main__':
     print("--- Running DimensionOptimizer Test ---")
-    optimizer = DimensionOptimizer()
+    # Load config for testing
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    config_dir = os.path.join(project_root, 'config')
+    # Note: DimensionOptimizer works with the YAML structure, so we don't use ConfigLoader here.
+    with open(os.path.join(config_dir, 'vector_dimensions_mobile.yaml'), 'r') as f:
+        test_config = yaml.safe_load(f)
+
+    optimizer = DimensionOptimizer(config=test_config)
     initial_weights = optimizer.current_weights.copy()
     print("\nInitial Weights:")
     for dim, weight in initial_weights.items():
