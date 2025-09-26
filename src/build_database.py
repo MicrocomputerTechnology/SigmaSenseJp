@@ -56,6 +56,19 @@ def build_vector_from_facts(facts, dimension_loader):
             vector[i] = 0.0 # 変換できない場合は0.0とする
     return vector
 
+def _get_dominant_layer(vector, dimension_loader):
+    """
+    ベクトルの中で最も値が大きい次元のレイヤーを特定する。
+    """
+    dimensions = dimension_loader.get_dimensions()
+    if not vector or len(vector) != len(dimensions):
+        return "unknown"
+
+    max_val_index = np.argmax(vector)
+    if max_val_index < len(dimensions):
+        return dimensions[max_val_index].get("layer", "unknown")
+    return "unknown"
+
 def build_database(img_dir, db_path, dimension_config_path):
     print("DEBUG: build_database called")
     """sigma_imagesディレクトリ内の画像から最新のアーキテクチャに基づいた意味データベースを構築する"""
@@ -93,10 +106,14 @@ def build_database(img_dir, db_path, dimension_config_path):
 
         # 2. 次元定義に従ってベクトルを構築
         vector = build_vector_from_facts(facts, dim_loader)
+        
+        # 3. ベクトルの主要レイヤーを判定
+        layer = _get_dominant_layer(vector, dim_loader)
 
         database.append({
             "id": item_id,
-            "meaning_vector": vector
+            "meaning_vector": vector,
+            "layer": layer
         })
 
     # --- データベース全体に一貫性補正を適用 ---

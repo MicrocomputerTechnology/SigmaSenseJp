@@ -54,8 +54,8 @@ class TestCategoryTheory(unittest.TestCase):
 
         # Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader()
-        database, ids, vectors = load_sigma_database(cls.db_path)
-        cls.sigma = SigmaSense(database, ids, vectors, dimension_loader=cls.loader)
+        database, ids, vectors, _ = load_sigma_database(cls.db_path)
+        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader)
         print("SigmaSense instance created for category theory tests.")
 
     @classmethod
@@ -119,8 +119,8 @@ class TestFunctoriality(unittest.TestCase):
 
         # Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader()
-        database, ids, vectors = load_sigma_database(cls.db_path)
-        cls.sigma = SigmaSense(database, ids, vectors, dimension_loader=cls.loader)
+        database, ids, vectors, _ = load_sigma_database(cls.db_path)
+        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader)
         vector_transforms_instance = VectorTransforms(cls.loader)
         cls.sigma_functor = SigmaFunctor(vector_transforms_instance, cls.sigma)
         print("SigmaSense and SigmaFunctor instances created for functoriality tests.")

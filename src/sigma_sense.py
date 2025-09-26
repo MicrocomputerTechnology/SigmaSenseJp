@@ -48,7 +48,7 @@ class SigmaSense:
     自己意識、因果推論、時間理解、そして倫理基盤を持つ、第十六次実験段階の統合知性。
     思考のオーケストレーターとして、すべてのコンポーネントを協調動作させる。
     """
-    def __init__(self, database, ids, vectors, dimension_loader: DimensionLoader, generator=None):
+    def __init__(self, database, ids, vectors, layers, dimension_loader: DimensionLoader, generator=None):
         # --- プロジェクトルートとデータディレクトリの定義 ---
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         config_dir = os.path.join(project_root, "config")
@@ -62,6 +62,7 @@ class SigmaSense:
         self.db = database
         self.ids = ids
         self.vectors = np.array(vectors, dtype=np.float32)
+        self.layers = layers
         self.dimension_loader = dimension_loader
         self.dimensions = self.dimension_loader.get_dimensions()
         self.weights = np.array([dim.get('weight', 1.0) for dim in self.dimensions], dtype=np.float32)
@@ -76,8 +77,12 @@ class SigmaSense:
         self.psyche_modulator = PsycheModulator(log_path=os.path.join(log_dir, "psyche_log.jsonl"))
 
         # --- 第十五次実験の中核コンポーネント ---
-        self.world_model = WorldModel(os.path.join(config_dir, "world_model.json"))
-        self.memory_graph = PersonalMemoryGraph(os.path.join(log_dir, "personal_memory.jsonl"))
+        sigma_sense_config = self.all_agent_configs.get_config("sigma_sense_config") or {}
+        world_model_path = sigma_sense_config.get("world_model_path", "config/world_model.json")
+        personal_memory_path = sigma_sense_config.get("personal_memory_path", "sigma_logs/personal_memory.jsonl")
+        
+        self.world_model = WorldModel(os.path.join(project_root, world_model_path))
+        self.memory_graph = PersonalMemoryGraph(os.path.join(project_root, personal_memory_path))
         self.reasoner = SymbolicReasoner(self.world_model)
         self.causal_discovery = CausalDiscovery(self.world_model, self.memory_graph)
         self.temporal_reasoning = TemporalReasoning(self.memory_graph)
@@ -295,9 +300,32 @@ class SigmaSense:
                 return dim_def.get('layer', 'unknown')
         return 'unknown' # 見つからない場合はunknownを返す
 
+    def _get_dominant_layer(self, vector):
+        """
+        ベクトルの中で最も値が大きい次元のレイヤーを特定する。
+        """
+        if vector is None or not np.any(vector):
+            return "unknown"
+        max_val_index = np.argmax(vector)
+        if max_val_index < len(self.dimensions):
+            return self.dimensions[max_val_index].get("layer", "unknown")
+        return "unknown"
+
     def _find_best_match(self, target_vector, metric='cosine', num_bins=10):
+        target_layer = self._get_dominant_layer(target_vector)
+        if target_layer == "unknown":
+            # レイヤーが不明な場合は、比較対象を絞れないため、以前のロジックに戻るか、エラーとする
+            # ここでは、安全策として一致なしを返す
+            print("⚠️ Warning: Could not determine the layer of the target vector. Skipping comparison.")
+            return None, 0.0, None
+
+        print(f"-> Target vector layer identified as: [{target_layer}]. Filtering database for comparison.")
+
         scores = []
-        for i, db_vec in enumerate(self.vectors):
+        for i, (db_vec, db_layer) in enumerate(zip(self.vectors, self.layers)):
+            if db_layer != target_layer:
+                continue # レイヤーが違う場合はスキップ
+
             if metric == 'cosine':
                 score = weighted_cosine_similarity(target_vector, db_vec, self.weights)
             elif metric == 'kl_divergence':
@@ -308,13 +336,15 @@ class SigmaSense:
                 raise ValueError(f"Unsupported metric: {metric}")
             scores.append((score, self.ids[i]))
         
-        scores.sort(key=lambda x: x[0], reverse=True)
-        
-        if not scores or scores[0][0] == 0.0:
+        if not scores:
+            print(f"-> No items found in the database with the layer: [{target_layer}]")
             return None, 0.0, None
+
+        scores.sort(key=lambda x: x[0], reverse=True)
         
         best_score, best_match_id = scores[0]
         try:
+            # 注意: self.ids全体からインデックスを探す必要がある
             best_match_index = self.ids.index(best_match_id)
             best_match_vector = self.vectors[best_match_index]
         except (ValueError, IndexError):

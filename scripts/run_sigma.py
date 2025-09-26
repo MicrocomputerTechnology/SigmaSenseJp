@@ -84,13 +84,14 @@ def main():
     
     # 意味データベースと次元定義の読み込み
     loader = DimensionLoader()
-    database, ids, vectors = load_sigma_database(args.db_path)
+    database, ids, vectors, layers = load_sigma_database(args.db_path)
 
     # SigmaSenseの初期化
     sigma = SigmaSense(
         database,
         ids,
         vectors,
+        layers,
         dimension_loader=loader
     )
 
