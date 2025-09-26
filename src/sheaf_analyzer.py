@@ -11,34 +11,22 @@ class SheafAnalyzer:
     画像に層理論の考え方を適用し、局所的な特徴の整合性を検証するクラス。
     """
 
-    def __init__(self, image_path, sigma_instance, config_path=None):
+    def __init__(self, image_path, sigma_instance, config: dict = None):
         """
         Args:
             image_path (str): 分析対象の画像ファイルパス。
             sigma_instance (SigmaSense): 特徴ベクトルを抽出するためのSigmaSenseインスタンス。
-            config_path (str): 設定ファイルへのパス。
+            config (dict): 設定オブジェクト。
         """
+        if config is None:
+            config = {}
+
         self.image_path = image_path
         self.image = Image.open(image_path).convert('RGB')
         self.sigma = sigma_instance
         self.local_data = {} # region -> feature_vector
-
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        config_dir = os.path.join(project_root, 'config')
         
-        if config_path is None:
-            self.config_path = os.path.join(config_dir, "sheaf_analyzer_profile.json")
-        else:
-            self.config_path = config_path
-
-        profile_config = {}
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                profile_config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print(f"Warning: SheafAnalyzer config file not found or invalid at {self.config_path}. Using default parameters.")
-        
-        self.tolerance = profile_config.get("tolerance", 0.1)
+        self.tolerance = config.get("tolerance", 0.1)
 
     def _get_feature_vector_for_region(self, region_rect):
         """
