@@ -140,8 +140,7 @@ if __name__ == "__main__":
         epilog="Example: python src/build_database.py --img_dir sigma_images",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--img_dir", type=str, required=True,
-                        help="Directory containing images to process.")
+    parser.add_argument('--img_dir', type=str, default='sigma_images', help='Directory containing the images.')
     parser.add_argument("--db_path", type=str, default="config/sigma_product_database_stabilized.json",
                         help="Path to the output SigmaSense product database JSON file.")
     parser.add_argument("--dimension_config", type=str, default=None,

@@ -1,5 +1,6 @@
 import json
 import argparse
+import sys
 from gemini_client import GeminiClient
 
 # Selia軸（構造）生成用のプロンプト
@@ -158,8 +159,8 @@ def main():
             output_filename = "vector_dimensions_custom_ai.json"
     
     else:
-        print("❗エラー: 'type' または '--prompt_file' のいずれかを指定する必要があります。")
-        return
+        parser.print_help(sys.stderr)
+        sys.exit(1)
         
     generate_dimensions_with_algorithms(prompt_to_use, output_filename)
 

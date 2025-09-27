@@ -4,7 +4,9 @@ import time
 from PIL import Image
 from gemini_client import GeminiClient
 
-def load_dimensions(filepath="vector_dimensions_custom_ai.json"):
+import argparse
+
+def load_dimensions(filepath):
     """次元定義ファイル(JSON)を読み込む"""
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
@@ -59,13 +61,13 @@ def generate_vector_for_image(client, image_path, dimensions):
         print(f"❗画像ベクトル生成中にエラー: {e}")
         return None
 
-def main():
+def main(dim_path, image_dir, output_path):
     """
     メイン処理: 全画像に対してAIにベクトル生成を依頼し、データベースを構築する。
     """
     print("🚀 Geminiによる画像ベクトルデータベースの構築を開始します。")
     
-    dimensions = load_dimensions()
+    dimensions = load_dimensions(dim_path)
     if not dimensions:
         return
 
@@ -75,7 +77,6 @@ def main():
         print(f"❗クライアント初期化エラー: {e}")
         return
 
-    image_dir = "sigma_images"
     image_files = [f for f in sorted(os.listdir(image_dir)) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
     
     database_entries = []
@@ -103,13 +104,19 @@ def main():
         else:
             print(f"   -> 生成失敗")
 
-    output_filename = "sigma_product_database_custom_ai_generated.json"
     print(f"\n✅ 全画像のベクトル生成が完了しました。")
-    with open(output_filename, 'w', encoding='utf-8') as f:
+    with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(database_entries, f, indent=2, ensure_ascii=False)
     
-    print(f"結果を {output_filename} に保存しました。")
+    print(f"結果を {output_path} に保存しました。")
 
 if __name__ == "__main__":
-    main()
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    parser = argparse.ArgumentParser(description='Geminiを使用して画像から意味ベクトルを生成し、データベースを構築します。')
+    parser.add_argument('--dim_path', type=str, default=os.path.join(project_root, 'config', 'vector_dimensions_custom_ai.json'), help='次元定義ファイルのパス')
+    parser.add_argument('--image_dir', type=str, default=os.path.join(project_root, 'sigma_images'), help='画像ディレクトリのパス')
+    parser.add_argument('--output_path', type=str, default=os.path.join(project_root, 'config', 'sigma_product_database_custom_ai_generated.json'), help='出力データベースファイルのパス')
+    args = parser.parse_args()
+
+    main(args.dim_path, args.image_dir, args.output_path)
 

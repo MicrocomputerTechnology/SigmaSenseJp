@@ -10,17 +10,15 @@ from src.sigma_database_loader import load_sigma_database
 from src.dimension_loader import DimensionLoader
 from src.sheaf_analyzer import SheafAnalyzer
 
-def main(image_path):
+import argparse
+
+def main(image_path, db_path):
     """
     Main function to run the sheaf analysis on a given image.
     """
     print(f"--- Running Sheaf Analysis on: {os.path.basename(image_path)} ---")
 
     # 1. Load configurations and initialize SigmaSense
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    config_dir = os.path.join(project_root, 'config')
-    db_path = os.path.join(config_dir, "sigma_product_database_custom_ai_generated.json")
-    
     if not os.path.exists(db_path):
         print(f"Error: Database file not found at {db_path}")
         return
@@ -57,10 +55,13 @@ def main(image_path):
         print(f"❌ {e}")
 
 if __name__ == "__main__":
-    # Default image to analyze
-    default_image = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'sigma_images', 'multi_object.jpg'))
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    default_image = os.path.join(project_root, 'sigma_images', 'multi_object.jpg')
+    default_db = os.path.join(project_root, 'config', 'sigma_product_database_custom_ai_generated.json')
 
-    # Use the image from command line argument if provided, otherwise use default
-    image_to_analyze = sys.argv[1] if len(sys.argv) > 1 else default_image
+    parser = argparse.ArgumentParser(description='Run Sheaf Analysis on an image.')
+    parser.add_argument('--image_path', type=str, default=default_image, help='Path to the image to analyze.')
+    parser.add_argument('--db_path', type=str, default=default_db, help='Path to the database file.')
+    args = parser.parse_args()
     
-    main(image_to_analyze)
+    main(args.image_path, args.db_path)

@@ -10,12 +10,14 @@ from src.narrative_analyzer import NarrativeAnalyzer
 def main():
     parser = argparse.ArgumentParser(
         description='SigmaSenseの個人記憶ログを分析し、特定の主題に関する物語の系譜を追跡します。',
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog="実行例: python scripts/run_narrative_analysis.py --subject circle_center"
     )
     parser.add_argument(
-        'subject', 
+        '--subject', 
         type=str, 
-        help='分析したい主題（画像のファイル名など）。\n例: circle_center.jpg'
+        default='circle_center',
+        help='分析したい主題（画像のIDなど）。\n例: circle_center'
     )
     parser.add_argument(
         '--log_file', 
@@ -23,6 +25,7 @@ def main():
         default='sigma_logs/personal_memory.jsonl',
         help='分析対象の.jsonlログファイルのパス。'
     )
+
     args = parser.parse_args()
 
     # スクリプトからの相対パスでlog_fileのパスを構築

@@ -278,7 +278,7 @@ models
     開発者は `python tools/functor_consistency_checker.py` を実行し、現在のデータベースとベクトル生成ロジックの健康状態を診断します。問題があれば `functor_consistency_failures.jsonl` が生成・更新されます。
 
 2.  **Step 2: 治療の実行**:
-    次に `python stabilize_database.py` を実行します。このスクリプトは診断結果（カルテ）を元に、元のデータベースを補正し、安定化させた新しいデータベースを生成します。
+    次に `python src/stabilize_database.py` を実行します。このスクリプトは診断結果（カルテ）を元に、元のデータベースを補正し、安定化させた新しいデータベースを生成します。デフォルトでは、`config/sigma_product_database_custom_ai_generated.json` を読み込み、`config/sigma_product_database_stabilized.json` を生成します。入力元と出力先は `--source` と `--output` 引数で変更可能です。
 
 3.  **Step 3: 再診断**:
     安定化されたデータベースを用いて、再度 `tools/functor_consistency_checker.py` を実行し、問題が解消されたかを確認します。
@@ -492,7 +492,9 @@ SigmaSenseの知的活動は、個性豊かな仲間たちとして擬人化す�
 
 - **`src/stabilize_database.py`**
   - 説明: `functor_consistency_checker.py` の診断結果に基づき、データベースを補正・安定化させます。
-  - 実行例: `python src/stabilize_database.py`
+    - `--source`: 補正元のデータベースパスを指定します。
+    - `--output`: 補正後のデータベース出力パスを指定します。
+  - 実行例: `python src/stabilize_database.py --source config/source.json --output config/stabilized.json`
 
 - **`scripts/run_sheaf_analysis.py`**
   - 説明: 画像内の局所的な特徴が、層理論の貼り合わせ条件を満たしているか（矛盾がないか）を検証します。
