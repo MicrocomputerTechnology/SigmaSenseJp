@@ -2,8 +2,8 @@
 
 # Core scientific libraries
 numpy==1.26.4
-scikit-learn==1.6.1
-scipy==1.16.2
+scikit-learn==1.4.2
+scipy==1.13.1
 
 # Image processing
 opencv-python
