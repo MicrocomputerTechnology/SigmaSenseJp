@@ -1,0 +1,52 @@
+name: Run Project Scripts
+
+on: [pull_request]
+
+jobs:
+  run-scripts:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -U ginza
+        pip install https://github.com/megagonlabs/ginza/releases/download/v5.2.0/ja_ginza-5.2.0-py3-none-any.whl
+        pip install -r requirements.txt
+    - name: Download models
+      run: python scripts/download_models.py
+    - name: Create dummy files for scripts
+      run: |
+        mkdir -p sigma_logs
+        touch sigma_logs/personal_memory.jsonl
+        touch config/functor_consistency_failures.jsonl
+        python src/build_database.py --img_dir sigma_images
+    - name: Run sigma script
+      run: python scripts/run_sigma.py
+    - name: Run learning objective script
+      run: python scripts/run_learning_objective.py --objective "Test Objective"
+    - name: Run sheaf analysis script
+      run: python scripts/run_sheaf_analysis.py --image_path sigma_images/circle_center.jpg
+    - name: Run functor consistency checker
+      run: python tools/functor_consistency_checker.py
+    - name: Run stabilize database script
+      run: python src/stabilize_database.py --source config/sigma_product_database_stabilized.json --output config/sigma_product_database_stabilized.json
+    - name: Run ethics check on text script
+      run: python scripts/run_ethics_check_on_text.py --text "This is a test text."
+    - name: Run narrative analysis script
+      run: python scripts/run_narrative_analysis.py
+    - name: Generate number image
+      run: python src/generate_number_image.py --number 123 --save_path generated_number.png
+    - name: Generate AI image vectors
+      run: python src/generate_ai_image_vectors.py --image_path sigma_images/circle_center.jpg
+    - name: Generate AI dimensions
+      run: python src/generate_ai_dimensions.py
+    - name: Run terrier comparison script
+      run: python scripts/run_terrier_comparison.py
+    - name: Run psyche simulation script
+      run: python scripts/run_psyche_simulation.py
