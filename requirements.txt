@@ -18,6 +18,7 @@ tf_keras
 google-generativeai==0.8.5
 ollama==0.5.4
 
+spacy==3.6.1
 # Utilities
 tqdm==4.67.1
 PyYAML==6.0.2
