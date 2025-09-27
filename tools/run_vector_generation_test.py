@@ -66,8 +66,12 @@ def test_single_image_vector(image_path):
     print("✅ テスト完了。")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='単一画像のベクトル生成をテストするスクリプト')
-    parser.add_argument('image_path', type=str, help='テスト対象の画像ファイルへのパス')
-    args = parser.parse_args()
+    parser = argparse.ArgumentParser(
+        description='単一画像のベクトル生成をテストするスクリプト',
+        epilog="実行例: python tools/run_vector_generation_test.py --image_path sigma_images/circle_center.jpg",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('--image_path', type=str, default='sigma_images/circle_center.jpg', help='テスト対象の画像ファイルへのパス')
 
+    args = parser.parse_args()
     test_single_image_vector(args.image_path)

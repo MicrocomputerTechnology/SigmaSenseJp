@@ -30,11 +30,16 @@ def generate_number_image(number_text, output_path):
     print(f"Image of '{number_text}' saved to {output_path}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python generate_number_image.py <number> <output_path>")
-        sys.exit(1)
+    import argparse
 
-    number_to_generate = sys.argv[1]
-    file_path = sys.argv[2]
+    parser = argparse.ArgumentParser(
+        description="Generates an image of a given number.",
+        epilog="Example: python src/generate_number_image.py --number 7 --output_path sigma_images/test_digit_7.png",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--number", type=str, default='5', help="The number to generate in the image (e.g., '7').")
+    parser.add_argument("--output_path", type=str, default='sigma_images/number_5.png', help="The path to save the output image file.")
     
-    generate_number_image(number_to_generate, file_path)
+    args = parser.parse_args()
+    
+    generate_number_image(args.number, args.output_path)
