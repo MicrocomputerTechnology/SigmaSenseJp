@@ -20,5 +20,18 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Run a simple script (placeholder)
-      run: echo "Basic setup complete."
+    - name: Cache models
+      id: cache-models
+      uses: actions/cache@v4
+      with:
+        path: models/
+        key: ${{ runner.os }}-models-${{ hashFiles('scripts/download_models.py') }}
+        restore-keys: |
+          ${{ runner.os }}-models-
+
+    - name: Download models
+      if: steps.cache-models.outputs.cache-hit != 'true'
+      run: python scripts/download_models.py
+
+    - name: Build semantic vector database
+      run: python src/build_database.py --img_dir sigma_images
