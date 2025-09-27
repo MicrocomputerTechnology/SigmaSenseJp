@@ -64,10 +64,10 @@ def main():
     load_octasense_config(os.path.join(config_dir, 'octasense_config.yaml'))
 
     db_path = os.path.join(config_dir, "sigma_product_database_stabilized.json")
-    database, ids, vectors = load_sigma_database(db_path)
+    database, ids, vectors, layers = load_sigma_database(db_path)
     
     dim_loader = DimensionLoader()
-    sigma = SigmaSense(database, ids, vectors, dimension_loader=dim_loader)
+    sigma = SigmaSense(database, ids, vectors, layers, dimension_loader=dim_loader)
     
     # Instantiate VectorTransforms and SigmaFunctor correctly
     vector_transforms = VectorTransforms(dim_loader)

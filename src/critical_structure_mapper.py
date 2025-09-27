@@ -2,7 +2,7 @@ import os
 import json
 import numpy as np
 from src.config_loader import ConfigLoader
-from dimension_loader import DimensionLoader
+from src.dimension_loader import DimensionLoader
 
 # DimensionLoaderのインスタンスを生成
 loader = DimensionLoader()

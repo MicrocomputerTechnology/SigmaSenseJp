@@ -1,4 +1,4 @@
-from dimension_loader import DimensionLoader
+from src.dimension_loader import DimensionLoader
 from collections import defaultdict
 
 def display_result(result, dimension_loader: DimensionLoader):

@@ -7,6 +7,7 @@ import os
 import importlib.util
 import inspect
 import sys
+import subprocess
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.config_loader import ConfigLoader
 from src.temporary_handler_base import BaseHandler
@@ -18,6 +19,30 @@ translation_map = {
     "犬種識別学習": "dog_breed_identification",
     "数字理解学習": "number_understanding",
 }
+
+def check_ollama_availability(model_name):
+    """Ollamaサーバーが稼働しており、指定されたモデルが利用可能かチェックする"""
+    try:
+        # Ollamaサーバーが稼働しているかチェック
+        subprocess.run(['ollama', 'list'], check=True, capture_output=True)
+        
+        # 指定されたモデルがダウンロードされているかチェック
+        result = subprocess.run(['ollama', 'list'], check=True, capture_output=True, text=True)
+        if model_name not in result.stdout:
+            print(f"❗エラー: Ollamaモデル '{model_name}' が見つかりません。\n  `ollama pull {model_name}` を実行してください。")
+            return False
+        return True
+    except FileNotFoundError:
+        print("❗エラー: Ollamaコマンドが見つかりません。Ollamaがインストールされているか確認してください。")
+        print("  インストール: https://ollama.com/download")
+        return False
+    except subprocess.CalledProcessError:
+        print("❗エラー: Ollamaサーバーに接続できません。Ollamaサーバーが稼働しているか確認してください。")
+        print("  起動: `ollama serve`")
+        return False
+    except Exception as e:
+        print(f"❗エラー: Ollamaのチェック中に予期せぬエラーが発生しました: {e}")
+        return False
 
 # --- 恒久ハンドラの動的読み込み ---
 def load_permanent_handlers(registry: dict):
@@ -184,6 +209,12 @@ def process_learning_objective(objective: dict):
     handler_code = objective.get("temporary_handler")
 
     if not handler_code and mode == "ヴェトラ":
+        # Ollamaの可用性をチェック
+        ollama_model = vetra.code_gen_model # VetraLLMCoreからモデル名を取得
+        if not check_ollama_availability(ollama_model):
+            print("❗ Ollamaのセットアップが不完全なため、コード生成をスキップします。")
+            return
+
         print("  - 臨時ハンドラが見つかりません。ヴェトラ先生がコード生成を試みます...")
         task_description = objective.get("goal", "")
         if not task_description:
