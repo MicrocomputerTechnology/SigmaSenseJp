@@ -1,6 +1,8 @@
 import json
 import os
-from gemini_client import GeminiClient # オリエン大賢者をインポート
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src.gemini_client import GeminiClient # オリエン大賢者をインポート
 
 def run_integration_process():
     """Reads the offline log, has Orien review it, and prepares for permanentization."""

@@ -27,12 +27,21 @@ class ToyokawaModel:
         # Load model weights from config
         self.weights = config.get("weights")
         if not self.weights:
-            print("Warning: ToyokawaModel weights not found in config. Using default weights.")
-            self.weights = {
-                "alpha": {f"E_{agent}": 1.0/len(self.agents) for agent in self.agents},
-                "beta": 0.5,  # Weight for coherence (positive impact)
-                "gamma": -0.5, # Weight for divergence (negative impact)
-            }
+            model_params = config.get("model_params")
+            if model_params and 'alpha' in model_params and 'beta' in model_params and 'gamma' in model_params:
+                print("Found model_params in config. Constructing weights.")
+                self.weights = {
+                    "alpha": {f"E_{agent}": model_params['alpha'] for agent in self.agents},
+                    "beta": model_params['beta'],
+                    "gamma": model_params['gamma']
+                }
+            else:
+                print("Warning: ToyokawaModel weights not found in config. Using default weights.")
+                self.weights = {
+                    "alpha": {f"E_{agent}": 1.0/len(self.agents) for agent in self.agents},
+                    "beta": 0.5,  # Weight for coherence (positive impact)
+                    "gamma": -0.5, # Weight for divergence (negative impact)
+                }
 
         print("Model weights (α, β, γ) have been set.")
         print(f"  - Alpha (αᵢ): {self.weights.get("alpha", {}).get(f"E_{self.agents[0]}", 0):.2f} for each agent")
