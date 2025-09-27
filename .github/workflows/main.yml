@@ -32,3 +32,16 @@ jobs:
     - name: Download models
       if: steps.cache-models.outputs.cache-hit != 'true'
       run: python scripts/download_models.py
+
+    - name: Build semantic vector database
+      run: python src/build_database.py --img_dir sigma_images
+
+    - name: Set up Ollama
+      run: |
+        curl -fsSL https://ollama.com/install.sh | sh
+        ollama serve & # Run Ollama in background
+        sleep 5 # Give Ollama time to start
+        ollama pull codegemma:latest
+
+    - name: Verify Ollama setup
+      run: ollama list | grep codegemma:latest
