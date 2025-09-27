@@ -2,13 +2,13 @@
 
 # Core scientific libraries
 numpy==1.26.4
-scikit-learn==1.6.1
-scipy==1.16.2
+scikit-learn==1.4.2
+scipy==1.13.1
 
 # Image processing
 opencv-python
 Pillow==11.3.0
-scikit-image==0.25.2
+scikit-image==0.24.0
 
 # AI/ML
 tensorflow==2.20.0
