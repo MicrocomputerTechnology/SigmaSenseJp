@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.9"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Cache models
+      id: cache-models
+      uses: actions/cache@v4
+      with:
+        path: models/
+        key: ${{ runner.os }}-models-${{ hashFiles('scripts/download_models.py') }}
+        restore-keys: |
+          ${{ runner.os }}-models-
+
+    - name: Download models
+      if: steps.cache-models.outputs.cache-hit != 'true'
+      run: python scripts/download_models.py
+
+    - name: Build semantic vector database
+      run: python src/build_database.py --img_dir sigma_images
+
+    - name: Set up Ollama
+      run: |
+        curl -fsSL https://ollama.com/install.sh | sh
+        ollama serve & # Run Ollama in background
+        sleep 5 # Give Ollama time to start
+        ollama pull codegemma:latest
+
+    - name: Verify Ollama setup
+      run: ollama list | grep codegemma:latest
+
+    - name: Run all major scripts
+      run: |
+        echo "Running scripts..."
+        python scripts/run_sigma.py
+        python scripts/run_learning_objective.py --objective "新しい犬種を学習する"
+        python scripts/run_sheaf_analysis.py --image_path sigma_images/multi_object.jpg
+        python scripts/run_benchmark.py
+        python tools/functor_consistency_checker.py
+        python src/stabilize_database.py
+        python scripts/run_ethics_check_on_text.py --text "これはテスト用の安全なテキストです。"
+        python tools/run_vector_generation_test.py --image_path sigma_images/circle_center.jpg
+        python scripts/run_narrative_analysis.py --subject circle_center
+        python src/generate_number_image.py --number 7 --output_path sigma_images/test_digit_7.png
+        python src/generate_ai_image_vectors.py
+        python src/generate_ai_dimensions.py --type selia
+        python scripts/run_terrier_comparison.py sigma_images/circle_center.jpg sigma_images/pentagon_center.jpg
+        python tools/review_handlers.py
+        python tools/log_batch_evaluator.py
+        python tools/critical_structure_report.py
+        python scripts/run_psyche_simulation.py
+
+    - name: Run tests
+      run: pytest
