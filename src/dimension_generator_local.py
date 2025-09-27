@@ -22,10 +22,10 @@ class DimensionGenerator:
         print("Initializing Multi-Engine Dimension Generator...")
         self.engines = [
             LegacyOpenCVEngine(),
-            EfficientNetEngine(),
+            # EfficientNetEngine(), # Temporarily disabled due to CI loading issues
             MobileNetV1Engine(),
             MobileViTEngine(),
-            ResNetEngine()
+            # ResNetEngine()      # Temporarily disabled due to CI loading issues
         ]
         print(f"{len(self.engines)} engines loaded.")
 

@@ -25,59 +25,32 @@ pip install -r requirements.txt
 
 ### 4. 機械学習モデルの準備
 
-SigmaSenseの機能の一部は、事前にダウンロードが必要な機械学習モデルに依存しています。以下の手順に従って、必要なモデルを`models/`ディレクトリに配置してください。
+SigmaSenseの機能は、事前にダウンロードが必要な複数の機械学習モデルに依存しています。
 
-#### 4.1. TFLiteモデルのダウンロード
+プロジェクトに同梱されているスクリプトを実行するだけで、必要なモデルがすべて`models/`ディレクトリに自動的にダウンロード・配置されます。
 
-以下のTFLiteモデルは、`curl`または`wget`コマンドを使用して直接ダウンロードできます。
-
--   **EfficientNet-Lite0 (`efficientnet_lite0.tflite`)**
-    ```bash
-    mkdir -p models
-    curl -L "https://tfhub.dev/tensorflow/efficientnet/lite0/classification/2?tf-hub-format=tflite" -o models/efficientnet_lite0.tflite
-    # または wget
-    # wget -O models/efficientnet_lite0.tflite "https://tfhub.dev/tensorflow/efficientnet/lite0/classification/2?tf-hub-format=tflite"
-    ```
-
--   **MobileNet V1 (`mobilenet_v1.tflite`)**
-    ```bash
-    mkdir -p models
-    curl -L "https://tfhub.dev/tensorflow/lite-model/mobilenet_v1_1.0_224/1/default/1?lite-format=tflite" -o models/mobilenet_v1.tflite
-    # または wget
-    # wget -O models/mobilenet_v1.t1.0_224.tflite "https://tfhub.dev/tensorflow/lite-model/mobilenet_v1_1.0_224/1/default/1?lite-format=tflite"
-    ```
-
-#### 4.2. SavedModel形式のモデルのダウンロード
-
-以下のモデルはSavedModel形式であり、`tensorflow_hub`ライブラリを使用してダウンロードし、ローカルに保存する必要があります。以下のPythonスクリプトを実行して、モデルを`models/`ディレクトリに配置してください。
-
-```python
-import tensorflow as tf
-import tensorflow_hub as hub
-import os
-
-# モデルを保存するディレクトリ
-model_dir = "models"
-os.makedirs(model_dir, exist_ok=True)
-
-# MobileViTモデルのダウンロードと保存
-print("Downloading and saving MobileViT model...")
-mobilevit_url = "https://www.kaggle.com/models/google/mobilevit/TensorFlow2/xxs-1k-256-classification/2"
-mobilevit_model = hub.KerasLayer(mobilevit_url)
-tf.saved_model.save(mobilevit_model, os.path.join(model_dir, "mobilevit-tensorflow2-xxs-1k-256-v1"))
-print("MobileViT model saved.")
-
-# ResNet V2 50モデルのダウンロードと保存
-print("Downloading and saving ResNet V2 50 model...")
-resnet_url = "https://www.kaggle.com/models/google/resnet-v2/TensorFlow2/50-classification/2"
-resnet_model = hub.KerasLayer(resnet_url)
-tf.saved_model.save(resnet_model, os.path.join(model_dir, "resnet_v2_50_saved_model"))
-print("ResNet V2 50 model saved.")
-
-print("All models prepared successfully.")
+```bash
+python scripts/download_models.py
 ```
 
-### 5. APIキーの設定
+このスクリプトは、以下のモデルをダウンロードします。
+- EfficientNet-Lite0 (TFLite)
+- MobileNet V1 (TFLite)
+- MobileViT (SavedModel)
+- ResNet V2 50 (SavedModel)
+
+### 5. 意味ベクトルデータベースの構築
+
+次に、画像から特徴を抽出して、システムの動作に不可欠な意味ベクトルデータベースを構築します。
+以下のコマンドを実行してください。
+
+```bash
+python src/build_database.py --img_dir sigma_images
+```
+
+これにより、`sigma_images` ディレクトリ内の画像に基づいて、`config/sigma_product_database_stabilized.json` ファイルが生成されます。
+
+### 6. APIキーの設定
 本システムは、外部のAPI（Geminiなど）を利用する機能があります。これらの機能を使用するには、実行するターミナルのセッションで環境変数としてAPIキーを設定する必要があります。
 
 **キーはファイルに保存せず、実行の都度、環境変数として設定することを強く推奨します。** これにより、キーの漏洩リスクを最小限に抑えることができます。
@@ -488,27 +461,43 @@ SigmaSenseの知的活動は、個性豊かな仲間たちとして擬人化す�
 
 ## 付録D: 実行可能スクリプト一覧
 
-プロジェクト内で直接実行されることを意図したスクリプトの一覧です。
-これらのスクリプトは、`if __name__ == "__main__"` のブロックを持っています。
+プロジェクト内で直接実行されることを意図した主要なスクリプトの一覧です。
 
-- `scripts/run_ethics_check_on_text.py`
-- `scripts/run_learning_objective.py`
-- `scripts/run_sheaf_analysis.py`
-- `scripts/run_benchmark.py`
-- `scripts/run_reconstruction_experiment.py`
-- `scripts/run_online_integration.py`
-- `scripts/run_functor_check.py`
-- `scripts/run_narrative_processing_experiment.py`
-- `scripts/run_terrier_comparison.py`
-- `scripts/run_sigma.py`
-- `tools/review_handlers.py`
-- `tools/log_batch_evaluator.py`
-- `tools/semantic_axis_report.py`
-- `tools/critical_structure_report.py`
-- `tools/run_vector_generation_test.py`
-- `tools/functor_consistency_checker.py`
-- `src/generate_ai_image_vectors.py`
-- `src/generate_number_image.py`
-- `src/generate_ai_dimensions.py`
-- `src/build_database.py`
-- `src/stabilize_database.py`
+### メインプロセス
+- **`scripts/run_sigma.py`**
+  - 説明: 第十五次世代の統合思考サイクルを実行するメインスクリプト。
+  - 実行例: `python scripts/run_sigma.py`
+
+- **`scripts/run_learning_objective.py`**
+  - 説明: 外部から与えられた学習目標を処理する自己拡張ワークフローを開始します。
+  - 実行例: `python scripts/run_learning_objective.py --objective "新しい犬種を学習する"`
+
+### データベースとモデル
+- **`src/build_database.py`**
+  - 説明: 画像ディレクトリから意味ベクトルデータベースを構築・更新します。
+  - 実行例: `python src/build_database.py --img_dir sigma_images`
+
+- **`scripts/download_models.py`**
+  - 説明: プロジェクトに必要な機械学習モデルをすべてダウンロードします。
+  - 実行例: `python scripts/download_models.py`
+
+### 分析と評価
+- **`scripts/run_benchmark.py`**
+  - 説明: `sigma_images` データセットを使い、システムの基本的な分類性能を評価します。
+  - 実行例: `python scripts/run_benchmark.py`
+
+- **`tools/functor_consistency_checker.py`**
+  - 説明: データベースの論理的一貫性（関手性）を診断し、問題点をログに出力します。
+  - 実行例: `python tools/functor_consistency_checker.py`
+
+- **`src/stabilize_database.py`**
+  - 説明: `functor_consistency_checker.py` の診断結果に基づき、データベースを補正・安定化させます。
+  - 実行例: `python src/stabilize_database.py`
+
+- **`scripts/run_sheaf_analysis.py`**
+  - 説明: 画像内の局所的な特徴が、層理論の貼り合わせ条件を満たしているか（矛盾がないか）を検証します。
+  - 実行例: `python scripts/run_sheaf_analysis.py --image_path sigma_images/multi_object.jpg`
+
+- **`scripts/run_ethics_check_on_text.py`**
+  - 説明: 入力されたテキストに対して倫理チェックを実行します。
+  - 実行例: `python scripts/run_ethics_check_on_text.py --text "これはテスト用の安全なテキストです。"`

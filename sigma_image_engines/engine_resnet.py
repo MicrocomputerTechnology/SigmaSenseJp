@@ -3,28 +3,29 @@ import numpy as np
 from PIL import Image
 import os
 import tensorflow as tf
+import tensorflow_hub as hub
 
 class ResNetEngine:
     """
     An engine that uses a real ResNet V2 50 TensorFlow SavedModel to extract features.
     """
     def __init__(self, model_path="models/resnet_v2_50_saved_model", config=None):
-        print("Initializing REAL ResNet V2 50 (TensorFlow SavedModel) Engine...")
+        print("Initializing REAL ResNet V2 50 (TensorFlow Hub) Engine...")
         self.model_path = model_path
         self.model = None
         if not os.path.isdir(self.model_path):
             print(f"!!! ERROR: SavedModel directory not found at {self.model_path} !!!")
             return
         try:
-            self.model = tf.saved_model.load(self.model_path)
-            self.infer = self.model.signatures["serving_default"]
+            # Load the model as a KerasLayer
+            self.model = hub.KerasLayer(self.model_path)
             # Input size for ResNet V2 50 is 224x224
             self.input_height = 224
             self.input_width = 224
-            print(f"TensorFlow SavedModel loaded successfully from {model_path}.")
+            print(f"TensorFlow Hub Layer loaded successfully from {model_path}.")
             print(f"Using input shape: ({self.input_height}, {self.input_width})")
         except Exception as e:
-            print(f"!!! ERROR: Failed to load SavedModel from {self.model_path} !!!")
+            print(f"!!! ERROR: Failed to load model from {self.model_path} !!!")
             print(f"Error: {e}")
             self.model = None
 
@@ -47,11 +48,9 @@ class ResNetEngine:
         try:
             input_tensor = self._preprocess_image(image_path_or_obj)
             
-            # Call the inference function
-            output_dict = self.infer(input_tensor)
-            
-            # The output key for this model is 'feature_vector'
-            feature_vector = output_dict['feature_vector'].numpy()[0]
+            # Call the KerasLayer directly for inference
+            output_tensor = self.model(input_tensor)
+            feature_vector = output_tensor.numpy()[0]
             
             return {
                 "resnet_v2_50_feature_mean": float(np.mean(feature_vector)),
@@ -59,5 +58,5 @@ class ResNetEngine:
                 "resnet_v2_50_feature_max": float(np.max(feature_vector)),
             }
         except Exception as e:
-            print(f"Error during ResNet V2 50 (SavedModel) inference: {e}")
+            print(f"Error during ResNet V2 50 (Hub Layer) inference: {e}")
             return {}
