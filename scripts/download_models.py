@@ -2,80 +2,95 @@ import os
 import subprocess
 import tensorflow as tf
 import tensorflow_hub as hub
+import zipfile
+import requests # Use requests for more robust downloads
 
-# Create models directory if it doesn't exist
-model_dir = "models"
-os.makedirs(model_dir, exist_ok=True)
+# --- Configuration ---
+MODEL_DIR = "models"
 
-# --- Download TFLite models ---
-print("--- Downloading TFLite models ---")
+# Models to download via requests
+TFLITE_MODELS = {
+    "efficientnet_lite0.tflite": "https://tfhub.dev/tensorflow/lite-model/efficientnet/lite0/int8/1",
+    "mobilenet_v1.tflite": "https://tfhub.dev/tensorflow/lite-model/mobilenet_v1_1.0_224/1/default/1?lite-format=tflite"
+}
 
-# EfficientNet-Lite0
-efficientnet_url = "https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/image_classification/lite-model_efficientnet_lite0_int8_1.tflite"
-efficientnet_path = os.path.join(model_dir, "efficientnet_lite0.tflite")
-if not os.path.exists(efficientnet_path):
-    print(f"Downloading EfficientNet-Lite0 to {efficientnet_path}...")
+# Models to download via TensorFlow Hub
+SAVED_MODELS = {
+    "resnet_v2_50_saved_model": "https://www.kaggle.com/models/google/resnet-v2/TensorFlow2/50-classification/2"
+}
+
+# Special case for MobileViT (download from zip)
+MOBILEVIT_ZIP_URL = "https://itb.co.jp/wp-content/uploads/mobilevit-tensorflow2-xxs-1k-256-v1.zip"
+MOBILEVIT_DIR_NAME = "mobilevit-tensorflow2-xxs-1k-256-v1"
+
+# --- Main script ---
+def download_file(url, filepath):
+    """Downloads a file from a URL to a given path using requests."""
     try:
-        subprocess.run(["curl", "-L", efficientnet_url, "-o", efficientnet_path], check=True)
-        print("EfficientNet-Lite0 downloaded successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error downloading EfficientNet-Lite0: {e}")
-else:
-    print(f"EfficientNet-Lite0 already exists at {efficientnet_path}. Skipping download.")
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status() # Raise an exception for bad status codes
+            with open(filepath, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        # Basic validation: check if file size is reasonable (e.g., > 1KB)
+        if os.path.getsize(filepath) < 1024:
+            print(f"WARNING: Downloaded file {filepath} is very small. It might be an error page.")
+        print(f"Successfully downloaded {os.path.basename(filepath)}.")
+        return True
+    except requests.exceptions.RequestException as e:
+        print(f"ERROR: Failed to download {os.path.basename(filepath)}: {e}")
+        return False
 
-# MobileNet V1
-mobilenet_url = "https://tfhub.dev/tensorflow/lite-model/mobilenet_v1_1.0_224/1/default/1?lite-format=tflite"
-mobilenet_path = os.path.join(model_dir, "mobilenet_v1.tflite")
-if not os.path.exists(mobilenet_path):
-    print(f"Downloading MobileNet V1 to {mobilenet_path}...")
-    try:
-        subprocess.run(["curl", "-L", mobilenet_url, "-o", mobilenet_path], check=True)
-        print("MobileNet V1 downloaded successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error downloading MobileNet V1: {e}")
-else:
-    print(f"MobileNet V1 already exists at {mobilenet_path}. Skipping download.")
+def main():
+    """Downloads all necessary models for the project."""
+    os.makedirs(MODEL_DIR, exist_ok=True)
 
+    # --- Download TFLite models ---
+    print("--- Downloading TFLite models ---")
+    for filename, url in TFLITE_MODELS.items():
+        filepath = os.path.join(MODEL_DIR, filename)
+        if not os.path.exists(filepath):
+            print(f"Downloading {filename}...")
+            download_file(url, filepath)
+        else:
+            print(f"{filename} already exists. Skipping.")
 
-# --- Download SavedModel format models ---
-print("\n--- Downloading SavedModel format models ---")
+    # --- Download SavedModel format models from TF Hub ---
+    print("\n--- Downloading SavedModel format models from TensorFlow Hub ---")
+    for dirname, url in SAVED_MODELS.items():
+        dirpath = os.path.join(MODEL_DIR, dirname)
+        if not os.path.exists(dirpath):
+            print(f"Downloading and saving {dirname}...")
+            try:
+                model_layer = hub.KerasLayer(url)
+                tf.saved_model.save(model_layer, dirpath)
+                print(f"Successfully saved {dirname}.")
+            except Exception as e:
+                print(f"ERROR: Failed to download or save {dirname}: {e}")
+        else:
+            print(f"{dirname} already exists. Skipping.")
 
-# MobileViT model
-mobilevit_path = os.path.join(model_dir, "mobilevit-tensorflow2-xxs-1k-256-v1")
-if not os.path.exists(mobilevit_path):
-    print("Downloading and saving MobileViT model...")
-    mobilevit_url = "https://itb.co.jp/wp-content/uploads/mobilevit-tensorflow2-xxs-1k-256-v1.zip"
-    try:
-        # Download the zip file
-        zip_path = os.path.join(model_dir, "mobilevit-tensorflow2-xxs-1k-256-v1.zip")
-        subprocess.run(["curl", "-L", mobilevit_url, "-o", zip_path], check=True)
-        print("MobileViT zip downloaded successfully. Extracting...")
+    # --- Download MobileViT from Zip ---
+    print("\n--- Downloading MobileViT model from Zip ---")
+    mobilevit_path = os.path.join(MODEL_DIR, MOBILEVIT_DIR_NAME)
+    if not os.path.exists(mobilevit_path):
+        print(f"Downloading and extracting {MOBILEVIT_DIR_NAME}...")
+        zip_path = os.path.join(MODEL_DIR, f"{MOBILEVIT_DIR_NAME}.zip")
+        if download_file(MOBILEVIT_ZIP_URL, zip_path):
+            try:
+                print("Zip file downloaded. Extracting...")
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(MODEL_DIR)
+                print(f"Successfully extracted {MOBILEVIT_DIR_NAME}.")
+            except Exception as e:
+                print(f"ERROR: Failed to extract {MOBILEVIT_DIR_NAME}: {e}")
+            finally:
+                if os.path.exists(zip_path):
+                    os.remove(zip_path)
+    else:
+        print(f"{MOBILEVIT_DIR_NAME} already exists. Skipping.")
 
-        # Extract the zip file
-        import zipfile
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(mobilevit_path)
-        os.remove(zip_path) # Clean up the zip file
-        print("MobileViT model extracted successfully.")
-    except Exception as e:
-        print(f"Error downloading or saving MobileViT model: {e}")
-else:
-    print(f"MobileViT model already exists at {mobilevit_path}. Skipping download.")
+    print("\n--- Model download process completed ---")
 
-
-# ResNet V2 50 model
-resnet_path = os.path.join(model_dir, "resnet_v2_50_saved_model")
-if not os.path.exists(resnet_path):
-    print("Downloading and saving ResNet V2 50 model...")
-    resnet_url = "https://tfhub.dev/google/imagenet/resnet_v2_50/classification/5"
-    try:
-        resnet_model = hub.KerasLayer(resnet_url)
-        tf.saved_model.save(resnet_model, resnet_path)
-        print("ResNet V2 50 model saved successfully.")
-    except Exception as e:
-        print(f"Error downloading or saving ResNet V2 50 model: {e}")
-else:
-    print(f"ResNet V2 50 model already exists at {resnet_path}. Skipping download.")
-
-
-print("\n--- Model download process completed ---")
+if __name__ == "__main__":
+    main()

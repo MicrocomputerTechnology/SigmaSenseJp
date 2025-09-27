@@ -135,13 +135,30 @@ def build_database(img_dir, db_path, dimension_config_path):
         print(f"\n❗ エラー: データベースファイルの書き込みに失敗しました: {e}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Build the SigmaSense product database.")
+    parser = argparse.ArgumentParser(
+        description="Build the SigmaSense product database from a directory of images.",
+        epilog="Example: python src/build_database.py --img_dir sigma_images",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--img_dir", type=str, required=True,
                         help="Directory containing images to process.")
     parser.add_argument("--db_path", type=str, default="config/sigma_product_database_stabilized.json",
                         help="Path to the output SigmaSense product database JSON file.")
     parser.add_argument("--dimension_config", type=str, default=None,
-                        help="Path to a specific dimension configuration file (YAML or JSON). If not provided, all default dimension files will be used.")
+                        help="Path to a specific dimension configuration file (YAML or JSON). \nIf not provided, all default dimension files will be used.")
     
-    args = parser.parse_args()
-    build_database(args.img_dir, args.db_path, args.dimension_config)
+    # 引数が渡されなかった場合に、エラーメッセージとヘルプを表示
+    if len(sys.argv) == 1:
+        print("エラー: 画像ディレクトリが指定されていません。--img_dir 引数を使用してください。\n")
+        parser.print_help()
+        sys.exit(1)
+
+    try:
+        args = parser.parse_args()
+        build_database(args.img_dir, args.db_path, args.dimension_config)
+    except SystemExit as e:
+        # argparseが引数エラーで終了しようとした場合、ここでキャッチして追加情報を提供
+        # (このロジックは、引数が一部不足している場合などに役立つ)
+        if e.code != 0:
+            print("\n引数の指定に誤りがあるようです。使い方を確認してください。")
+        # parser.print_help() # 必要に応じてヘルプを再表示
