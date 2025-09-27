@@ -32,6 +32,3 @@ jobs:
     - name: Download models
       if: steps.cache-models.outputs.cache-hit != 'true'
       run: python scripts/download_models.py
-
-    - name: Build semantic vector database
-      run: python src/build_database.py --img_dir sigma_images
