@@ -76,7 +76,7 @@ def main():
     parser.add_argument(
         '--db_path', 
         type=str, 
-        default=os.path.join(project_root, "config", "sigma_product_database_custom_ai_generated.json"),
+        default=os.path.join(project_root, "config", "sigma_product_database_stabilized.json"),
         help='Path to the Sigma product database JSON file.'
     )
     parser.add_argument(

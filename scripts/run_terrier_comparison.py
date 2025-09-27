@@ -4,6 +4,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.terrier_vector_generator import generate_terrier_vector
 
+import argparse
+
 def cosine_similarity(v1, v2):
     if not isinstance(v1, np.ndarray):
         v1 = np.array(v1)
@@ -19,10 +21,7 @@ def cosine_similarity(v1, v2):
         
     return dot_product / (norm_v1 * norm_v2)
 
-def main():
-    img1_path = "sigma_images/dog_01.jpg"
-    img2_path = "sigma_images/dog_02.jpg"
-
+def main(img1_path, img2_path):
     vector1 = generate_terrier_vector(img1_path)
     vector2 = generate_terrier_vector(img2_path)
 
@@ -45,4 +44,8 @@ def main():
         print("判定: これらは異なる犬種である可能性が高いです。")
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='2枚のテリア犬の画像の類似度を比較します。')
+    parser.add_argument('image1_path', type=str, help='1枚目の画像ファイルのパス')
+    parser.add_argument('image2_path', type=str, help='2枚目の画像ファイルのパス')
+    args = parser.parse_args()
+    main(args.image1_path, args.image2_path)

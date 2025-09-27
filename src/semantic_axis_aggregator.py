@@ -1,7 +1,7 @@
 import os
 import json
 import numpy as np
-from dimension_loader import DimensionLoader
+from src.dimension_loader import DimensionLoader
 
 def aggregate_semantic_axes(log_dir=None):
     """
