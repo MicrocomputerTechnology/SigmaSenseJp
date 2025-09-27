@@ -56,7 +56,7 @@ class PersonalMemoryGraph:
         """
         memory_entry = {
             "memory_id": str(uuid.uuid4()),
-            "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "experience": experience_data
         }
 
