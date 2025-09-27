@@ -180,7 +180,7 @@ if __name__ == "__main__":
     process_narrative(permanentized_narrative)
     process_narrative(new_unknown_narrative)
     
-    print("\n--- 実験終了 ---")======================")
+    print("\n--- 実験終了 ---======================")
     print("== SigmaSense 第十次実証実験：自己拡張ループの統合テスト ==")
     print("==================================================================")
 

@@ -1,8 +1,6 @@
 import json
 import os
-
-LOG_FILE = os.path.join(os.path.dirname(__file__), '..', 'sigma_logs', 'permanentization_log.jsonl')
-HANDLERS_DIR = os.path.join(os.path.dirname(__file__), '..', 'handlers')
+import argparse
 
 # 語り/学習目標のタイトルを英語のファイル名に変換するためのマップ
 translation_map = {
@@ -13,16 +11,16 @@ translation_map = {
     "数字理解学習": "number_understanding",
 }
 
-def review_and_permanentize():
+def review_and_permanentize(log_file_path):
     """
     恒久化ログを読み込み、レビュー待ちのハンドラを対話的に処理する。
     語り・学習目標の両方のログ形式に対応。
     """
-    if not os.path.exists(LOG_FILE):
-        print(f"ログファイルが見つかりません: {LOG_FILE}")
+    if not os.path.exists(log_file_path):
+        print(f"ログファイルが見つかりません: {log_file_path}")
         return
 
-    with open(LOG_FILE, "r", encoding="utf-8") as f:
+    with open(log_file_path, "r", encoding="utf-8") as f:
         log_entries = [json.loads(line) for line in f]
 
     updated_entries = []
@@ -108,12 +106,20 @@ def review_and_permanentize():
         return
 
     if changes_made:
-        with open(LOG_FILE, "w", encoding="utf-8") as f:
+        with open(log_file_path, "w", encoding="utf-8") as f:
             for entry in updated_entries:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        print(f"\nログファイル '{LOG_FILE}' が更新されました。")
+        print(f"\nログファイル '{log_file_path}' が更新されました。")
     else:
         print("\nログファイルに変更はありませんでした。")
 
 if __name__ == "__main__":
-    review_and_permanentize()
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    default_log_file = os.path.join(project_root, 'sigma_logs', 'offline_permanentization_log.jsonl')
+    
+    parser = argparse.ArgumentParser(description='レビュー待ちのハンドラを対話的に処理します。')
+    parser.add_argument('--log_file', type=str, default=default_log_file,
+                        help=f'レビュー対象のログファイルパス (デフォルト: {default_log_file})')
+    args = parser.parse_args()
+
+    review_and_permanentize(args.log_file)

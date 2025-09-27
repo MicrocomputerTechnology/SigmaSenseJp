@@ -46,13 +46,13 @@ def main():
     # SigmaSenseの初期化（倫理チェックモジュールをロードするために必要）
     loader = DimensionLoader()
     # データベースのロードはダミーでOK
-    database, ids, vectors = [], [], []
+    database, ids, vectors, layers = [], [], [], []
     try:
-        database, ids, vectors = load_sigma_database("sigma_product_database_custom_ai_generated.json")
+        database, ids, vectors, layers = load_sigma_database("sigma_product_database_custom_ai_generated.json")
     except FileNotFoundError:
         print("Warning: Main database not found. Proceeding with empty DB for ethics check.")
 
-    sigma = SigmaSense(database, ids, vectors, dimension_loader=loader)
+    sigma = SigmaSense(database, ids, vectors, layers, dimension_loader=loader)
 
     # --- テストケース1: 安全なテキスト ---
     safe_text = "本日、新しい公園が開園し、多くの家族連れで賑わいました。子供たちは笑顔で遊具に向かって走る様子が見られました。"

@@ -1,13 +1,4 @@
-import os
-import yaml
-import numpy as np
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.sigma_local_core import SigmaLocalCore
-from src.dimension_generator_local import DimensionGenerator
-from src.dimension_optimizer import DimensionOptimizer
-from src.dimension_suggester import DimensionSuggester
+import argparse
 
 def print_header(title):
     bar = "="*60
@@ -34,11 +25,16 @@ if __name__ == '__main__':
     CONFIG_PATH = os.path.join(config_dir, "vector_dimensions_mobile.yaml")
     OPTIMIZED_CONFIG_PATH = os.path.join(config_dir, "vector_dimensions_mobile_optimized.yaml")
     
-    IMG_CIRCLE = "sigma_images/circle_center.jpg"
-    IMG_CAT = "sigma_images/cat_01.jpg"
-    IMG_NEW_PHENOMENON = "sigma_images/pentagon_center_blue.jpg"
+    parser = argparse.ArgumentParser(description='Run an offline evolution cycle simulation.')
+    parser.add_argument('--img_circle', type=str, default=os.path.join(project_root, "sigma_images", "circle_center.jpg"),
+                        help='Path to the circle image.')
+    parser.add_argument('--img_cat', type=str, default=os.path.join(project_root, "sigma_images", "cat_01.jpg"),
+                       help='Path to the cat image.')
+    parser.add_argument('--img_new_phenomenon', type=str, default=os.path.join(project_root, "sigma_images", "pentagon_center_blue.jpg"),
+                        help='Path to the new phenomenon image.')
+    args = parser.parse_args()
 
-    if not all(os.path.exists(p) for p in [IMG_CIRCLE, IMG_CAT, IMG_NEW_PHENOMENON]):
+    if not all(os.path.exists(p) for p in [args.img_circle, args.img_cat, args.img_new_phenomenon]):
         print("\nERROR: One or more test images are missing. Aborting simulation.")
         exit()
 
@@ -47,7 +43,7 @@ if __name__ == '__main__':
     # === CYCLE 1: BASELINE COMPARISON ===
     print_header("Cycle 1: Baseline Comparison (Before Evolution)")
     core_v1 = SigmaLocalCore(config_path=CONFIG_PATH)
-    result_baseline = core_v1.compare_images(IMG_CIRCLE, IMG_CAT)
+    result_baseline = core_v1.compare_images(args.img_circle, args.img_cat)
     if not result_baseline: exit()
     print(f"  -> Similarity (Circle vs Cat): {result_baseline['similarity_score']:.4f}")
 
@@ -55,8 +51,8 @@ if __name__ == '__main__':
     print_header("Cycle 2: Encountering a New Phenomenon")
     generator = DimensionGenerator()
     suggester = DimensionSuggester()
-    print(f"Analyzing new phenomenon: {os.path.basename(IMG_NEW_PHENOMENON)}")
-    new_phenomenon_dims = generator.generate_dimensions(IMG_NEW_PHENOMENON)
+    print(f"Analyzing new phenomenon: {os.path.basename(args.img_new_phenomenon)}")
+    new_phenomenon_dims = generator.generate_dimensions(args.img_new_phenomenon)
     suggestions = suggester.suggest(new_phenomenon_dims['features'])
     if suggestions:
         print("Vetra has new suggestions based on the phenomenon:")
@@ -72,8 +68,8 @@ if __name__ == '__main__':
         optimizer_config = yaml.safe_load(f)
     optimizer = DimensionOptimizer(config=optimizer_config)
     print("Generating vectors for feedback using current architecture...")
-    vec_circle = generator.generate_dimensions(IMG_CIRCLE)['features']
-    vec_cat = generator.generate_dimensions(IMG_CAT)['features']
+    vec_circle = generator.generate_dimensions(args.img_circle)['features']
+    vec_cat = generator.generate_dimensions(args.img_cat)['features']
     
     initial_dims = optimizer.current_weights.keys()
     vec_circle_filtered = {k: vec_circle.get(k, 0.0) for k in initial_dims}
@@ -95,7 +91,7 @@ if __name__ == '__main__':
         print("Optimized config not found.")
     else:
         core_v2 = SigmaLocalCore(config_path=OPTIMIZED_CONFIG_PATH)
-        result_evolved = core_v2.compare_images(IMG_CIRCLE, IMG_CAT)
+        result_evolved = core_v2.compare_images(args.img_circle, args.img_cat)
         if result_evolved:
             print(f"\n  -> Similarity (Circle vs Cat) BEFORE evolution: {result_baseline['similarity_score']:.4f}")
             print(f"  -> Similarity (Circle vs Cat) AFTER evolution:  {result_evolved['similarity_score']:.4f}")
