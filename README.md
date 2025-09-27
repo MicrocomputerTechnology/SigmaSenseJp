@@ -308,7 +308,7 @@ models
     次に `python stabilize_database.py` を実行します。このスクリプトは診断結果（カルテ）を元に、元のデータベースを補正し、安定化させた新しいデータベースを生成します。
 
 3.  **Step 3: 再診断**:
-    安定化されたデータベースを用いて、再度 `functor_consistency_checker.py` を実行し、問題が解消されたかを確認します。
+    安定化されたデータベースを用いて、再度 `tools/functor_consistency_checker.py` を実行し、問題が解消されたかを確認します。
 
 この「診断 → 治療 → 再診断」のサイクルを繰り返すことで、SigmaSenseの意味データベースは、その論理的整合性を常に高く維持し、信頼性の高い照合性能を実現しています。
 
@@ -485,3 +485,30 @@ SigmaSenseの知的活動は、個性豊かな仲間たちとして擬人化す�
     -   **ライセンス**: Apache 2.0 License
 
 プロジェクトの成果物は、これらのライセンス条件を尊重する必要があります。
+
+## 付録D: 実行可能スクリプト一覧
+
+プロジェクト内で直接実行されることを意図したスクリプトの一覧です。
+これらのスクリプトは、`if __name__ == "__main__"` のブロックを持っています。
+
+- `scripts/run_ethics_check_on_text.py`
+- `scripts/run_learning_objective.py`
+- `scripts/run_sheaf_analysis.py`
+- `scripts/run_benchmark.py`
+- `scripts/run_reconstruction_experiment.py`
+- `scripts/run_online_integration.py`
+- `scripts/run_functor_check.py`
+- `scripts/run_narrative_processing_experiment.py`
+- `scripts/run_terrier_comparison.py`
+- `scripts/run_sigma.py`
+- `tools/review_handlers.py`
+- `tools/log_batch_evaluator.py`
+- `tools/semantic_axis_report.py`
+- `tools/critical_structure_report.py`
+- `tools/run_vector_generation_test.py`
+- `tools/functor_consistency_checker.py`
+- `src/generate_ai_image_vectors.py`
+- `src/generate_number_image.py`
+- `src/generate_ai_dimensions.py`
+- `src/build_database.py`
+- `src/stabilize_database.py`
