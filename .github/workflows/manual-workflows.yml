@@ -68,7 +68,7 @@ jobs:
     - name: Run stabilize database script
       run: python src/stabilize_database.py --source config/sigma_product_database_stabilized.json --output config/sigma_product_database_stabilized.json
     - name: Run ethics check on text script
-      run: python scripts/run_ethics_check_on_text.py --text "This is a test text."
+      run: python scripts/run_ethics_check_on_text.py
     - name: Run narrative analysis script
       run: python scripts/run_narrative_analysis.py
     - name: Generate number image
