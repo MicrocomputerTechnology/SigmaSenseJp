@@ -47,6 +47,6 @@ jobs:
     - name: Generate AI dimensions
       run: python src/generate_ai_dimensions.py
     - name: Run terrier comparison script
-      run: python scripts/run_terrier_comparison.py
+      run: python scripts/run_terrier_comparison.py sigma_images/circle_center.jpg sigma_images/square_left.jpg
     - name: Run psyche simulation script
       run: python scripts/run_psyche_simulation.py
