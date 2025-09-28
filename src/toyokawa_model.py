@@ -36,7 +36,7 @@ class ToyokawaModel:
 
         print("Model weights (α, β, γ) have been set.")
         print(f'  - Alpha (αᵢ): {self.weights.get("alpha", {}).get(f"E_{self.agents[0]}", 0):.2f} for each agent')
-        print(f"  - Beta (β): {self.weights.get("beta", 0)}")
+        print(f'  - Beta (β): {self.weights.get("beta", 0)}')
         print(f"  - Gamma (γ): {self.weights.get("gamma", 0)}")
 
     def load_log(self):
