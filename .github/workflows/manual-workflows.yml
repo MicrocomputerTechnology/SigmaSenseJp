@@ -58,7 +58,9 @@ jobs:
         touch config/functor_consistency_failures.jsonl
         python src/build_database.py --img_dir sigma_images
     - name: Run sigma script
-      run: python scripts/run_sigma.py
+      run: python scripts/run_sigma.py --img_dir sigma_images --db_path config/sigma_product_database_stabilized.json
+    - name: Run benchmark script
+      run: python scripts/run_benchmark.py
     - name: Run learning objective script
       run: python scripts/run_learning_objective.py --objective "Test Objective"
     - name: Run sheaf analysis script
@@ -70,7 +72,17 @@ jobs:
     - name: Run ethics check on text script
       run: python scripts/run_ethics_check_on_text.py
     - name: Run narrative analysis script
-      run: python scripts/run_narrative_analysis.py
+      run: python scripts/run_narrative_analysis.py --subject circle_center
+    - name: Run narrative processing experiment
+      run: python scripts/run_narrative_processing_experiment.py
+    - name: Run offline evolution cycle
+      run: python scripts/run_offline_evolution_cycle.py --img_circle sigma_images/circle_center.jpg --img_cat sigma_images/cat_01.jpg --img_new_phenomenon sigma_images/pentagon_center_blue.jpg
+    - name: Run online integration
+      run: python scripts/run_online_integration.py
+    - name: Run reconstruction experiment
+      run: python scripts/run_reconstruction_experiment.py
+    - name: Generate test images
+      run: python src/generate_test_image.py
     - name: Generate number image
       run: python src/generate_number_image.py --number 123 --output_path generated_number.png
     - name: Generate AI image vectors
