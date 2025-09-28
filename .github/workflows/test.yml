@@ -29,5 +29,3 @@ jobs:
         touch sigma_logs/personal_memory.jsonl
     - name: Test with pytest
       run: pytest --cov=src --cov-report=xml
-    - name: Run benchmark script
-      run: python scripts/run_benchmark.py
