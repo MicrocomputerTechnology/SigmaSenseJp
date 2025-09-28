@@ -2,6 +2,8 @@ import yaml
 import os
 import json
 import ollama
+import transformers
+import torch
 
 class VetraLLMCore:
     """
@@ -13,13 +15,36 @@ class VetraLLMCore:
 
     def __init__(self, config_path="vector_dimensions_mobile.yaml", 
                  narrative_model="lucas2024/gemma-2-2b-jpn-it:q8_0", 
-                 code_gen_model="codegemma:latest"):
+                 code_gen_model="codegemma:latest",
+                 hf_fallback_model_name=None, hf_fallback_model_path=None):
         """
         Initializes Vetra's core.
         """
         print("VetraLLMCore initializing...")
         self.narrative_model = narrative_model
         self.code_gen_model = code_gen_model
+        self.hf_fallback_model_name = hf_fallback_model_name
+        self.hf_fallback_model_path = hf_fallback_model_path
+
+        self.hf_tokenizer = None
+        self.hf_model = None
+
+        if self.hf_fallback_model_name or self.hf_fallback_model_path:
+            print(f"VetraLLMCore: Attempting to load Hugging Face fallback model: {self.hf_fallback_model_name or self.hf_fallback_model_path}")
+            try:
+                if self.hf_fallback_model_path:
+                    model_id = self.hf_fallback_model_path
+                else:
+                    model_id = self.hf_fallback_model_name
+                
+                self.hf_tokenizer = transformers.AutoTokenizer.from_pretrained(model_id)
+                self.hf_model = transformers.AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16)
+                print("VetraLLMCore: Hugging Face fallback model loaded successfully.")
+            except Exception as e:
+                print(f"VetraLLMCore: Failed to load Hugging Face fallback model: {e}")
+                self.hf_tokenizer = None
+                self.hf_model = None
+
         try:
             with open(config_path, 'r') as f:
                 self.config = yaml.safe_load(f)
@@ -34,11 +59,12 @@ class VetraLLMCore:
 
     def _call_local_llm(self, model, system_prompt, user_prompt):
         """
-        Calls the specified local LLM using the ollama library.
+        Calls the specified local LLM. Tries Ollama first, then falls back to Hugging Face if available.
         Returns a tuple (response_content, error_message).
         """
+        # Try Ollama first
         try:
-            print(f"\n--- Calling Local LLM '{model}' (Vetra) ---")
+            print(f"\n--- Calling Local LLM '{model}' via Ollama (Vetra) ---")
             response = ollama.chat(
                 model=model,
                 messages=[
@@ -46,16 +72,33 @@ class VetraLLMCore:
                     {'role': 'user', 'content': user_prompt},
                 ],
             )
-            print("--- LLM Response Received ---")
+            print("--- Ollama LLM Response Received ---")
             return response['message']['content'], None
         except Exception as e:
-            error_message = (
+            ollama_error_message = (
                 f"ERROR calling local LLM '{model}' via ollama: {e}\n"
                 f"Please check that Ollama is downloaded, running and accessible. https://ollama.com/download\n"
                 f"Please ensure the Ollama server is running (`ollama serve`)\n"
                 f"and the model '{model}' is available (`ollama pull {model}`)."
             )
-            return None, error_message
+            print(ollama_error_message)
+
+            # Fallback to Hugging Face model if Ollama failed and HF model is loaded
+            if self.hf_model and self.hf_tokenizer:
+                print("--- Ollama failed. Falling back to Hugging Face model (Vetra) ---")
+                try:
+                    full_prompt = f"System: {system_prompt}\nUser: {user_prompt}"
+                    inputs = self.hf_tokenizer(full_prompt, return_tensors="pt").to(self.hf_model.device)
+                    outputs = self.hf_model.generate(**inputs, max_new_tokens=500)
+                    response_content = self.hf_tokenizer.decode(outputs[0], skip_special_tokens=True)
+                    print("--- Hugging Face LLM Response Received ---")
+                    return response_content, None
+                except Exception as hf_e:
+                    hf_error_message = f"ERROR calling Hugging Face LLM: {hf_e}"
+                    print(hf_error_message)
+                    return None, f"{ollama_error_message}\n{hf_error_message}"
+            else:
+                return None, ollama_error_message
 
     def explain_vector(self, vector):
         """

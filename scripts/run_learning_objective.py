@@ -20,26 +20,26 @@ translation_map = {
     "数字理解学習": "number_understanding",
 }
 
-def check_ollama_availability(model_name):
-    """Ollamaサーバーが稼働しており、指定されたモデルが利用可能かチェックする"""
+def check_ollama_availability(vetra_instance, model_name):
+    """Ollamaサーバーが稼働しており、指定されたモデルが利用可能かチェックする。Ollamaが利用できない場合はHFフォールバックをチェックする"""
+    # Ollamaのチェック
     try:
-        # Ollamaサーバーが稼働しているかチェック
         subprocess.run(['ollama', 'list'], check=True, capture_output=True)
-        
-        # 指定されたモデルがダウンロードされているかチェック
         result = subprocess.run(['ollama', 'list'], check=True, capture_output=True, text=True)
         if model_name not in result.stdout:
             print(f"❗エラー: Ollamaモデル '{model_name}' が見つかりません。\n  `ollama pull {model_name}` を実行してください。")
             return False
+        print("✅ Ollamaサーバーが稼働しており、モデルが利用可能です。")
         return True
-    except FileNotFoundError:
-        print("❗エラー: Ollamaコマンドが見つかりません。Ollamaがインストールされているか確認してください。")
-        print("  インストール: https://ollama.com/download")
-        return False
-    except subprocess.CalledProcessError:
-        print("❗エラー: Ollamaサーバーに接続できません。Ollamaサーバーが稼働しているか確認してください。")
-        print("  起動: `ollama serve`")
-        return False
+    except (FileNotFoundError, subprocess.CalledProcessError) as e:
+        print(f"❗Ollamaサーバーまたはモデルのチェックに失敗しました: {e}")
+        # Ollamaが利用できない場合、Hugging Faceフォールバックをチェック
+        if vetra_instance.hf_model and vetra_instance.hf_tokenizer:
+            print("✅ Ollamaが利用できないため、Hugging Faceフォールバックモデルを使用します。")
+            return True
+        else:
+            print("❗エラー: OllamaもHugging Faceフォールバックモデルも利用できません。")
+            return False
     except Exception as e:
         print(f"❗エラー: Ollamaのチェック中に予期せぬエラーが発生しました: {e}")
         return False
@@ -175,7 +175,9 @@ if vetra_config:
     vetra = VetraLLMCore(
         config_path=config_path_absolute,
         narrative_model=vetra_config.get('narrative_model'),
-        code_gen_model=vetra_config.get('code_gen_model')
+        code_gen_model=vetra_config.get('code_gen_model'),
+        hf_fallback_model_name="codegemma/codegemma-7b-it", # Example Hugging Face model
+        hf_fallback_model_path=None # Specify path if using local HF model
     )
 else:
     # コンフィグファイルが見つからない場合はデフォルト値で初期化
@@ -211,7 +213,7 @@ def process_learning_objective(objective: dict):
     if not handler_code and mode == "ヴェトラ":
         # Ollamaの可用性をチェック
         ollama_model = vetra.code_gen_model # VetraLLMCoreからモデル名を取得
-        if not check_ollama_availability(ollama_model):
+        if not check_ollama_availability(vetra, ollama_model):
             print("❗ Ollamaのセットアップが不完全なため、コード生成をスキップします。")
             return
 
