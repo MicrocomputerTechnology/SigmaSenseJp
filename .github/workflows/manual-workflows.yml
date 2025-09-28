@@ -76,7 +76,7 @@ jobs:
     - name: Generate AI image vectors
       run: python src/generate_ai_image_vectors.py --single_image_path sigma_images/circle_center.jpg
     - name: Generate AI dimensions
-      run: python src/generate_ai_dimensions.py
+      run: python src/generate_ai_dimensions.py selia
     - name: Run terrier comparison script
       run: python scripts/run_terrier_comparison.py
     - name: Run psyche simulation script
