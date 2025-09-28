@@ -74,7 +74,7 @@ jobs:
     - name: Generate number image
       run: python src/generate_number_image.py --number 123 --output_path generated_number.png
     - name: Generate AI image vectors
-      run: python src/generate_ai_image_vectors.py --image_path sigma_images/circle_center.jpg
+      run: python src/generate_ai_image_vectors.py --single_image_path sigma_images/circle_center.jpg
     - name: Generate AI dimensions
       run: python src/generate_ai_dimensions.py
     - name: Run terrier comparison script

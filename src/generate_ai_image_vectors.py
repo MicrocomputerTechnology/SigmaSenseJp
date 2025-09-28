@@ -77,7 +77,18 @@ def main(dim_path, image_dir, output_path):
         print(f"❗クライアント初期化エラー: {e}")
         return
 
-    image_files = [f for f in sorted(os.listdir(image_dir)) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    if args.single_image_path:
+        image_files = [os.path.basename(args.single_image_path)]
+        image_dir = os.path.dirname(args.single_image_path) or '.' # Use current directory if no path given
+        if not os.path.exists(args.single_image_path):
+            print(f"❗エラー: 指定された画像ファイルが見つかりません: {args.single_image_path}")
+            return
+    else:
+        image_dir = args.image_dir
+        image_files = [f for f in sorted(os.listdir(image_dir)) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        if not image_files:
+            print(f"❗エラー: 指定された画像ディレクトリ '{image_dir}' に画像ファイルが見つかりません。")
+            return
     
     database_entries = []
 
@@ -115,6 +126,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Geminiを使用して画像から意味ベクトルを生成し、データベースを構築します。')
     parser.add_argument('--dim_path', type=str, default=os.path.join(project_root, 'config', 'vector_dimensions_custom_ai.json'), help='次元定義ファイルのパス')
     parser.add_argument('--image_dir', type=str, default=os.path.join(project_root, 'sigma_images'), help='画像ディレクトリのパス')
+    parser.add_argument('--single_image_path', type=str, help='単一の画像ファイルのパス (指定された場合、image_dirは無視されます)')
     parser.add_argument('--output_path', type=str, default=os.path.join(project_root, 'config', 'sigma_product_database_custom_ai_generated.json'), help='出力データベースファイルのパス')
     args = parser.parse_args()
 
