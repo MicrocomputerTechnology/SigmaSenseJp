@@ -41,7 +41,7 @@ SigmaSenseの思考と判断の中核を担うモジュール群です。
 システムの「思考」を司る、換装可能な知性エージェント群です。
 
 - **E1. オンライン知性 (オリエン)**
-  - `gemini_client.py`: Gemini APIとの通信を担い、意味次元の設計など高度な帰納的推論を実行します。
+  - `gemini_client.py`: Gemini APIとの通信を担う、高度な帰納的推論エンジン。API障害時にローカルLLMへ自動的にフォールバックする強靭性も備える。
 - **E2. オフライン知性 (ヴェトラ)**
   - `sigma_local_core.py`: オフライン時の思考プロセス全体を制御する「脳」。
 - `sheaf_analyzer.py`: **層理論アナライザー**。画像の複数領域から得られた特徴ベクトルが、その重複部分で整合的であるか（貼り合わせ可能か）を検証する。
@@ -70,6 +70,7 @@ SigmaSenseの思考と判断の中核を担うモジュール群です。
 
 - `world_model.json`: **動的知識グラフ**。世界の概念と、学習によって発見された因果関係が記録される。
 - `personal_memory.jsonl`: **個人記憶ログ**。全ての経験が時系列で記録される、自己省察の源泉。
+- `orient_profile.json`: 大賢者オリエンが使用する`Gemini`モデルと、API障害時に使用するフォールバック用のローカルLLMモデルを定義する。
 - `vector_dimensions_*.json`, `vector_dimensions_*.yaml`: 各知性・各レイヤーが使用する意味次元の設計図。
 - `sigma_product_database_*.json`: 生成された意味ベクトルが格納されるデータベース。
 - `common_sense_rulebase.json`: `SymbolicReasoner` が使用していた静的ルールブック（第十五次実験で`world_model.json`に移行）。
