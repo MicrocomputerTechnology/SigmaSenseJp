@@ -48,7 +48,7 @@ class SigmaSense:
     自己意識、因果推論、時間理解、そして倫理基盤を持つ、第十六次実験段階の統合知性。
     思考のオーケストレーターとして、すべてのコンポーネントを協調動作させる。
     """
-    def __init__(self, database, ids, vectors, layers, dimension_loader: DimensionLoader, generator=None):
+    def __init__(self, database, ids, vectors, layers, dimension_loader: DimensionLoader, generator=None, world_model=None):
         # --- プロジェクトルートとデータディレクトリの定義 ---
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         config_dir = os.path.join(project_root, "config")
@@ -77,11 +77,15 @@ class SigmaSense:
         self.psyche_modulator = PsycheModulator(log_path=os.path.join(log_dir, "psyche_log.jsonl"))
 
         # --- 第十五次実験の中核コンポーネント ---
-        sigma_sense_config = self.all_agent_configs.get_config("sigma_sense_config") or {}
-        world_model_path = sigma_sense_config.get("world_model_path", "config/world_model.json")
-        personal_memory_path = sigma_sense_config.get("personal_memory_path", "sigma_logs/personal_memory.jsonl")
+        if world_model:
+            self.world_model = world_model
+        else:
+            sigma_sense_config = self.all_agent_configs.get_config("sigma_sense_config") or {}
+            world_model_path = sigma_sense_config.get("world_model_path", "data/world_model.sqlite")
+            self.world_model = WorldModel(db_path=os.path.join(project_root, world_model_path))
         
-        self.world_model = WorldModel(os.path.join(project_root, world_model_path))
+        personal_memory_path = self.all_agent_configs.get_config("sigma_sense_config").get("personal_memory_path", "sigma_logs/personal_memory.jsonl")
+        
         self.memory_graph = PersonalMemoryGraph(os.path.join(project_root, personal_memory_path))
         self.reasoner = SymbolicReasoner(self.world_model)
         self.causal_discovery = CausalDiscovery(self.world_model, self.memory_graph)

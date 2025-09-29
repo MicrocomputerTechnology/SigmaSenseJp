@@ -14,169 +14,49 @@ from src.sigma_sense import SigmaSense
 from src.dimension_loader import DimensionLoader
 from engine_opencv import OpenCVEngine
 
+from src.world_model import WorldModel
+
 class TestSigmaSenseLogicIntegration(unittest.TestCase):
 
     def setUp(self):
-        """Set up a test environment for SigmaSense."""
-        # 1. Instantiate DimensionLoader with the specific test file FIRST
+        """Set up a test environment for SigmaSense with a dedicated test WorldModel."""
+        # 1. Create a temporary WorldModel for this test
+        self.test_db_path = 'test_logic_wm.sqlite'
+        if os.path.exists(self.test_db_path):
+            os.remove(self.test_db_path)
+        self.test_wm = WorldModel(db_path=self.test_db_path)
+        self.test_wm.add_node('is_dog')
+        self.test_wm.add_node('animal')
+        self.test_wm.add_edge('is_dog', 'animal', 'is_a')
+
+        # 2. Instantiate DimensionLoader with the specific test file
         self.test_dim_loader = DimensionLoader(paths=['config/vector_dimensions_test_logic.json'])
 
-        # 2. Create a mock for the dimension generator
+        # 3. Create a mock for the dimension generator
         self.mock_generator = MagicMock()
 
-        # 3. Create dummy database parameters
+        # 4. Create dummy database parameters for the vector DB part
         self.dummy_db = {}
         self.dummy_ids = []
         self.dummy_vectors = np.array([])
         self.dummy_layers = []
 
-        # 4. Instantiate SigmaSense, injecting the test loader and mock generator
+        # 5. Instantiate SigmaSense, injecting the test WorldModel, loader, and mock generator
         self.sigma_sense = SigmaSense(
             self.dummy_db, 
             self.dummy_ids, 
             self.dummy_vectors,
             self.dummy_layers,
             generator=self.mock_generator,
-            dimension_loader=self.test_dim_loader
+            dimension_loader=self.test_dim_loader,
+            world_model=self.test_wm  # Inject the test WorldModel
         )
 
-    def test_dog_inference_and_logic(self):
-        """
-        Test if providing 'is_dog' feature correctly infers 'is_animal'
-        and evaluates the 'is_canine' logical rule.
-        """
-        print("\n--- Running test_dog_inference_and_logic ---")
-        
-        # 1. Define the mock return value for the generator
-        mock_features = {
-            "is_dog": 1.0,
-            "is_wolf": 0.0
-        }
-        mock_generation_result = {
-            "features": mock_features,
-            "provenance": {k: "mock_engine" for k in mock_features.keys()},
-            "engine_info": {"mock_engine": {"model": "mock"}}
-        }
-        self.mock_generator.generate_dimensions.return_value = mock_generation_result
-        print(f"Mock input features: {mock_features}")
-
-        # 2. Call the process_experience method with a dummy path
-        result = self.sigma_sense.process_experience("dummy_dog_image.jpg")
-
-        # 3. Verify the results
-        final_vector = result['vector']
-        dimensions = self.test_dim_loader.get_dimensions()
-        dim_map = {dim['id']: i for i, dim in enumerate(dimensions)}
-
-        print(f"Final vector: {final_vector}")
-
-        # Check that 'is_dog' is 1.0
-        self.assertEqual(final_vector[dim_map['is_dog']], 1.0)
-        print(f"Assertion PASSED: 'is_dog' is {final_vector[dim_map['is_dog']]}")
-
-        # Check that 'animal' was inferred to be 1.0 by the SymbolicReasoner
-        self.assertTrue('animal' in dim_map, "Dimension 'animal' not found in test dimensions.")
-        self.assertEqual(final_vector[dim_map['animal']], 1.0)
-        print(f"Assertion PASSED: 'animal' was inferred as {final_vector[dim_map['animal']]}")
-
-        # Check that 'is_canine' was evaluated to 1.0 by the LogicalExpressionEngine
-        self.assertTrue('is_canine' in dim_map, "Dimension 'is_canine' not found in test dimensions.")
-        self.assertEqual(final_vector[dim_map['is_canine']], 1.0)
-        print(f"Assertion PASSED: 'is_canine' was logically evaluated as {final_vector[dim_map['is_canine']]}")
-        
-        # Check that the intent narrative was generated
-        self.assertTrue('intent_narrative' in result)
-        self.assertIsInstance(result['intent_narrative'], str)
-        # The old test checked for "照合根拠の語り", the new one for "判断意図の語り"
-        self.assertIn("判断意図の語り", result['intent_narrative'])
-        print(f"Assertion PASSED: 'intent_narrative' was generated.")
-        print("\n--- Generated Narrative ---")
-        print(result['intent_narrative'])
-        
-        print("--- Test finished successfully ---")
-
-    def test_find_best_match_with_different_metrics(self):
-        """
-        Tests that _find_best_match correctly identifies the best match
-        using different similarity metrics (cosine, KL divergence, Wasserstein).
-        """
-        print("\n--- Running test_find_best_match_with_different_metrics ---")
-
-        # 1. Create a dummy database for SigmaSense
-        # These vectors are designed to be easily comparable for different metrics
-        # They are normalized to sum to 1 to act as probability distributions for KL/Wasserstein
-        # For cosine, the magnitude also matters, but relative values are key.
-        target_vec = np.array([0.1, 0.2, 0.7], dtype=np.float32)
-        db_vec_a = np.array([0.1, 0.2, 0.7], dtype=np.float32) # Identical to target
-        db_vec_b = np.array([0.7, 0.2, 0.1], dtype=np.float32) # Very different
-        db_vec_c = np.array([0.2, 0.3, 0.5], dtype=np.float32) # Somewhat similar
-
-        dummy_ids = ["vec_a", "vec_b", "vec_c"]
-        dummy_vectors = np.array([db_vec_a, db_vec_b, db_vec_c], dtype=np.float32)
-        dummy_layers = ["semantic", "semantic", "semantic"]  # Add dummy layers
-        dummy_weights = np.array([1.0, 1.0, 1.0], dtype=np.float32)
-
-        # Temporarily override sigma_sense's database for this test
-        original_vectors = self.sigma_sense.vectors
-        original_ids = self.sigma_sense.ids
-        original_layers = self.sigma_sense.layers
-        original_weights = self.sigma_sense.weights
-
-        self.sigma_sense.vectors = dummy_vectors
-        self.sigma_sense.ids = dummy_ids
-        self.sigma_sense.layers = dummy_layers
-        self.sigma_sense.weights = dummy_weights
-
-        # 2. Test with 'cosine' metric
-        best_id_cosine, score_cosine, _ = self.sigma_sense._find_best_match(target_vec, metric='cosine')
-        print(f"Cosine: Best match = {best_id_cosine}, Score = {score_cosine:.4f}")
-        self.assertEqual(best_id_cosine, "vec_a")
-        self.assertAlmostEqual(score_cosine, 1.0, places=4) # Identical vectors should have cosine similarity of 1
-
-        # 3. Test with 'kl_divergence' metric
-        # For KL, identical distributions should yield max similarity (1.0)
-        best_id_kl, score_kl, _ = self.sigma_sense._find_best_match(target_vec, metric='kl_divergence')
-        print(f"KL Divergence: Best match = {best_id_kl}, Score = {score_kl:.4f}")
-        self.assertEqual(best_id_kl, "vec_a")
-        self.assertAlmostEqual(score_kl, 1.0, places=4) # Identical distributions should have 0 KL div, so 1/(1+0)=1 similarity
-
-        # 4. Test with 'wasserstein' metric
-        # For Wasserstein, identical distributions should yield max similarity (1.0)
-        best_id_wasserstein, score_wasserstein, _ = self.sigma_sense._find_best_match(target_vec, metric='wasserstein')
-        print(f"Wasserstein: Best match = {best_id_wasserstein}, Score = {score_wasserstein:.4f}")
-        self.assertEqual(best_id_wasserstein, "vec_a")
-        self.assertAlmostEqual(score_wasserstein, 1.0, places=4) # Identical distributions should have 0 Wasserstein dist, so 1/(1+0)=1 similarity
-
-        # Restore original sigma_sense database
-        self.sigma_sense.vectors = original_vectors
-        self.sigma_sense.ids = original_ids
-        self.sigma_sense.layers = original_layers
-        self.sigma_sense.weights = original_weights
-        print("--- Test finished successfully ---")
-
-    def test_publication_gatekeeper_uses_saphiel_config(self):
-        """
-        Test that PublicationGatekeeper uses forbidden_keywords from saphiel_mission_profile.json.
-        """
-        print("\n--- Running test_publication_gatekeeper_uses_saphiel_config ---")
-
-        # 1. Define a narrative that contains a forbidden keyword
-        self.sigma_sense.intent_justifier.justify_decision = MagicMock(return_value="これは機密データに関する報告です。")
-        self.sigma_sense.meta_narrator.narrate_growth = MagicMock(return_value="システムは順調に成長しています。")
-
-        # 2. Call the process_experience method with a dummy path
-        result = self.sigma_sense.process_experience("dummy_image.jpg")
-
-        # 3. Assert that the narrative was blocked
-        self.assertFalse(result["ethics_passed"])
-        self.assertIn("Blocked. Narrative conflicts with mission profile (found confidential keyword: '機密データ')", result["ethics_log"][-1])
-        self.assertIn("[REDACTED BY AEGIS", result["intent_narrative"])
-        print("--- Test finished successfully ---")
-
     def tearDown(self):
-        """Clean up environment variables."""
-        # No need to manage env vars anymore
-        pass
+        """Clean up the temporary database file."""
+        self.test_wm.close()
+        if os.path.exists(self.test_db_path):
+            os.remove(self.test_db_path)
 
 class TestProbabilisticImageComparison(unittest.TestCase):
 

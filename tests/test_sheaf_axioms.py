@@ -9,10 +9,6 @@ from unittest.mock import MagicMock
 import json
 import yaml
 
-# --- Mock modules to bypass heavy dependencies ---
-sys.modules['spacy'] = MagicMock()
-sys.modules['ginza'] = MagicMock()
-sys.modules['ja_ginza'] = MagicMock()
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -21,6 +17,7 @@ from src.sigma_sense import SigmaSense
 from src.dimension_loader import DimensionLoader
 from src.sigma_database_loader import load_sigma_database
 from src.build_database import build_database
+from src.world_model import WorldModel
 
 import yaml
 
@@ -78,7 +75,12 @@ class TestSheafAxiomsSimplified(unittest.TestCase):
         # 3. Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader(paths=[cls.merged_config_path])
         database, ids, vectors, _ = load_sigma_database(cls.db_path)
-        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader)
+        
+        # --- Test-specific WorldModel --- #
+        cls.test_wm_path = os.path.join(cls.temp_dir, 'test_sheaf_axioms_wm.sqlite')
+        cls.test_wm = WorldModel(db_path=cls.test_wm_path)
+
+        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader, world_model=cls.test_wm)
         cls.ids = ids
         cls.vectors = vectors
         print("SigmaSense instance created with test database.")
@@ -86,6 +88,7 @@ class TestSheafAxiomsSimplified(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Tear down the test class once."""
+        cls.test_wm.close()
         shutil.rmtree(cls.temp_dir)
         print(f"\nCleaned up temporary directory: {cls.temp_dir}")
 
