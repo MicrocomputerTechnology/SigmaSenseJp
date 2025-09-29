@@ -1,4 +1,4 @@
 {
-  "gemini_model": "gemini-1.5-pro-latest",
+  "gemini_model": "gemini-2.5-flash",
   "fallback_local_model": "meta-llama/Meta-Llama-3-8B-Instruct"
 }
