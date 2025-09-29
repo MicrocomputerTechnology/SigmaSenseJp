@@ -31,6 +31,20 @@ def analyze_sentence(sentence: str):
         spec_service = SpecializedVocabularyService()
         wm = WorldModel()
         reasoner = SymbolicReasoner(world_model=wm)
+
+        # --- For Demonstration: Add knowledge programmatically ---
+        # In a real application, this knowledge would be in world_model.json
+        print("Injecting temporary knowledge for demonstration...")
+        wm.add_node('団子', name_ja="団子")
+        wm.add_node('和菓子', name_ja="和菓子")
+        wm.add_node('食べ物', name_ja="食べ物")
+        wm.add_node('重し', name_ja="重し")
+        wm.add_node('物体', name_ja="物体")
+        wm.add_edge('団子', '和菓子', 'is_a')
+        wm.add_edge('和菓子', '食べ物', 'is_a')
+        wm.add_edge('重し', '物体', 'is_a')
+        # -----------------------------------------------------
+
         print("Services initialized.")
 
         # (省略) ... 辞書検索までの処理は同じ ...
