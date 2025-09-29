@@ -48,7 +48,7 @@ python scripts/download_models.py
 python src/build_database.py --img_dir sigma_images
 ```
 
-これにより、`sigma_images` ディレクトリ内の画像に基づいて、`config/sigma_product_database_stabilized.json` ファイルが生成されます。
+これにより、`sigma_images` ディレクトリ内の画像に基づいて、`data/world_model.sqlite` データベース内にベクトル情報が構築されます。
 
 ### 6. APIキーの設定
 本システムは、外部のAPI（Geminiなど）を利用する機能があります。これらの機能を使用するには、実行するターミナルのセッションで環境変数としてAPIキーを設定する必要があります。
@@ -171,7 +171,7 @@ SigmaSenseのアーキテクチャは、二つの異なる知性の協調によ�
     -   最終的に意味ベクトルを生成し、データベースと照合して最良のマッチを見つけ出す。
 
 3.  **F2: 経験の記録 (Memory Consolidation)**:
-    -   上記の一連のプロセス（入力画像、生成されたベクトル、照合結果、思考の文脈）を一つの「経験」として、`PersonalMemoryGraph`に時系列で記録する。
+    -   上記の一連のプロセス（入力画像、生成されたベクトル、照合結果、思考の文脈）を一つの「経験」として、`PersonalMemoryGraph`を介して、中央の`world_model.sqlite`データベースに時系列で記録する。
 
 4.  **F3 & F4: 自己省察と学習 (Self-Reflection and Learning)**:
     -   `CausalDiscovery`が記憶の蓄積を分析し、新たな因果関係（例：「Aがあれば、Bである可能性が高い」）を発見し、`WorldModel`に新たな知識として追加する。
@@ -185,7 +185,7 @@ SigmaSenseのアーキテクチャは、二つの異なる知性の協調によ�
     -   生成された語りを公開する前に、「八人の誓い」に基づき、8つの倫理モジュールが安全性、共感性、責任などを多角的に検証する。
 
 7.  **F7: 状態の永続化 (Persistence)**:
-    -   学習によって更新された`WorldModel`を`world_model.json`に保存し、次の思考サイクルに備える。
+    -   学習によって更新された`WorldModel`や、新たに追加された`PersonalMemoryGraph`の経験は、`SQLiteStore`によって、`data/world_model.sqlite`データベースへ自動的に永続化される。
 
 このサイクルを通じて、SigmaSenseは単にタスクをこなすだけでなく、自らの経験から学び、自身の判断を説明し、長期的に成長していく能力を手に入れた。
 
