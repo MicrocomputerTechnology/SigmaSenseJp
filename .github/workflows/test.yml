@@ -27,5 +27,9 @@ jobs:
       run: |
         mkdir -p sigma_logs
         touch sigma_logs/personal_memory.jsonl
+
+    - name: Build Knowledge Store
+      run: python scripts/build_knowledge_store.py
+
     - name: Test with pytest
       run: pytest --cov=src --cov-report=xml

@@ -8,12 +8,6 @@ import shutil
 import cv2
 from unittest.mock import MagicMock
 
-# --- Mock modules to bypass heavy dependencies ---
-# To avoid installing spacy for this specific test if not needed.
-MOCK_MODULES = ['spacy', 'ginza', 'ja_ginza']
-for mod_name in MOCK_MODULES:
-    if mod_name not in sys.modules:
-        sys.modules[mod_name] = MagicMock()
 
 # Add the project root to the Python path for module imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -23,6 +17,7 @@ from src.dimension_loader import DimensionLoader
 from src.sigma_database_loader import load_sigma_database
 from src.build_database import build_database
 from src.sheaf_analyzer import SheafAnalyzer
+from src.world_model import WorldModel
 
 import json
 import yaml
@@ -88,12 +83,18 @@ class TestSheafBenchmark(unittest.TestCase):
         # 4. Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader(paths=[cls.merged_config_path])
         database, ids, vectors, _ = load_sigma_database(cls.db_path)
-        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader)
+
+        # --- Test-specific WorldModel --- #
+        cls.test_wm_path = os.path.join(cls.temp_dir, 'test_sheaf_benchmark_wm.sqlite')
+        cls.test_wm = WorldModel(db_path=cls.test_wm_path)
+
+        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader, world_model=cls.test_wm)
         print("SigmaSense instance created for benchmark.")
 
     @classmethod
     def tearDownClass(cls):
         """Tear down the test class once."""
+        cls.test_wm.close()
         shutil.rmtree(cls.temp_dir)
         print(f"\nCleaned up temporary benchmark directory: {cls.temp_dir}")
 

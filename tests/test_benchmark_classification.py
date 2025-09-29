@@ -9,6 +9,8 @@ from src.sigma_database_loader import load_sigma_database
 from src.sigma_sense import SigmaSense
 from src.dimension_loader import DimensionLoader
 
+from src.world_model import WorldModel
+
 # プロジェクトのルートディレクトリ
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -24,14 +26,28 @@ def sigma_instance():
     loader = DimensionLoader()
     database, ids, vectors, layers = load_sigma_database(db_path)
 
+    # --- Test-specific WorldModel --- #
+    test_db_path = 'test_benchmark_wm.sqlite'
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
+    test_wm = WorldModel(db_path=test_db_path)
+    # This test does not require specific knowledge, so an empty WM is fine.
+
     sigma = SigmaSense(
         database,
         ids,
         vectors,
         layers,
-        dimension_loader=loader
+        dimension_loader=loader,
+        world_model=test_wm
     )
-    return sigma
+    
+    yield sigma # Provide the instance to the tests
+
+    # --- Teardown --- #
+    test_wm.close()
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
 
 def get_expected_label(filename):
     if not filename:

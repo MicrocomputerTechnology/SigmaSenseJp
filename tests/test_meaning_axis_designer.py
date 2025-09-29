@@ -34,7 +34,7 @@ class TestMeaningAxisDesigner(unittest.TestCase):
 
     def setUp(self):
         """テスト用のインスタンスとモックを作成"""
-        self.designer = MeaningAxisDesigner(balance_threshold=3)
+        self.designer = MeaningAxisDesigner(config={'balance_threshold': 3})
         # モックのWorldModelにテスト用の概念を登録
         # GiNZAは語幹を返すため、'可愛い'（形容詞）の語幹は'可愛い'、'走る'（動動詞）の語幹は'走る'
         self.world_model = MockWorldModel(["犬", "動物", "可愛い", "走る", "楽しい", "見る"])

@@ -7,10 +7,6 @@ import shutil
 import tempfile
 from unittest.mock import MagicMock
 
-# --- Mock modules to bypass heavy dependencies ---
-sys.modules['spacy'] = MagicMock()
-sys.modules['ginza'] = MagicMock()
-sys.modules['ja_ginza'] = MagicMock()
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -22,6 +18,7 @@ from src.build_database import build_database
 from src.image_transformer import identity as identity_transform
 from src.sigma_functor import SigmaFunctor
 from src.vector_transforms import VectorTransforms
+from src.world_model import WorldModel
 
 class TestCategoryTheory(unittest.TestCase):
 
@@ -30,7 +27,6 @@ class TestCategoryTheory(unittest.TestCase):
         """Set up a real SigmaSense instance for testing functor properties."""
         print("\n--- Setting up TestCategoryTheory ---")
         
-        # Skip tests if models are not present
         model_paths = [
             'models/efficientnet_lite0.tflite',
             'models/mobilenet_v1.tflite',
@@ -45,17 +41,19 @@ class TestCategoryTheory(unittest.TestCase):
 
         cls.db_path = os.path.join(cls.temp_dir, 'test_db.json')
         
-        # Create a dummy image to ensure the database can be built
         dummy_img_path = os.path.join(cls.temp_dir, 'dummy.png')
         Image.new('RGB', (10, 10), 'green').save(dummy_img_path)
 
-        # Build a database using the dummy image
         build_database(db_path=cls.db_path, img_dir=cls.temp_dir, dimension_config_path="config/vector_dimensions_mobile.yaml")
 
-        # Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader()
         database, ids, vectors, _ = load_sigma_database(cls.db_path)
-        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader)
+
+        # --- Test-specific WorldModel --- #
+        cls.test_wm_path = os.path.join(cls.temp_dir, 'test_cat_wm.sqlite')
+        cls.test_wm = WorldModel(db_path=cls.test_wm_path)
+
+        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader, world_model=cls.test_wm)
         print("SigmaSense instance created for category theory tests.")
 
     @classmethod
@@ -63,6 +61,7 @@ class TestCategoryTheory(unittest.TestCase):
         """
         Clean up the temporary directory.
         """
+        cls.test_wm.close()
         shutil.rmtree(cls.temp_dir)
         print(f"\nCleaned up temporary directory: {cls.temp_dir}")
 
@@ -110,17 +109,19 @@ class TestFunctoriality(unittest.TestCase):
 
         cls.db_path = os.path.join(cls.temp_dir, 'test_db_functor.json')
         
-        # Create a dummy image to ensure the database can be built
         dummy_img_path = os.path.join(cls.temp_dir, 'dummy_functor.png')
         Image.new('RGB', (10, 10), 'red').save(dummy_img_path)
 
-        # Build a database using the dummy image
         build_database(db_path=cls.db_path, img_dir=cls.temp_dir, dimension_config_path="config/vector_dimensions_mobile.yaml")
 
-        # Load the database and instantiate SigmaSense
         cls.loader = DimensionLoader()
         database, ids, vectors, _ = load_sigma_database(cls.db_path)
-        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader)
+
+        # --- Test-specific WorldModel --- #
+        cls.test_wm_path = os.path.join(cls.temp_dir, 'test_functor_wm.sqlite')
+        cls.test_wm = WorldModel(db_path=cls.test_wm_path)
+
+        cls.sigma = SigmaSense(database, ids, vectors, [], dimension_loader=cls.loader, world_model=cls.test_wm)
         vector_transforms_instance = VectorTransforms(cls.loader)
         cls.sigma_functor = SigmaFunctor(vector_transforms_instance, cls.sigma)
         print("SigmaSense and SigmaFunctor instances created for functoriality tests.")
@@ -130,6 +131,7 @@ class TestFunctoriality(unittest.TestCase):
         """
         Clean up the temporary directory.
         """
+        cls.test_wm.close()
         shutil.rmtree(cls.temp_dir)
         print(f"\nCleaned up temporary directory: {cls.temp_dir}")
 
