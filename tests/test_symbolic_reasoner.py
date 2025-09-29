@@ -12,14 +12,14 @@ from src.symbolic_reasoner import SymbolicReasoner
 class TestSymbolicReasoner(unittest.TestCase):
 
     def setUp(self):
-        """テストごとに、一時的なWorldModelを構築"""
-        self.test_graph_path = 'test_wm_for_reasoner.json'
-        self.test_profile_path = 'test_profile_for_reasoner.json'
+        """テストごとに、一時的なSQLiteデータベースを持つWorldModelを構築"""
+        self.test_db_path = 'test_reasoner_wm.sqlite'
+        # 古いテストファイルが残っていれば削除
+        if os.path.exists(self.test_db_path):
+            os.remove(self.test_db_path)
 
-        with open(self.test_profile_path, 'w', encoding='utf-8') as f:
-            json.dump({"graph_path": self.test_graph_path}, f)
-
-        self.wm = WorldModel(config_path=self.test_profile_path)
+        # WorldModelは内部でSQLiteStoreを初期化する
+        self.wm = WorldModel(db_path=self.test_db_path)
         
         # テストデータをプログラムで追加
         self.wm.add_node('penguin', name_ja="ペンギン")
@@ -40,10 +40,10 @@ class TestSymbolicReasoner(unittest.TestCase):
         self.reasoner = SymbolicReasoner(world_model=self.wm)
 
     def tearDown(self):
-        """テスト後に一時ファイルを削除"""
-        for path in [self.test_graph_path, self.test_profile_path]:
-            if os.path.exists(path):
-                os.remove(path)
+        """テスト後に一時的なデータベースファイルを削除"""
+        self.wm.close()
+        if os.path.exists(self.test_db_path):
+            os.remove(self.test_db_path)
 
     def test_get_all_supertypes(self):
         """get_all_supertypesが正しく上位概念を再帰的に取得できるかテスト"""
