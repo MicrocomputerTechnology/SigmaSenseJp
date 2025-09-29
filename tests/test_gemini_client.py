@@ -66,5 +66,41 @@ class TestGeminiClientFallback(unittest.TestCase):
         # 4. 最終的なレスポンスがフォールバックからのものであることを確認
         self.assertEqual(response, "Fallback successful")
 
+    @patch('subprocess.run')
+    @patch('ollama.chat')
+    @patch('google.generativeai.GenerativeModel')
+    def test_fallback_uses_ollama_when_available(self, MockGenerativeModel, mock_ollama_chat, mock_subprocess_run):
+        """Gemini APIが失敗し、Ollamaが利用可能な場合に、Ollamaにフォールバックすることをテスト"""
+        # --- Arrange ---
+        # Gemini APIのモックを設定し、例外を発生させる
+        mock_gemini_model_instance = MockGenerativeModel.return_value
+        mock_gemini_model_instance.generate_content.side_effect = Exception("Simulated API Error")
+
+        # subprocess.runのモックを設定し、Ollamaが利用可能であると見せかける
+        mock_subprocess_run.return_value = MagicMock(stdout=f'{self.fallback_model_name}\n')
+
+        # ollama.chatのモックを設定
+        mock_ollama_chat.return_value = {'message': {'content': 'Ollama response'}}
+
+        # テスト対象のクライアントをインスタンス化
+        # VetraLLMCoreのhf_fallback_model_nameをNoneにして、HFフォールバックを無効化
+        client = GeminiClient(config_path=self.config_path)
+        client.fallback_llm.hf_fallback_model_name = None # Ensure HF fallback is not used
+        client.fallback_llm.hf_model = None
+
+        # --- Act ---
+        prompt = "Test prompt for Ollama"
+        response = client.query_text(prompt)
+
+        # --- Assert ---
+        # 1. Gemini APIが呼び出されたことを確認
+        mock_gemini_model_instance.generate_content.assert_called_once_with(prompt)
+
+        # 2. ollama.chatが呼び出されたことを確認
+        mock_ollama_chat.assert_called_once()
+
+        # 3. 最終的なレスポンスがOllamaからのものであることを確認
+        self.assertEqual(response, "Ollama response")
+
 if __name__ == '__main__':
     unittest.main()
