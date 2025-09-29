@@ -33,23 +33,16 @@ class InstinctMonitor:
 
         # 過去の意図の語りの長さのリストを作成
         past_lengths = [
-            len(mem.get("experience", {}).get("intent_narrative", ""))
+            len(mem.get("intent_narrative", ""))
             for mem in past_memories
-            if mem.get("experience", {}).get("intent_narrative")
-        ]
-
-        # 過去の意図の語りの長さのリストを作成
-        past_lengths = [
-            len(mem.get("experience", {}).get("intent_narrative", ""))
-            for mem in past_memories
-            if mem.get("experience", {}).get("intent_narrative")
+            if mem.get("intent_narrative")
         ]
 
         # 過去の自己相関スコアのリストを作成
         past_self_correlations = [
-            mem.get("experience", {}).get("auxiliary_analysis", {}).get("self_correlation_score", 0.0)
+            mem.get("auxiliary_analysis", {}).get("self_correlation_score", 0.0)
             for mem in past_memories
-            if "self_correlation_score" in mem.get("experience", {}).get("auxiliary_analysis", {})
+            if "self_correlation_score" in mem.get("auxiliary_analysis", {})
         ]
 
         log_messages = []

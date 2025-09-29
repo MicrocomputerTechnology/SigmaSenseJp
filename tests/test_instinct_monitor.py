@@ -22,11 +22,11 @@ class TestInstinctMonitor(unittest.TestCase):
         
         # 平均100文字、標準偏差10の正規分布に近い過去の語りを作成
         self.past_narratives = [
-            {"experience": {"intent_narrative": "a" * 100}},
-            {"experience": {"intent_narrative": "a" * 110}},
-            {"experience": {"intent_narrative": "a" * 90}},
-            {"experience": {"intent_narrative": "a" * 105}},
-            {"experience": {"intent_narrative": "a" * 95}},
+            {"intent_narrative": "a" * 100},
+            {"intent_narrative": "a" * 110},
+            {"intent_narrative": "a" * 90},
+            {"intent_narrative": "a" * 105},
+            {"intent_narrative": "a" * 95},
         ]
         self.memory_graph = MockMemoryGraph(self.past_narratives)
 
@@ -78,11 +78,11 @@ class TestInstinctMonitor(unittest.TestCase):
 
         # 過去の自己相関スコアが安定しているデータを作成
         past_memories_with_sc = [
-            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.8}}},
-            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.85}}},
-            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.75}}},
-            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.82}}},
-            {"experience": {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.78}}},
+            {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.8}},
+            {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.85}},
+            {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.75}},
+            {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.82}},
+            {"intent_narrative": "a" * 100, "auxiliary_analysis": {"self_correlation_score": 0.78}},
         ]
         sc_memory_graph = MockMemoryGraph(past_memories_with_sc)
 

@@ -99,28 +99,32 @@ class CausalDiscovery:
 
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
-    import os
+    from .sqlite_knowledge_store import SQLiteStore
 
     print("--- CausalDiscovery Self-Test --- ")
     # 1. モックと設定の準備
+    test_db_path = 'cd_test.sqlite'
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
+
+    # 共通のストアを生成
+    store = SQLiteStore(db_path=test_db_path)
+    wm = WorldModel(db_path=test_db_path) # WorldModelはパスからストアを内部生成
+    pmg = PersonalMemoryGraph(store=store) # PMGはストアを直接受け取る
+
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     config_dir = os.path.join(project_root, 'config')
     config_loader = ConfigLoader(config_dir)
     causal_config = config_loader.get_config("causal_discovery_profile")
 
-    wm = WorldModel('cd_test_wm.json')
-    # PersonalMemoryGraph now requires a config object
-    pmg_config = {"memory_path": "cd_test_pmg.jsonl"}
-    pmg = PersonalMemoryGraph(config=pmg_config)
-
     # 2. テスト用の記憶を準備
     # 仮説（鳥→飛ぶ）を支持する経験
-    exp1 = {"fusion_data": {"logical_terms": {"is_sparrow": {}, "is_bird": {}, "can_fly": {}}}}
-    exp2 = {"fusion_data": {"logical_terms": {"is_crow": {}, "is_bird": {}, "can_fly": {}}}}
+    exp1 = {"id": "exp1", "timestamp": "1", "fusion_data": {"logical_terms": {"is_sparrow": {}, "is_bird": {}, "can_fly": {}}}}
+    exp2 = {"id": "exp2", "timestamp": "2", "fusion_data": {"logical_terms": {"is_crow": {}, "is_bird": {}, "can_fly": {}}}}
     # 仮説の反例となる経験
-    exp3 = {"fusion_data": {"logical_terms": {"is_penguin": {}, "is_bird": {}, "cannot_fly": {}}}}
+    exp3 = {"id": "exp3", "timestamp": "3", "fusion_data": {"logical_terms": {"is_penguin": {}, "is_bird": {}, "cannot_fly": {}}}}
     # 無関係な経験
-    exp4 = {"fusion_data": {"logical_terms": {"is_cat": {}, "is_animal": {}}}}
+    exp4 = {"id": "exp4", "timestamp": "4", "fusion_data": {"logical_terms": {"is_cat": {}, "is_animal": {}}}}
 
     for exp in [exp1, exp2, exp3, exp4]:
         pmg.add_experience(exp)
@@ -137,9 +141,8 @@ if __name__ == '__main__':
     print("\n[PASS] Rule 'is_bird -> can_fly' was correctly rejected.")
 
     # クリーンアップ
-    if os.path.exists('cd_test_wm.json'):
-        os.remove('cd_test_wm.json')
-    if os.path.exists('cd_test_pmg.jsonl'):
-        os.remove('cd_test_pmg.jsonl')
+    store.close()
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
 
     print("\n--- Self-Test Complete ---")

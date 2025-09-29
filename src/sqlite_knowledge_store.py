@@ -9,6 +9,8 @@ class SQLiteStore(KnowledgeStoreBase):
 
     def __init__(self, db_path: str):
         self.db_path = db_path
+        # Ensure the directory for the db exists
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         self.connection = sqlite3.connect(self.db_path)
         self._create_tables()
 
@@ -37,22 +39,35 @@ class SQLiteStore(KnowledgeStoreBase):
                 PRIMARY KEY (source_id, target_id, relationship)
             )
         ''')
+        # Personal Memory table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS personal_memory (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                memory_id TEXT UNIQUE,
+                timestamp TEXT,
+                source_image_name TEXT,
+                vector TEXT,
+                best_match_id TEXT,
+                best_match_score REAL,
+                logical_terms TEXT,
+                psyche_state TEXT,
+                self_correlation_score REAL
+            )
+        ''')
+
         # Indexes for fast traversal
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_edges_source ON edges (source_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_edges_target ON edges (target_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_edges_relationship ON edges (relationship)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_memory_timestamp ON personal_memory (timestamp)')
         self.connection.commit()
 
     def add_node(self, node_id: str, **attributes):
         cursor = self.connection.cursor()
-        # Separate core attributes from the JSON blob
         domain = attributes.pop('domain', None)
         provenance = attributes.pop('provenance', 'manual')
         last_updated = datetime.now(UTC).isoformat()
-        
-        # Serialize remaining attributes to JSON
         attributes_json = json.dumps(attributes)
-
         cursor.execute('''
             INSERT OR REPLACE INTO nodes (id, domain, attributes, provenance, last_updated)
             VALUES (?, ?, ?, ?, ?)
@@ -78,7 +93,6 @@ class SQLiteStore(KnowledgeStoreBase):
         confidence = attributes.get('confidence', 1.0)
         provenance = attributes.get('provenance', 'manual')
         last_updated = datetime.now(UTC).isoformat()
-
         cursor.execute('''
             INSERT OR REPLACE INTO edges (source_id, target_id, relationship, weight, confidence, provenance, last_updated)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -87,23 +101,22 @@ class SQLiteStore(KnowledgeStoreBase):
 
     def find_related_nodes(self, source_id: str, relationship: str = None):
         cursor = self.connection.cursor()
+        query = """
+            SELECT e.target_id, n.attributes, e.relationship, e.weight, e.confidence, e.provenance
+            FROM edges e JOIN nodes n ON e.target_id = n.id
+            WHERE e.source_id = ?
+        """
+        params = [source_id]
         if relationship:
-            cursor.execute("""
-                SELECT e.target_id, n.attributes, e.relationship, e.weight, e.confidence, e.provenance
-                FROM edges e JOIN nodes n ON e.target_id = n.id
-                WHERE e.source_id = ? AND e.relationship = ?
-            """, (source_id, relationship))
-        else:
-            cursor.execute("""
-                SELECT e.target_id, n.attributes, e.relationship, e.weight, e.confidence, e.provenance
-                FROM edges e JOIN nodes n ON e.target_id = n.id
-                WHERE e.source_id = ?
-            """, (source_id,))
+            query += " AND e.relationship = ?"
+            params.append(relationship)
+        
+        cursor.execute(query, params)
         
         related = []
         for row in cursor.fetchall():
             target_node_attributes = json.loads(row[1])
-            target_node_attributes['id'] = row[0] # Ensure id is in the node dict
+            target_node_attributes['id'] = row[0]
             related.append({
                 "target_node": target_node_attributes,
                 "edge_attributes": {
@@ -115,11 +128,64 @@ class SQLiteStore(KnowledgeStoreBase):
             })
         return related
 
+    def add_memory(self, memory_data: dict):
+        cursor = self.connection.cursor()
+        
+        # Extract and serialize data
+        best_match = memory_data.get('best_match', {})
+        fusion_data = memory_data.get('fusion_data', {})
+        aux_analysis = memory_data.get('auxiliary_analysis', {})
+
+        params = (
+            memory_data.get('id'),
+            memory_data.get('timestamp'),
+            memory_data.get('source_image_name'),
+            json.dumps(memory_data.get('vector')),
+            best_match.get('image_name'),
+            best_match.get('score'),
+            json.dumps(fusion_data.get('logical_terms')),
+            json.dumps(aux_analysis.get('psyche_state')),
+            aux_analysis.get('self_correlation_score')
+        )
+
+        cursor.execute('''
+            INSERT INTO personal_memory (
+                memory_id, timestamp, source_image_name, vector, best_match_id, 
+                best_match_score, logical_terms, psyche_state, self_correlation_score
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', params)
+        self.connection.commit()
+        return cursor.lastrowid
+
+    def get_all_memories(self) -> list:
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM personal_memory ORDER BY timestamp ASC")
+        
+        memories = []
+        for row in cursor.fetchall():
+            memories.append({
+                "id": row[1], # memory_id
+                "timestamp": row[2],
+                "source_image_name": row[3],
+                "vector": json.loads(row[4]),
+                "best_match": {
+                    "image_name": row[5],
+                    "score": row[6]
+                },
+                "fusion_data": {
+                    "logical_terms": json.loads(row[7])
+                },
+                "auxiliary_analysis": {
+                    "psyche_state": json.loads(row[8]),
+                    "self_correlation_score": row[9]
+                }
+            })
+        return memories
+
     def close(self):
         if self.connection:
             self.connection.close()
 
     def save(self):
-        # For SQLite, commit is sufficient. This method is for API consistency.
         if self.connection:
             self.connection.commit()

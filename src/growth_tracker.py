@@ -65,7 +65,7 @@ class GrowthTracker:
         current_concepts = self._extract_concepts(current_text)
 
         # 前回の意図の語りから概念を抽出
-        previous_experience = past_memories[-2].get("experience", {})
+        previous_experience = past_memories[-2]
         previous_text = previous_experience.get("intent_narrative", "")
         previous_concepts = self._extract_concepts(previous_text)
 

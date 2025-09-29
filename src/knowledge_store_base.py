@@ -37,3 +37,13 @@ class KnowledgeStoreBase(ABC):
     def save(self):
         """For file-based stores, saves the current state."""
         pass
+
+    @abstractmethod
+    def add_memory(self, memory_data: dict):
+        """Adds a personal memory record to the store."""
+        pass
+
+    @abstractmethod
+    def get_all_memories(self) -> list:
+        """Retrieves all personal memory records from the store."""
+        pass
