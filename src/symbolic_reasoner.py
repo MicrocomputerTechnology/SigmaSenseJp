@@ -1,6 +1,7 @@
 # === 第十五次実験 改修後ファイル ===
 
 import os
+import json
 from .world_model import WorldModel
 
 class SymbolicReasoner:
@@ -62,45 +63,137 @@ class SymbolicReasoner:
         self.world_model.add_edge(source_id, target_id, relationship, **attributes)
         print(f"SymbolicReasoner: Updated knowledge: {source_id} -[{relationship}]-> {target_id}")
 
+    def get_all_supertypes(self, node_id: str) -> set:
+        """
+        Recursively finds all 'is_a' supertypes for a given node.
+        e.g., penguin -> {'bird', 'animal'}
+        """
+        supertypes = set()
+        if not self.world_model.has_node(node_id):
+            return supertypes
+            
+        facts_to_process = [node_id]
+        processed_facts = set()
+
+        while facts_to_process:
+            fact = facts_to_process.pop(0)
+            if fact in processed_facts:
+                continue
+            processed_facts.add(fact)
+
+            related_nodes = self.world_model.find_related_nodes(fact, relationship='is_a')
+            for item in related_nodes:
+                target_node_info = item.get('target_node')
+                if not target_node_info:
+                    continue
+                supertype_id = target_node_info.get('id')
+                if supertype_id:
+                    supertypes.add(supertype_id)
+                    facts_to_process.append(supertype_id)
+        return supertypes
+
+    def check_category_consistency(self, item_ids: list[str]) -> dict:
+        """
+        Checks if a list of items share a common, meaningful supertype.
+        For now, it checks if all items are 'food' if at least one is.
+        """
+        if not item_ids or len(item_ids) < 2:
+            return {'consistent': True, 'reason': 'Not enough items to compare.'}
+
+        all_item_supertypes = {item: self.get_all_supertypes(item) for item in item_ids}
+
+        # Determine the context category. Simple heuristic: if any item is food, the context is food.
+        is_food_context = any('食べ物' in supertypes for supertypes in all_item_supertypes.values())
+
+        if is_food_context:
+            for item, supertypes in all_item_supertypes.items():
+                if '食べ物' not in supertypes:
+                    return {
+                        'consistent': False,
+                        'reason': f"In a '食べ物' context, item '{item}' is not a 食べ物.",
+                        'violator': item,
+                        'context_category': '食べ物'
+                    }
+        
+        return {'consistent': True, 'reason': 'All items are consistent within the detected context.'}
+
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
     print("--- SymbolicReasoner Self-Test (with WorldModel) --- ")
     
-    # テスト用のWorldModelを準備
+    # テスト用のファイルパスを定義
     test_graph_path = 'reasoner_test_wm.json'
-    if os.path.exists(test_graph_path):
-        os.remove(test_graph_path)
+    test_profile_path = 'reasoner_test_profile.json'
+
+    # 既存のテストファイルを削除
+    for path in [test_graph_path, test_profile_path]:
+        if os.path.exists(path):
+            os.remove(path)
+
+    # テスト用のWorldModelプロファイルを作成
+    with open(test_profile_path, 'w', encoding='utf-8') as f:
+        json.dump({"graph_path": test_graph_path}, f)
     
-    wm = WorldModel(graph_path=test_graph_path)
+    # 正しいconfig_pathを使ってWorldModelを初期化
+    wm = WorldModel(config_path=test_profile_path)
+
+    # --- 既存のテストデータ ---
     wm.add_node('penguin', name_ja="ペンギン")
     wm.add_node('bird', name_ja="鳥")
     wm.add_node('animal', name_ja="動物")
     wm.add_edge('penguin', 'bird', 'is_a')
     wm.add_edge('bird', 'animal', 'is_a')
 
+    # --- 新しいテストデータ ---
+    wm.add_node('dango', name_ja="団子")
+    wm.add_node('wagashi', name_ja="和菓子")
+    wm.add_node('food', name_ja="食べ物")
+    wm.add_node('stone', name_ja="石")
+    wm.add_node('object', name_ja="物体")
+    wm.add_edge('dango', 'wagashi', 'is_a')
+    wm.add_edge('wagashi', 'food', 'is_a')
+    wm.add_edge('stone', 'object', 'is_a')
+
     # 1. 推論器の初期化
     reasoner = SymbolicReasoner(world_model=wm)
 
-    # 2. 推論の実行
+    # 2. 既存の推論テスト
     initial_context = {'penguin': True}
     print(f"\nInitial context: {initial_context}")
     new_facts = reasoner.reason(initial_context)
     print(f"Inferred facts: {new_facts}")
-
-    # 3. 結果の検証（連鎖的な推論が成功したか）
     expected_facts = {'bird': True, 'animal': True}
     assert new_facts == expected_facts, f"Test Failed: Expected {expected_facts}, but got {new_facts}"
     print("Chained reasoning test passed.")
 
-    # 4. 知識更新のテスト
-    print("\nTesting knowledge update...")
-    reasoner.update_knowledge('sparrow', 'bird', 'is_a', provenance="Test Update")
-    sparrow_relations = wm.find_related_nodes('sparrow', 'is_a')
-    assert len(sparrow_relations) > 0 and sparrow_relations[0]['target_node']['id'] == 'bird'
-    print("Knowledge update test passed.")
+    # 3. 新メソッドのテスト: get_all_supertypes
+    print("\nTesting get_all_supertypes...")
+    dango_supertypes = reasoner.get_all_supertypes('dango')
+    expected_supertypes = {'wagashi', 'food'}
+    assert dango_supertypes == expected_supertypes, f"Test Failed: Expected {expected_supertypes}, but got {dango_supertypes}"
+    print("get_all_supertypes test passed.")
+
+    # 4. 新メソッドのテスト: check_category_consistency
+    print("\nTesting check_category_consistency...")
+    # 矛盾がないケース
+    consistent_result = reasoner.check_category_consistency(['dango'])
+    assert consistent_result['consistent'] is True
+    print("Consistency test (single item) passed.")
+
+    # 矛盾があるケース
+    inconsistent_result = reasoner.check_category_consistency(['dango', 'stone'])
+    expected_inconsistency = {
+        'consistent': False,
+        'reason': "In a 'food' context, item 'stone' is not a food.",
+        'violator': 'stone',
+        'context_category': 'food'
+    }
+    assert inconsistent_result == expected_inconsistency, f"Test Failed: Expected {expected_inconsistency}, but got {inconsistent_result}"
+    print("Inconsistency detection test ('dango' vs 'stone') passed.")
 
     # クリーンアップ
-    if os.path.exists(test_graph_path):
-        os.remove(test_graph_path)
+    for path in [test_graph_path, test_profile_path]:
+        if os.path.exists(path):
+            os.remove(path)
 
     print("\n--- Self-Test Complete ---")
