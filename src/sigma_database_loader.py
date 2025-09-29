@@ -1,11 +1,6 @@
 import json
 import os
-import sys
-
-# Add the src directory to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.sqlite_knowledge_store import SQLiteStore
+from .sqlite_knowledge_store import SQLiteStore
 
 def load_sigma_database(db_path):
     """

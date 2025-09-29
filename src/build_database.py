@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.join(project_root, 'src'))
 from dimension_generator_local import DimensionGenerator
 from dimension_loader import DimensionLoader
 from stabilize_database import stabilize_database
-from correction_applicator import CorrectionApplicator
-from sqlite_knowledge_store import SQLiteStore
+from .correction_applicator import CorrectionApplicator
+from .sqlite_knowledge_store import SQLiteStore
 
 # --- NumPyデータ型をJSONに変換するためのカスタムエンコーダ ---
 class NumpyEncoder(json.JSONEncoder):
