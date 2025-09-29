@@ -58,11 +58,11 @@ class SpecializedVocabularyService:
 
     def lookup_python_term(self, term: str) -> list[tuple]:
         """Looks up a Python vocabulary term in its database."""
-        return self.python_vocab_handler.lookup_word(term)
+        return self.python_vocab_handler.lookup_word(term, table_name="terms", key_column="term", value_column="description")
 
     def lookup_philosophy_term(self, term: str) -> list[tuple]:
         """Looks up a philosophy vocabulary term in its database."""
-        return self.philosophy_vocab_handler.lookup_word(term)
+        return self.philosophy_vocab_handler.lookup_word(term, table_name="terms", key_column="term", value_column="description")
 
     def close(self):
         """Closes all database connections."""
