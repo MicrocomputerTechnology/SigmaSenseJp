@@ -21,15 +21,18 @@ class DatabaseHandler:
             except sqlite3.Error as e:
                 print(f"Error connecting to database: {e}")
 
-    def lookup_word(self, word: str) -> list[tuple]:
+    def lookup_word(self, word: str, table_name: str = "items", key_column: str = "word", value_column: str = "mean") -> list[tuple]:
         """
-        Looks up a word in the EJDict-hand database.
+        Looks up a word in a specified table within the database.
 
         Args:
             word: The word to look up.
+            table_name: The name of the table to search in.
+            key_column: The name of the column to match the word against.
+            value_column: The name of the column to return as the definition.
 
         Returns:
-            A list of tuples containing the search results (word, definition).
+            A list of tuples containing the search results (key, value).
         """
         if not self.connection:
             print("Database connection not available.")
@@ -38,8 +41,8 @@ class DatabaseHandler:
         results = []
         try:
             cursor = self.connection.cursor()
-            # The table is named 'items' and columns are 'word' and 'mean'
-            cursor.execute("SELECT word, mean FROM items WHERE word = ?", (word,))
+            query = f"SELECT {key_column}, {value_column} FROM {table_name} WHERE {key_column} = ?"
+            cursor.execute(query, (word,))
             results = cursor.fetchall()
         except sqlite3.Error as e:
             print(f"Error during database lookup: {e}")
