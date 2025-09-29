@@ -24,7 +24,7 @@ class GeminiClient:
         genai.configure(api_key=api_key)
 
         # 設定ファイルの読み込み
-        self.gemini_model_name = 'gemini-1.5-pro-latest' # デフォルト値
+        self.gemini_model_name = 'gemini-2.5-flash' # デフォルト値
         self.fallback_model_name = None
         if os.path.exists(config_path):
             with open(config_path, 'r') as f:
