@@ -47,3 +47,18 @@ class KnowledgeStoreBase(ABC):
     def get_all_memories(self) -> list:
         """Retrieves all personal memory records from the store."""
         pass
+
+    @abstractmethod
+    def add_vector(self, vector_id: str, vector: list, layer: str):
+        """Adds a vector to the vector database."""
+        pass
+
+    @abstractmethod
+    def get_all_vectors(self) -> tuple[list, list, list]:
+        """Retrieves all records from the vector database."""
+        pass
+
+    @abstractmethod
+    def clear_vector_database(self):
+        """Clears all records from the vector database."""
+        pass

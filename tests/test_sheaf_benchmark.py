@@ -37,7 +37,7 @@ class TestSheafBenchmark(unittest.TestCase):
         
         import tempfile
         cls.temp_dir = tempfile.mkdtemp()
-        cls.db_path = os.path.join(cls.temp_dir, 'benchmark_db.json')
+        cls.db_path = os.path.join(cls.temp_dir, 'benchmark_db.sqlite')
         cls.db_img_dir = os.path.join(cls.temp_dir, 'db_images')
         os.makedirs(cls.db_img_dir)
 

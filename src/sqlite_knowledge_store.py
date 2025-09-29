@@ -60,6 +60,17 @@ class SQLiteStore(KnowledgeStoreBase):
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_edges_target ON edges (target_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_edges_relationship ON edges (relationship)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_memory_timestamp ON personal_memory (timestamp)')
+
+        # Vector Database table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS vector_database (
+                id TEXT PRIMARY KEY,
+                vector TEXT,
+                layer TEXT
+            )
+        ''')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_vector_layer ON vector_database (layer)')
+
         self.connection.commit()
 
     def add_node(self, node_id: str, **attributes):
@@ -189,3 +200,30 @@ class SQLiteStore(KnowledgeStoreBase):
     def save(self):
         if self.connection:
             self.connection.commit()
+
+    def add_vector(self, vector_id: str, vector: list, layer: str):
+        cursor = self.connection.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO vector_database (id, vector, layer)
+            VALUES (?, ?, ?)
+        ''', (vector_id, json.dumps(vector), layer))
+        self.connection.commit()
+
+    def get_all_vectors(self) -> tuple[list, list, list]:
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT id, vector, layer FROM vector_database")
+        
+        ids = []
+        vectors = []
+        layers = []
+        for row in cursor.fetchall():
+            ids.append(row[0])
+            vectors.append(json.loads(row[1]))
+            layers.append(row[2])
+        return ids, vectors, layers
+
+    def clear_vector_database(self):
+        cursor = self.connection.cursor()
+        cursor.execute("DELETE FROM vector_database")
+        self.connection.commit()
+        print("Vector database cleared.")

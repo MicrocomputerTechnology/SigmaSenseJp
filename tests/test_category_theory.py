@@ -39,7 +39,7 @@ class TestCategoryTheory(unittest.TestCase):
         cls.temp_dir = os.path.join(os.path.dirname(__file__), 'temp_test_cat_dir')
         os.makedirs(cls.temp_dir, exist_ok=True)
 
-        cls.db_path = os.path.join(cls.temp_dir, 'test_db.json')
+        cls.db_path = os.path.join(cls.temp_dir, 'test_db.sqlite')
         
         dummy_img_path = os.path.join(cls.temp_dir, 'dummy.png')
         Image.new('RGB', (10, 10), 'green').save(dummy_img_path)
@@ -107,7 +107,7 @@ class TestFunctoriality(unittest.TestCase):
         cls.temp_dir = os.path.join(os.path.dirname(__file__), 'temp_test_functor_dir')
         os.makedirs(cls.temp_dir, exist_ok=True)
 
-        cls.db_path = os.path.join(cls.temp_dir, 'test_db_functor.json')
+        cls.db_path = os.path.join(cls.temp_dir, 'test_db_functor.sqlite')
         
         dummy_img_path = os.path.join(cls.temp_dir, 'dummy_functor.png')
         Image.new('RGB', (10, 10), 'red').save(dummy_img_path)
