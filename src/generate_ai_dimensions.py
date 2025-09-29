@@ -1,7 +1,7 @@
 import json
 import argparse
 import sys
-from gemini_client import GeminiClient
+from src.gemini_client import GeminiClient
 
 # Selia軸（構造）生成用のプロンプト
 prompt_selia = '''
