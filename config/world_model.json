@@ -1,67 +1,21 @@
 {
     "nodes": {
-        "penguin": {
-            "id": "penguin",
-            "name_ja": "ペンギン",
-            "type": "instance"
-        },
-        "bird": {
-            "id": "bird",
-            "name_ja": "鳥",
-            "type": "concept"
-        },
-        "animal": {
-            "id": "animal",
-            "name_ja": "動物",
-            "type": "property"
-        },
-        "団子": {
-            "id": "団子",
-            "name_ja": "団子"
-        },
-        "和菓子": {
-            "id": "和菓子",
-            "name_ja": "和菓子"
-        },
-        "食べ物": {
-            "id": "食べ物",
-            "name_ja": "食べ物"
-        },
-        "重し": {
-            "id": "重し",
-            "name_ja": "重し"
-        },
-        "物体": {
-            "id": "物体",
-            "name_ja": "物体"
-        }
+        "penguin": {"id": "penguin", "name_ja": "ペンギン"},
+        "bird": {"id": "bird", "name_ja": "鳥"},
+        "animal": {"id": "animal", "name_ja": "動物"},
+        "is_dog": {"id": "is_dog", "name_ja": "犬である"},
+        "団子": {"id": "団子", "name_ja": "団子"},
+        "和菓子": {"id": "和菓子", "name_ja": "和菓子"},
+        "食べ物": {"id": "食べ物", "name_ja": "食べ物"},
+        "重し": {"id": "重し", "name_ja": "重し"},
+        "物体": {"id": "物体", "name_ja": "物体"}
     },
     "edges": [
-        {
-            "source": "penguin",
-            "target": "bird",
-            "relationship": "is_a",
-            "provenance": "common_sense_rulebase.json"
-        },
-        {
-            "source": "bird",
-            "target": "animal",
-            "relationship": "is_a"
-        },
-        {
-            "source": "団子",
-            "target": "和菓子",
-            "relationship": "is_a"
-        },
-        {
-            "source": "和菓子",
-            "target": "食べ物",
-            "relationship": "is_a"
-        },
-        {
-            "source": "重し",
-            "target": "物体",
-            "relationship": "is_a"
-        }
+        {"source": "penguin", "target": "bird", "relationship": "is_a"},
+        {"source": "bird", "target": "animal", "relationship": "is_a"},
+        {"source": "is_dog", "target": "animal", "relationship": "is_a"},
+        {"source": "団子", "target": "和菓子", "relationship": "is_a"},
+        {"source": "和菓子", "target": "食べ物", "relationship": "is_a"},
+        {"source": "重し", "target": "物体", "relationship": "is_a"}
     ]
 }
