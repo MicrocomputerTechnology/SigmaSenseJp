@@ -13,4 +13,5 @@ temp_handler_*.py
 # Temporary files for gh issue bodies
 gh_issue_body_*.md
 config/sigma_product_database_custom_ai_generated.json
+*.sqlite3
 data/wnjpn.db

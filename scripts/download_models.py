@@ -3,10 +3,12 @@ import subprocess
 import tensorflow as tf
 import tensorflow_hub as hub
 import zipfile
-import requests # Use requests for more robust downloads
+import requests
+import urllib.request
 
 # --- Configuration ---
 MODEL_DIR = "models"
+DATA_DIR = "data"
 
 # Models to download via requests
 TFLITE_MODELS = {
@@ -23,16 +25,19 @@ SAVED_MODELS = {
 MOBILEVIT_ZIP_URL = "https://itb.co.jp/wp-content/uploads/mobilevit-tensorflow2-xxs-1k-256-v1.zip"
 MOBILEVIT_DIR_NAME = "mobilevit-tensorflow2-xxs-1k-256-v1"
 
-# --- Main script ---
+# Dictionaries
+EJDICT_URL = "https://github.com/kujirahand/EJDict/archive/refs/heads/master.zip"
+WNJPN_URL = "https://github.com/bond-lab/wnja/releases/download/v1.1/wnjpn.db.gz"
+
+# --- Helper Functions ---
 def download_file(url, filepath):
     """Downloads a file from a URL to a given path using requests."""
     try:
         with requests.get(url, stream=True) as r:
-            r.raise_for_status() # Raise an exception for bad status codes
+            r.raise_for_status()
             with open(filepath, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
-        # Basic validation: check if file size is reasonable (e.g., > 1KB)
         if os.path.getsize(filepath) < 1024:
             print(f"WARNING: Downloaded file {filepath} is very small. It might be an error page.")
         print(f"Successfully downloaded {os.path.basename(filepath)}.")
@@ -41,11 +46,9 @@ def download_file(url, filepath):
         print(f"ERROR: Failed to download {os.path.basename(filepath)}: {e}")
         return False
 
-def main():
-    """Downloads all necessary models for the project."""
-    os.makedirs(MODEL_DIR, exist_ok=True)
-
-    # --- Download TFLite models ---
+# --- Download Functions ---
+def download_tflite_models():
+    """Downloads TFLite models."""
     print("--- Downloading TFLite models ---")
     for filename, url in TFLITE_MODELS.items():
         filepath = os.path.join(MODEL_DIR, filename)
@@ -55,7 +58,8 @@ def main():
         else:
             print(f"{filename} already exists. Skipping.")
 
-    # --- Download SavedModel format models from TF Hub ---
+def download_saved_models():
+    """Downloads SavedModel format models from TensorFlow Hub."""
     print("\n--- Downloading SavedModel format models from TensorFlow Hub ---")
     for dirname, url in SAVED_MODELS.items():
         dirpath = os.path.join(MODEL_DIR, dirname)
@@ -70,7 +74,8 @@ def main():
         else:
             print(f"{dirname} already exists. Skipping.")
 
-    # --- Download MobileViT from Zip ---
+def download_mobilevit_model():
+    """Downloads and extracts the MobileViT model."""
     print("\n--- Downloading MobileViT model from Zip ---")
     mobilevit_path = os.path.join(MODEL_DIR, MOBILEVIT_DIR_NAME)
     if not os.path.exists(mobilevit_path):
@@ -90,7 +95,65 @@ def main():
     else:
         print(f"{MOBILEVIT_DIR_NAME} already exists. Skipping.")
 
-    print("\n--- Model download process completed ---")
+def download_ejdict():
+    """Downloads and extracts the EJDict-hand database."""
+    print("\n--- Downloading EJDict-hand ---")
+    zip_path = os.path.join(DATA_DIR, "ejdict.zip")
+    db_path = os.path.join(DATA_DIR, "ejdict.sqlite3")
+    extracted_dir = os.path.join(DATA_DIR, "EJDict-master")
 
-if __name__ == "__main__":
-    main()
+    if os.path.exists(db_path):
+        print("ejdict.sqlite3 already exists. Skipping download.")
+        return
+
+    try:
+        print(f"Downloading {EJDICT_URL}...")
+        urllib.request.urlretrieve(EJDICT_URL, zip_path)
+        print("Download complete. Extracting...")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(DATA_DIR)
+        
+        source_db = os.path.join(extracted_dir, "ejdict.sqlite3")
+        if os.path.exists(source_db):
+            os.rename(source_db, db_path)
+            print("Successfully moved ejdict.sqlite3.")
+        
+        os.remove(zip_path)
+        subprocess.run(["rm", "-rf", extracted_dir], check=True)
+        print("Cleaned up temporary files.")
+
+    except Exception as e:
+        print(f"Failed to download or process EJDict-hand: {e}")
+
+def download_wnjpn():
+    """Downloads and extracts the Japanese WordNet database."""
+    print("\n--- Downloading Japanese WordNet (wnjpn) ---")
+    gz_path = os.path.join(DATA_DIR, "wnjpn.db.gz")
+    db_path = os.path.join(DATA_DIR, "wnjpn.db")
+
+    if os.path.exists(db_path):
+        print("wnjpn.db already exists. Skipping download.")
+        return
+
+    try:
+        print(f"Downloading {WNJPN_URL}...")
+        subprocess.run(["wget", WNJPN_URL, "-O", gz_path], check=True)
+        print("Download complete. Extracting...")
+        subprocess.run(["gunzip", gz_path], check=True)
+        print("Successfully downloaded and extracted wnjpn.db.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to download or extract wnjpn.db: {e}")
+    except FileNotFoundError:
+        print("wget or gunzip command not found. Please install them or download the dictionary manually.")
+
+if __name__ == '__main__':
+    os.makedirs(MODEL_DIR, exist_ok=True)
+    os.makedirs(DATA_DIR, exist_ok=True)
+    
+    download_tflite_models()
+    download_saved_models()
+    download_mobilevit_model()
+    download_ejdict()
+    download_wnjpn()
+
+    print("\n--- Asset download process completed ---")
