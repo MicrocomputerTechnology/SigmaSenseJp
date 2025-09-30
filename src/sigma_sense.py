@@ -13,6 +13,9 @@ from .logical_pattern_suggester import LogicalPatternSuggester
 from .contextual_override_engine import ContextualOverrideEngine
 from .logical_expression_engine import parse_expression
 
+import uuid
+import datetime
+
 # --- 第十五次実験で導入されたコンポーネント ---
 from .world_model import WorldModel
 from .personal_memory_graph import PersonalMemoryGraph
@@ -84,9 +87,7 @@ class SigmaSense:
             world_model_path = sigma_sense_config.get("world_model_path", "data/world_model.sqlite")
             self.world_model = WorldModel(db_path=os.path.join(project_root, world_model_path))
         
-        personal_memory_path = self.all_agent_configs.get_config("sigma_sense_config").get("personal_memory_path", "sigma_logs/personal_memory.jsonl")
-        
-        self.memory_graph = PersonalMemoryGraph(os.path.join(project_root, personal_memory_path))
+        self.memory_graph = PersonalMemoryGraph(store=self.world_model.store)
         self.reasoner = SymbolicReasoner(self.world_model)
         self.causal_discovery = CausalDiscovery(self.world_model, self.memory_graph)
         self.temporal_reasoning = TemporalReasoning(self.memory_graph)
@@ -240,7 +241,13 @@ class SigmaSense:
                 "source_engine": source_engine
             }
 
+        # Generate metadata before creating the experience dictionary
+        memory_id = str(uuid.uuid4())
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
         current_experience = {
+            "id": memory_id,
+            "timestamp": timestamp,
             "image_path": image_path_or_obj if isinstance(image_path_or_obj, str) else "in-memory_object",
             "source_image_name": image_name,
             "vector": meaning_vector.tolist(),
@@ -255,11 +262,7 @@ class SigmaSense:
             }
         }
         
-        memory_entry = self.memory_graph.add_experience(current_experience)
-        if memory_entry:
-            current_experience["id"] = memory_entry["memory_id"]
-        else:
-            current_experience["id"] = None
+        self.memory_graph.add_experience(current_experience)
 
 
         # =================================================================

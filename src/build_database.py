@@ -14,7 +14,8 @@ sys.path.insert(0, os.path.join(project_root, 'src'))
 from dimension_generator_local import DimensionGenerator
 from dimension_loader import DimensionLoader
 from stabilize_database import stabilize_database
-from correction_applicator import CorrectionApplicator
+from .correction_applicator import CorrectionApplicator
+from .sqlite_knowledge_store import SQLiteStore
 
 # --- NumPyデータ型をJSONに変換するためのカスタムエンコーダ ---
 class NumpyEncoder(json.JSONEncoder):
@@ -74,12 +75,11 @@ def build_database(img_dir, db_path, dimension_config_path):
     """sigma_imagesディレクトリ内の画像から最新のアーキテクチャに基づいた意味データベースを構築する"""
     print(f"🚀 最新アーキテクチャでの意味データベース構築を開始します...")
     print(f"   画像ディレクトリ: {img_dir}")
-    print(f"   出力先: {db_path}")
+    print(f"   出力先(SQLite): {db_path}")
 
     # 最新の次元生成器と次元定義ローダーを初期化
     dim_generator = DimensionGenerator()
     
-    # dimension_config_path を使ってDimensionLoaderを初期化
     if dimension_config_path:
         print(f"   指定された次元ファイルを使用: {dimension_config_path}")
         dim_loader = DimensionLoader(paths=[dimension_config_path])
@@ -87,7 +87,7 @@ def build_database(img_dir, db_path, dimension_config_path):
         print("   デフォルトの全次元ファイルを使用します。")
         dim_loader = DimensionLoader() # 指定がない場合はデフォルト
 
-    database = []
+    database_in_memory = []
     if not os.path.isdir(img_dir):
         print(f"❗ エラー: 画像ディレクトリが見つかりません: {img_dir}")
         return
@@ -98,12 +98,10 @@ def build_database(img_dir, db_path, dimension_config_path):
         print("❗ 警告: 対象となる画像ファイルが見つかりません。")
         return
 
-    # tqdmを使ってプログレスバーを表示
     for fname in tqdm(image_files, desc="ベクトル生成中"):
         img_path = os.path.join(img_dir, fname)
         item_id = os.path.splitext(fname)[0]
         
-        # 1. 特徴量を網羅的に抽出
         generation_result = dim_generator.generate_dimensions(img_path)
         facts = generation_result.get("features", {})
 
@@ -111,28 +109,33 @@ def build_database(img_dir, db_path, dimension_config_path):
             print(f"⚠️ 警告: {fname} の特徴量抽出に失敗したため、データベースから除外します。")
             continue
 
-        # 2. 次元定義に従ってベクトルを構築
         vector = build_vector_from_facts(facts, dim_loader)
-        
-        # 3. ベクトルの主要レイヤーを判定
         layer = _get_dominant_layer(vector, dim_loader)
 
-        database.append({
+        database_in_memory.append({
             "id": item_id,
             "meaning_vector": vector,
             "layer": layer
         })
 
-    # --- データベース全体に一貫性補正を適用 ---
     corrector = CorrectionApplicator()
-    stabilized_database = corrector.apply_to_database(database)
+    stabilized_database = corrector.apply_to_database(database_in_memory)
 
+    # --- SQLiteデータベースへの書き込み ---
     try:
-        with open(db_path, 'w', encoding='utf-8') as f:
-            json.dump(stabilized_database, f, indent=2, ensure_ascii=False, cls=NumpyEncoder)
+        store = SQLiteStore(db_path=db_path)
+        store.clear_vector_database() # 既存のデータをクリア
+        print(f"\nWriting {len(stabilized_database)} records to SQLite database...")
+        for item in tqdm(stabilized_database, desc="DB書き込み中"):
+            store.add_vector(
+                vector_id=item['id'], 
+                vector=item['meaning_vector'], 
+                layer=item['layer']
+            )
+        store.close()
         print(f"\n✅ データベースの構築と安定化が完了しました。{len(stabilized_database)}件のデータが {db_path} に保存されました。")
-    except IOError as e:
-        print(f"\n❗ エラー: データベースファイルの書き込みに失敗しました: {e}")
+    except Exception as e:
+        print(f"\n❗ エラー: データベースへの書き込みに失敗しました: {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -141,8 +144,8 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('--img_dir', type=str, default='sigma_images', help='Directory containing the images.')
-    parser.add_argument("--db_path", type=str, default="config/sigma_product_database_stabilized.json",
-                        help="Path to the output SigmaSense product database JSON file.")
+    parser.add_argument("--db_path", type=str, default="data/world_model.sqlite",
+                        help="Path to the output SigmaSense SQLite database file.")
     parser.add_argument("--dimension_config", type=str, default=None,
                         help="Path to a specific dimension configuration file (YAML or JSON). \nIf not provided, all default dimension files will be used.")
     

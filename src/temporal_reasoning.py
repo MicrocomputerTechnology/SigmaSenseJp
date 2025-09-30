@@ -41,8 +41,8 @@ class TemporalReasoning:
         for i in range(len(all_memories) - 1):
             try:
                 # ここでは簡易的に、イベントを画像のファイル名とする
-                event_a = all_memories[i]["experience"]["source_image_name"]
-                event_b = all_memories[i+1]["experience"]["source_image_name"]
+                event_a = all_memories[i]["source_image_name"]
+                event_b = all_memories[i+1]["source_image_name"]
                 transitions[(event_a, event_b)] += 1
             except KeyError:
                 # 必要なキーがない記憶はスキップ
@@ -62,26 +62,31 @@ class TemporalReasoning:
 
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
-    import os
     import time
+    import uuid
+    import datetime
+    from .sqlite_knowledge_store import SQLiteStore
 
     print("--- TemporalReasoning Self-Test --- ")
-    test_memory_path = 'tr_test_pmg.jsonl'
-    if os.path.exists(test_memory_path):
-        os.remove(test_memory_path)
+    test_db_path = 'tr_test.sqlite'
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
 
     # 1. 記憶モデルと設定の準備
-    # Note: The test requires PersonalMemoryGraph, which now also takes a config.
-    # For this self-contained test, we pass a config directly to PMG.
-    pmg_config = {"memory_path": test_memory_path}
-    pmg = PersonalMemoryGraph(config=pmg_config)
+    store = SQLiteStore(db_path=test_db_path)
+    pmg = PersonalMemoryGraph(store=store)
 
     # 2. パターンを含む一連の経験を追加
     # A -> B というパターンを3回繰り返す
     log_pattern = ["A.jpg", "B.jpg", "C.jpg", "A.jpg", "B.jpg", "D.jpg", "A.jpg", "B.jpg"]
     print(f"\nLogging experience sequence: {log_pattern}")
     for img_name in log_pattern:
-        pmg.add_experience({"experience": {"source_image_name": img_name}})
+        experience = {
+            "id": str(uuid.uuid4()),
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "source_image_name": img_name
+        }
+        pmg.add_experience(experience)
         time.sleep(0.01) # タイムスタンプを確実ずらす
 
     # 3. パターン発見エンジンの実行
@@ -97,7 +102,8 @@ if __name__ == '__main__':
     print(f"\n[PASS] Correctly identified the frequent pattern: {expected_pattern}")
 
     # クリーンアップ
-    if os.path.exists(test_memory_path):
-        os.remove(test_memory_path)
+    store.close()
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
 
     print("\n--- Self-Test Complete ---")

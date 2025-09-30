@@ -79,7 +79,7 @@ class IntentJustifier:
             ))
             # 最新の過去の記憶（最後から2番目）を取得
             last_memory = past_memories[-2]
-            last_psyche = last_memory.get("experience", {}).get("auxiliary_analysis", {}).get("psyche_state", {}).get("state", "不明")
+            last_psyche = last_memory.get("auxiliary_analysis", {}).get("psyche_state", {}).get("state", "不明")
             narrative.append(self.narrative_templates.get("past_psyche_state", "").format(
                 last_psyche=last_psyche
             ))
@@ -116,25 +116,37 @@ class IntentJustifier:
 
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
-    import os
+    import uuid
+    import datetime
+    from .sqlite_knowledge_store import SQLiteStore
 
     print("--- IntentJustifier Self-Test --- ")
     # 1. モックと設定の準備
+    test_db_path = 'ij_test.sqlite'
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
+
+    store = SQLiteStore(db_path=test_db_path)
+    wm = WorldModel(db_path=test_db_path)
+    pmg = PersonalMemoryGraph(store=store)
+
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     config_dir = os.path.join(project_root, 'config')
     config_loader = ConfigLoader(config_dir)
     justifier_config = config_loader.get_config("intent_justifier_profile")
 
-    # WorldModelのモック
-    wm = WorldModel('ij_test_wm.json')
+    # WorldModelに知識を追加
     wm.add_node('penguin', name_ja="ペンギン")
     wm.add_node('bird', name_ja="鳥")
     wm.add_edge('penguin', 'bird', 'is_a')
 
-    # PersonalMemoryGraphのモック
-    pmg = PersonalMemoryGraph('ij_test_pmg.jsonl')
-    # 過去の経験を追加
-    past_exp = {"source_image_name": "penguin.jpg", "auxiliary_analysis": {"psyche_state": {"state": "confused"}}}
+    # PersonalMemoryGraphに過去の経験を追加
+    past_exp = {
+        "id": str(uuid.uuid4()), 
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "source_image_name": "penguin.jpg", 
+        "auxiliary_analysis": {"psyche_state": {"state": "confused"}}
+    }
     pmg.add_experience(past_exp)
 
     # 2. Justifierの初期化
@@ -142,6 +154,8 @@ if __name__ == '__main__':
 
     # 3. 現在の経験データを作成
     current_exp = {
+        "id": str(uuid.uuid4()),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "source_image_name": "penguin.jpg",
         "best_match": {"image_name": "bird.jpg", "score": 0.85},
         "fusion_data": {
@@ -167,9 +181,8 @@ if __name__ == '__main__':
     print("\nAssertions passed. Narrative contains references to both knowledge and memory.")
 
     # クリーンアップ
-    if os.path.exists('ij_test_wm.json'):
-        os.remove('ij_test_wm.json')
-    if os.path.exists('ij_test_pmg.jsonl'):
-        os.remove('ij_test_pmg.jsonl')
+    store.close()
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
 
     print("\n--- Self-Test Complete ---")

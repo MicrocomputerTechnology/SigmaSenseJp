@@ -47,7 +47,7 @@ class MetaNarrator:
         # 経験を画像名でグループ化
         experiences_by_image = defaultdict(list)
         for mem in all_memories:
-            source_image = mem.get("experience", {}).get("source_image_name")
+            source_image = mem.get("source_image_name")
             if source_image:
                 experiences_by_image[source_image].append(mem)
         
@@ -56,8 +56,8 @@ class MetaNarrator:
             if len(memories) > 1:
                 # 時系列でソート
                 sorted_memories = sorted(memories, key=lambda m: m["timestamp"])
-                first_exp = sorted_memories[0]["experience"]
-                last_exp = sorted_memories[-1]["experience"]
+                first_exp = sorted_memories[0]
+                last_exp = sorted_memories[-1]
 
                 first_psyche = first_exp.get("auxiliary_analysis", {}).get("psyche_state", {}).get("state", "不明")
                 last_psyche = last_exp.get("auxiliary_analysis", {}).get("psyche_state", {}).get("state", "不明")
@@ -88,26 +88,30 @@ class MetaNarrator:
 
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
-    import os
     import time
+    import uuid
+    import datetime
+    from .sqlite_knowledge_store import SQLiteStore
 
     print("--- MetaNarrator Self-Test --- ")
-    test_memory_path = 'mn_test_pmg.jsonl'
-    if os.path.exists(test_memory_path):
-        os.remove(test_memory_path)
+    test_db_path = 'mn_test.sqlite'
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
 
     # 1. 記憶モデルと設定の準備
+    store = SQLiteStore(db_path=test_db_path)
+    pmg = PersonalMemoryGraph(store=store)
+
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     config_dir = os.path.join(project_root, 'config')
     config_loader = ConfigLoader(config_dir)
     narrator_config = config_loader.get_config("meta_narrator_profile")
 
-    pmg = PersonalMemoryGraph(memory_path=test_memory_path)
-
     # 2. 学習パターンを示す一連の経験を追加
     print("\n--- Logging a learning story ---")
     # 最初のペンギンの経験（混乱）
     exp1 = {
+        "id": str(uuid.uuid4()), "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "source_image_name": "penguin.jpg", 
         "best_match": {"image_name": "rock.jpg"}, 
         "auxiliary_analysis": {"psyche_state": {"state": "confused"}}
@@ -117,6 +121,7 @@ if __name__ == '__main__':
 
     # 別の経験
     exp2 = {
+        "id": str(uuid.uuid4()), "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "source_image_name": "cat.jpg", 
         "best_match": {"image_name": "animal.jpg"}, 
         "auxiliary_analysis": {"psyche_state": {"state": "calm"}}
@@ -126,6 +131,7 @@ if __name__ == '__main__':
 
     # 2回目のペンギンの経験（穏やか）
     exp3 = {
+        "id": str(uuid.uuid4()), "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "source_image_name": "penguin.jpg", 
         "best_match": {"image_name": "bird.jpg"}, 
         "auxiliary_analysis": {"psyche_state": {"state": "calm"}}
@@ -147,7 +153,8 @@ if __name__ == '__main__':
     print("\nAssertions passed. Narrative correctly identified the learning story.")
 
     # クリーンアップ
-    if os.path.exists(test_memory_path):
-        os.remove(test_memory_path)
+    store.close()
+    if os.path.exists(test_db_path):
+        os.remove(test_db_path)
 
     print("\n--- Self-Test Complete ---")

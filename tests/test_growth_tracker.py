@@ -33,17 +33,15 @@ class TestGrowthTracker(unittest.TestCase):
         """インスタンスを作成"""
         self.tracker = GrowthTracker()
         self.previous_experience = {
-            "experience": {
-                "intent_narrative": "犬は動物です。",
-                "growth_narrative": "基本的な関係性を理解した。"
-            }
+            "intent_narrative": "犬は動物です。",
+            "growth_narrative": "基本的な関係性を理解した。"
         }
 
     @unittest.skipIf(GINZA_UNAVAILABLE, "GiNZA model is not available or not working correctly")
     def test_growth_detected(self):
         """新しい概念が追加され、成長が検知されるテスト"""
         print("\n--- Testing growth detection ---")
-        memories = [self.previous_experience, {"experience": {}}]
+        memories = [self.previous_experience, {}] # The second memory is the current one, not yet fully formed
         mock_graph = MockMemoryGraph(memories)
         
         current_narratives = {
@@ -63,7 +61,7 @@ class TestGrowthTracker(unittest.TestCase):
     def test_stagnation_detected(self):
         """新しい概念がなく、停滞と見なされるテスト"""
         print("\n--- Testing stagnation detection ---")
-        memories = [self.previous_experience, {"experience": {}}]
+        memories = [self.previous_experience, {}]
         mock_graph = MockMemoryGraph(memories)
         
         current_narratives = {
@@ -78,7 +76,7 @@ class TestGrowthTracker(unittest.TestCase):
     def test_not_enough_history(self):
         """履歴が不十分でチェックがスキップされるテスト"""
         print("\n--- Testing with not enough history ---")
-        memories = [{"experience": {}}] # 記憶が1つしかない
+        memories = [{}] # 記憶が1つしかない
         mock_graph = MockMemoryGraph(memories)
         
         current_narratives = {

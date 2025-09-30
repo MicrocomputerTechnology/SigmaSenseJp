@@ -32,7 +32,7 @@ class TestSheafAxiomsSimplified(unittest.TestCase):
         
         import tempfile
         cls.temp_dir = tempfile.mkdtemp()
-        cls.db_path = os.path.join(cls.temp_dir, 'test_db.json')
+        cls.db_path = os.path.join(cls.temp_dir, 'test_db.sqlite')
         
         # 1. Create two separate, non-overlapping images in BGR format
         cls.red_image_path = os.path.join(cls.temp_dir, 'red_square.png')

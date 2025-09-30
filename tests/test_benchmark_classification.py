@@ -19,9 +19,9 @@ def sigma_instance():
     """
     テスト用のSigmaSenseインスタンスを生成するフィクスチャ
     """
-    db_path = os.path.join(project_root, "config", "sigma_product_database_stabilized.json")
+    db_path = os.path.join(project_root, "data", "world_model.sqlite")
     if not os.path.exists(db_path):
-        pytest.fail(f"Database file not found at {db_path}. Run 'python src/build_database.py --img_dir sigma_images' first.")
+        pytest.fail(f"Database file not found at {db_path}. Ensure the test setup and build scripts (e.g., scripts/build_knowledge_store.py) have run correctly.")
 
     loader = DimensionLoader()
     database, ids, vectors, layers = load_sigma_database(db_path)

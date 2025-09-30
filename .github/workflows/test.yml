@@ -31,5 +31,8 @@ jobs:
     - name: Build Knowledge Store
       run: python scripts/build_knowledge_store.py
 
+    - name: Build Vector Database
+      run: python -m src.build_database --img_dir sigma_images
+
     - name: Test with pytest
       run: pytest --cov=src --cov-report=xml

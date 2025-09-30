@@ -28,7 +28,9 @@ SigmaSenseの思考と判断の中核を担うモジュール群です。
 - `world_model.py`: **知識ストアインターフェース**。システムの他の部分（思考エンジンなど）と、具体的なデータベース実装（SQLite, Neo4j等）とを分離する、高レベルな抽象インターフェース。
 - `knowledge_store_base.py`: `WorldModel`が利用する知識ストアの抽象基底クラス。データベースが実装すべきメソッド（`add_node`, `find_edges`等）を定義する。
 - `sqlite_knowledge_store.py`: `KnowledgeStoreBase`の具体的な実装。知識を高速かつ堅牢に操作するため、バックエンドとしてSQLiteを利用する。
-- `personal_memory_graph.py`: **個人的な経験の記憶**。`process_experience`の一回の実行（知覚〜判断）を一つの「経験」ノードとして記録します。入力、中間生成物、最終結果、利用した知識などが関連付けられ、後の自己省察の材料となります。
+- `personal_memory_graph.py`: **個人記憶グラフインターフェース**。`KnowledgeStore`を介して、個人の経験（思考、感情、判断のログ）を時系列でデータベースに記録・管理します。
+- `build_database.py`: **ベクトルデータベース構築スクリプト**。画像ディレクトリから特徴量を抽出し、`vector_database`テーブルにベクトル情報を構築します。
+- `sigma_database_loader.py`: **ベクトルデータベースローダー**。`vector_database`テーブルから、ベクトル情報をメモリに読み込みます。
 - `meta_narrator.py`: **成長の語り手**。`PersonalMemoryGraph`に蓄積された全経験を分析し、自己の成長（例: 新しい概念の獲得）や心理状態の変化を物語として生成します。
 - `causal_discovery.py`: **因果発見エンジン**。蓄積された記憶を統計的に分析し、「特定の形状と特定の色彩が同時に現れることが多い」といった新たな因果関係のルールを発見して`WorldModel`を更新します。
 - `temporal_reasoning.py`: **時間的推論エンジン**。記憶のシーケンスを分析し、「イベントAの後にはイベントBが起こりやすい」といった時間的なパターンを発見して`WorldModel`を更新します。
