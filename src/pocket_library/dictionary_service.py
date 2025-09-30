@@ -1,5 +1,6 @@
 # Handles dictionary lookups and translation services.
 import os
+import sqlite3
 import sudachipy
 from sudachipy import tokenizer
 from sudachipy import dictionary
@@ -12,11 +13,12 @@ from .database_handler import DatabaseHandler
 class DictionaryService:
     """Provides a unified interface for dictionary and translation services."""
 
-    def __init__(self, db_path: str = "data/ejdict.sqlite3"):
+    def __init__(self, db_path: str = "data/ejdict.sqlite3", wnjpn_path: str = "data/wnjpn.db"):
         """Initializes the dictionary services."""
         self.sudachi_tokenizer = self._setup_sudachi()
         self.mecab_tokenizer = self._setup_mecab()
         self.ejdict_handler = DatabaseHandler(db_path)
+        self.wnjpn_connection = self._setup_wnjpn(wnjpn_path)
         self._setup_argos()
         self.en_translator = self._get_en_translator()
 
@@ -36,13 +38,23 @@ class DictionaryService:
             print(f"Error initializing MeCab: {e}")
             return None
 
+    def _setup_wnjpn(self, db_path: str):
+        """Initializes the connection to the Japanese WordNet (wnjpn) database."""
+        if not os.path.exists(db_path):
+            print(f"Warning: WordNet database not found at {db_path}")
+            return None
+        try:
+            return sqlite3.connect(db_path, check_same_thread=False)
+        except sqlite3.Error as e:
+            print(f"Error connecting to WordNet DB: {e}")
+            return None
+
     def _setup_argos(self):
         """Downloads and installs Argos Translate language packages if not present."""
         try:
             argostranslate.package.update_package_index()
             available_packages = argostranslate.package.get_available_packages()
             
-            # Install English package for EN->EN paraphrasing/definitions
             package_to_install = next(
                 filter(
                     lambda x: x.from_code == "en" and x.to_code == "en",
@@ -69,7 +81,7 @@ class DictionaryService:
 
     def tokenize_japanese_text_sudachi(self, text: str, mode: str = 'A'):
         if not self.sudachi_tokenizer:
-            return None
+            return []
         sudachi_mode = getattr(tokenizer.Tokenizer.SplitMode, mode, tokenizer.Tokenizer.SplitMode.A)
         return self.sudachi_tokenizer.tokenize(text, sudachi_mode)
 
@@ -88,9 +100,62 @@ class DictionaryService:
             return None
         return self.en_translator.translate(text)
 
+    def get_supertypes_from_wordnet(self, word: str) -> set:
+        """Finds supertypes (hypernyms) for a word from the Japanese WordNet."""
+        if not self.wnjpn_connection:
+            return set()
+
+        inferred_supertypes = set()
+        try:
+            cursor = self.wnjpn_connection.cursor()
+            lemma_to_search = word
+            if self.sudachi_tokenizer:
+                tokens = self.tokenize_japanese_text_sudachi(word, 'C')
+                if tokens:
+                    lemma_to_search = tokens[0].dictionary_form()
+
+            cursor.execute("SELECT wordid FROM word WHERE lemma = ?", (lemma_to_search,))
+            word_rows = cursor.fetchall()
+            if not word_rows:
+                return set()
+
+            synsets_to_process = []
+            processed_synsets = set()
+
+            for word_row in word_rows:
+                wordid = word_row[0]
+                cursor.execute("SELECT synset FROM sense WHERE wordid = ?", (wordid,))
+                for sense_row in cursor.fetchall():
+                    synset = sense_row[0]
+                    if synset not in processed_synsets:
+                        synsets_to_process.append(synset)
+                        processed_synsets.add(synset)
+            
+            while synsets_to_process:
+                current_synset = synsets_to_process.pop(0)
+                
+                cursor.execute("SELECT name FROM synset WHERE synset = ?", (current_synset,))
+                name_row = cursor.fetchone()
+                if name_row:
+                    inferred_supertypes.add(name_row[0])
+
+                cursor.execute("SELECT synset2 FROM synlink WHERE synset1 = ? AND link = 'hype'", (current_synset,))
+                for hypernym_row in cursor.fetchall():
+                    hypernym_synset = hypernym_row[0]
+                    if hypernym_synset not in processed_synsets:
+                        synsets_to_process.append(hypernym_synset)
+                        processed_synsets.add(hypernym_synset)
+        except sqlite3.Error as e:
+            print(f"Warning: Error searching in WordNet: {e}")
+        
+        return inferred_supertypes
+
     def close(self):
         """Closes any open connections, like the database handler."""
-        self.ejdict_handler.close()
+        if hasattr(self, 'ejdict_handler') and self.ejdict_handler:
+            self.ejdict_handler.close()
+        if hasattr(self, 'wnjpn_connection') and self.wnjpn_connection:
+            self.wnjpn_connection.close()
 
 # Example usage:
 if __name__ == '__main__':
@@ -121,6 +186,16 @@ if __name__ == '__main__':
                 print(f"  Word: {row[0]}\n  Meaning: {row[1]}")
         else:
             print("Word not found.")
+
+    print("\n--- Japanese WordNet (wnjpn) ---")
+    if service.wnjpn_connection:
+        word_to_lookup = "猫"
+        print(f"Looking up supertypes for: '{word_to_lookup}'")
+        supertypes = service.get_supertypes_from_wordnet(word_to_lookup)
+        if supertypes:
+            print(f"  Supertypes: {supertypes}")
+        else:
+            print("  No supertypes found.")
 
     print("\n--- Argos Translate (EN->EN) ---")
     if service.en_translator:
