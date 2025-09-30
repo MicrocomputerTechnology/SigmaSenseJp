@@ -167,7 +167,7 @@ SigmaSenseのアーキテクチャは、二つの異なる知性の協調によ�
     `DimensionGenerator`が複数の画像分析エンジンを並列実行し、画像から特徴を抽出する。
 
 2.  **F1: 判断と推論 (Judgment and Reasoning)**:
-    -   観測された特徴、提案された仮説(`LogicalPatternSuggester`)、そして`WorldModel`（動的知識グラフ）に基づく常識(`SymbolicReasoner`)を統合し、論理的なコンテキストを構築する。
+    -   観測された特徴、提案された仮説(`LogicalPatternSuggester`)、そして`WorldModel`（動的知識グラフ）に基づく常識(`SymbolicReasoner`)を統合し、論理的なコンテキストを構築する。**未知の概念に遭遇した場合、`SymbolicReasoner`はまず内部の辞書ライブラリ群を参照して意味を推測する。**
     -   最終的に意味ベクトルを生成し、データベースと照合して最良のマッチを見つけ出す。
 
 3.  **F2: 経験の記録 (Memory Consolidation)**:

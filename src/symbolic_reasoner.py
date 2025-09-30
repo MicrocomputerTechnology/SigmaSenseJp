@@ -2,6 +2,7 @@
 
 import os
 import json
+import sqlite3
 from .world_model import WorldModel
 
 class SymbolicReasoner:
@@ -16,6 +17,22 @@ class SymbolicReasoner:
             world_model (WorldModel): 使用するWorldModelのインスタンス。
         """
         self.world_model = world_model
+        self._init_dictionary_connections()
+
+    def _init_dictionary_connections(self):
+        """Initialize connections to internal dictionary databases."""
+        self.dict_connections = {}
+        dict_paths = {
+            "ejdict": os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'ejdict.sqlite3'))
+        }
+        for name, path in dict_paths.items():
+            if os.path.exists(path):
+                try:
+                    self.dict_connections[name] = sqlite3.connect(path, check_same_thread=False)
+                except sqlite3.Error as e:
+                    print(f"Warning: Could not connect to dictionary '{name}' at {path}: {e}")
+            else:
+                print(f"Warning: Dictionary file not found for '{name}' at {path}")
 
     def reason(self, context):
         """
@@ -63,34 +80,57 @@ class SymbolicReasoner:
         self.world_model.add_edge(source_id, target_id, relationship, **attributes)
         print(f"SymbolicReasoner: Updated knowledge: {source_id} -[{relationship}]-> {target_id}")
 
+    def _search_internal_dictionaries(self, word: str) -> set:
+        """Search for a word in the internal dictionaries and infer supertypes."""
+        inferred_supertypes = set()
+        for name, conn in self.dict_connections.items():
+            try:
+                cursor = conn.cursor()
+                cursor.execute("SELECT word, mean FROM items WHERE word = ?", (word,))
+                row = cursor.fetchone()
+                if row:
+                    definition = row[1]
+                    print(f"  -> Found '{word}' in '{name}' dictionary: {definition[:50]}...")
+                    # Simple heuristic to infer category from definition
+                    if "food" in definition or "菓子" in definition or "料理" in definition:
+                        inferred_supertypes.add("食べ物")
+                    if "tool" in definition or "道具" in definition or "装置" in definition:
+                        inferred_supertypes.add("物体")
+                    return inferred_supertypes # Return after first match
+            except sqlite3.Error as e:
+                print(f"Warning: Error searching in dictionary '{name}': {e}")
+        return inferred_supertypes
+
     def get_all_supertypes(self, node_id: str) -> set:
         """
         Recursively finds all 'is_a' supertypes for a given node.
+        If not in WorldModel, consults internal dictionaries.
         e.g., penguin -> {'bird', 'animal'}
         """
-        supertypes = set()
-        if not self.world_model.has_node(node_id):
-            return supertypes
-            
-        facts_to_process = [node_id]
-        processed_facts = set()
+        if self.world_model.has_node(node_id):
+            supertypes = set()
+            facts_to_process = [node_id]
+            processed_facts = set()
 
-        while facts_to_process:
-            fact = facts_to_process.pop(0)
-            if fact in processed_facts:
-                continue
-            processed_facts.add(fact)
-
-            related_nodes = self.world_model.find_related_nodes(fact, relationship='is_a')
-            for item in related_nodes:
-                target_node_info = item.get('target_node')
-                if not target_node_info:
+            while facts_to_process:
+                fact = facts_to_process.pop(0)
+                if fact in processed_facts:
                     continue
-                supertype_id = target_node_info.get('id')
-                if supertype_id:
-                    supertypes.add(supertype_id)
-                    facts_to_process.append(supertype_id)
-        return supertypes
+                processed_facts.add(fact)
+
+                related_nodes = self.world_model.find_related_nodes(fact, relationship='is_a')
+                for item in related_nodes:
+                    target_node_info = item.get('target_node')
+                    if not target_node_info:
+                        continue
+                    supertype_id = target_node_info.get('id')
+                    if supertype_id:
+                        supertypes.add(supertype_id)
+                        facts_to_process.append(supertype_id)
+            return supertypes
+        else:
+            # Stage 0: Consult pocket library
+            return self._search_internal_dictionaries(node_id)
 
     def check_category_consistency(self, item_ids: list[str]) -> dict:
         """
@@ -119,7 +159,7 @@ class SymbolicReasoner:
 
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
-    print("--- SymbolicReasoner Self-Test (with WorldModel) --- ")
+    print("--- SymbolicReasoner Self-Test (with WorldModel) ---" )
     
     # テスト用のファイルパスを定義
     test_graph_path = 'reasoner_test_wm.json'
@@ -184,9 +224,9 @@ if __name__ == '__main__':
     inconsistent_result = reasoner.check_category_consistency(['dango', 'stone'])
     expected_inconsistency = {
         'consistent': False,
-        'reason': "In a 'food' context, item 'stone' is not a food.",
+        'reason': "In a '食べ物' context, item 'stone' is not a 食べ物.",
         'violator': 'stone',
-        'context_category': 'food'
+        'context_category': '食べ物'
     }
     assert inconsistent_result == expected_inconsistency, f"Test Failed: Expected {expected_inconsistency}, but got {inconsistent_result}"
     print("Inconsistency detection test ('dango' vs 'stone') passed.")
