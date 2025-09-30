@@ -10,7 +10,9 @@ class SQLiteStore(KnowledgeStoreBase):
     def __init__(self, db_path: str):
         self.db_path = db_path
         # Ensure the directory for the db exists
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        dir_name = os.path.dirname(db_path)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
         self.connection = sqlite3.connect(self.db_path)
         self._create_tables()
 

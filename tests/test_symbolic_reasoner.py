@@ -13,7 +13,7 @@ class TestSymbolicReasoner(unittest.TestCase):
 
     def setUp(self):
         """テストごとに、一時的なSQLiteデータベースを持つWorldModelを構築"""
-        self.test_db_path = 'test_reasoner_wm.sqlite'
+        self.test_db_path = os.path.abspath('test_reasoner_wm.sqlite')
         # 古いテストファイルが残っていれば削除
         if os.path.exists(self.test_db_path):
             os.remove(self.test_db_path)
