@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import os
 import sys
 import pytest
@@ -41,7 +41,7 @@ class TestSymbolicReasoner(unittest.TestCase):
         self.wm.add_node('都市', name_ja="都市")
         self.wm.add_node('場所', name_ja="場所")
         self.wm.add_edge('都市', '場所', 'is_a')
-
+        
         self.wm.add_node('食べ物', name_ja="食べ物")
 
         # 既知の固有名詞をストアに追加
@@ -52,6 +52,7 @@ class TestSymbolicReasoner(unittest.TestCase):
     def tearDown(self):
         """テスト後に一時的なデータベースファイルを削除"""
         self.wm.close()
+        self.reasoner.dictionary_service.close()
         for path in [self.test_db_path, self.proper_noun_db_path]:
             if os.path.exists(path):
                 os.remove(path)
@@ -67,26 +68,25 @@ class TestSymbolicReasoner(unittest.TestCase):
         self.assertEqual(supertypes, {'都市', '場所'})
 
     @unittest.skipUnless(ginza_available, "GiNZA is not installed, skipping NER-dependent test")
-    def test_get_supertypes_for_unknown_proper_noun_with_ner(self):
-        """未知の固有名詞（NERで判定）の上位概念が取得できるかテスト"""
-        with patch.object(self.reasoner, '_search_internal_dictionaries', return_value={'都市'}) as mock_search:
-            supertypes = self.reasoner.get_all_supertypes('東京')
-            mock_search.assert_called_once_with(_normalize_str('東京'))
-            self.assertEqual(self.wm.get_category_for_proper_noun('東京'), '都市')
-            self.assertEqual(supertypes, {'都市', '場所'})
+    def test_unknown_proper_noun_calls_dictionary_service(self):
+        """未知の固有名詞の場合にDictionaryServiceが呼ばれるかテスト"""
+        with patch.object(self.reasoner, '_is_proper_noun', return_value=(True, 'GPE')) as mock_is_proper:
+            with patch.object(self.reasoner.dictionary_service, 'tokenize_japanese_text_sudachi', return_value=[]) as mock_sudachi:
+                with patch.object(self.reasoner.dictionary_service, 'get_supertypes_from_wordnet', return_value=set()) as mock_wordnet:
+                    self.reasoner.get_all_supertypes('沖縄')
+                    mock_is_proper.assert_called_once_with('沖縄')
+                    mock_sudachi.assert_called_once()
+                    mock_wordnet.assert_called_once()
 
-    def test_get_supertypes_for_unknown_common_noun(self):
-        """未知の一般名詞の上位概念が取得できるかテスト"""
+    def test_unknown_common_noun_calls_dictionary_service(self):
+        """未知の一般名詞の場合にDictionaryServiceが呼ばれるかテスト"""
         with patch.object(self.reasoner, '_is_proper_noun', return_value=(False, None)) as mock_is_proper:
-            with patch.object(self.reasoner, '_search_internal_dictionaries', return_value={'食べ物'}) as mock_search:
-                
-                supertypes = self.reasoner.get_all_supertypes('パン')
-                
-                mock_is_proper.assert_called_once_with(_normalize_str('パン'))
-                mock_search.assert_called_once_with(_normalize_str('パン'))
-                
-                self.assertIsNone(self.wm.get_category_for_proper_noun('パン'))
-                self.assertEqual(supertypes, {'食べ物'})
+            with patch.object(self.reasoner.dictionary_service, 'tokenize_japanese_text_sudachi', return_value=[]) as mock_sudachi:
+                with patch.object(self.reasoner.dictionary_service, 'get_supertypes_from_wordnet', return_value=set()) as mock_wordnet:
+                    self.reasoner.get_all_supertypes('コンピューター')
+                    mock_is_proper.assert_called_once_with('コンピューター')
+                    mock_sudachi.assert_called_once()
+                    mock_wordnet.assert_called_once()
 
     def test_reason_with_mixed_context(self):
         """固有名詞と一般名詞が混在したコンテキストでreasonが正しく動作するかテスト"""

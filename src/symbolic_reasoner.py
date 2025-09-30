@@ -5,7 +5,10 @@ import json
 import sqlite3
 import unicodedata
 import spacy
+from sudachipy import tokenizer
+from sudachipy import dictionary
 from .world_model import WorldModel
+from .pocket_library.dictionary_service import DictionaryService
 
 def _normalize_str(s: str) -> str:
     return unicodedata.normalize("NFKC", s)
@@ -22,22 +25,9 @@ class SymbolicReasoner:
             world_model (WorldModel): 使用するWorldModelのインスタンス。
         """
         self.world_model = world_model
-        self._init_dictionary_connections()
+        self.dictionary_service = DictionaryService()
         self._init_ner_engine()
 
-    def _init_dictionary_connections(self):
-        """Initialize connections to internal dictionary databases."""
-        self.dict_connections = {}
-        
-        wnjpn_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'wnjpn.db'))
-
-        if os.path.exists(wnjpn_path):
-            try:
-                self.dict_connections["wnjpn"] = sqlite3.connect(wnjpn_path, check_same_thread=False)
-            except sqlite3.Error as e:
-                print(f"Warning: Could not connect to dictionary 'wnjpn' at {wnjpn_path}: {e}")
-        else:
-            print(f"Warning: Dictionary file not found for 'wnjpn' at {wnjpn_path}. Run scripts/download_models.py")
 
     def _init_ner_engine(self):
         """Initializes the Named Entity Recognition engine (GiNZA)."""
@@ -95,66 +85,36 @@ class SymbolicReasoner:
         print(f"SymbolicReasoner: Updated knowledge: {source_id} -[{relationship}]-> {target_id}")
 
     def _search_internal_dictionaries(self, word: str) -> set:
-        """Search for a word in the internal dictionaries and infer supertypes by traversing hypernyms and checking keywords."""
-        inferred_supertypes = set()
-        food_keywords = [_normalize_str(kw) for kw in ["food", "fruit", "vegetable", "菓子", "料理", "食べ物", "果物", "りんご", "リンゴ", "林檎", "おはぎ", "御萩", "羊羹"]]
-        object_keywords = [_normalize_str(kw) for kw in ["tool", "device", "instrument", "道具", "装置", "物体", "文鎮", "鉛筆", "筆", "万年筆", "黒鉛"]]
-
+        """
+        Infer supertypes for a word using the DictionaryService.
+        It combines POS tagging from Sudachi and hypernyms from WordNet.
+        """
         normalized_word = _normalize_str(word)
+        inferred_supertypes = set()
 
-        # 1. Direct keyword check
-        if normalized_word in food_keywords:
+        # Get POS-based categories from Sudachi
+        tokens = self.dictionary_service.tokenize_japanese_text_sudachi(normalized_word, 'C')
+        if tokens:
+            main_token = tokens[0]
+            pos = main_token.part_of_speech()
+            if pos[0] == "名詞":
+                inferred_supertypes.add("名詞")
+            if pos[0] == "動詞":
+                inferred_supertypes.add("動詞")
+                inferred_supertypes.add("行動")
+        
+        # Get semantic categories from WordNet
+        wordnet_supertypes = self.dictionary_service.get_supertypes_from_wordnet(normalized_word)
+        inferred_supertypes.update(wordnet_supertypes)
+
+        # Add specific, high-level categories based on WordNet results
+        if any(cat in wordnet_supertypes for cat in {"食べ物", "食物", "料理", "食品"}):
             inferred_supertypes.add("食べ物")
-        if normalized_word in object_keywords:
+        if any(cat in wordnet_supertypes for cat in {"物体", "物", "道具", "装置"}):
             inferred_supertypes.add("物体")
-        if inferred_supertypes:
-            return inferred_supertypes
-
-        # 2. WordNet search (hypernym traversal)
-        if "wnjpn" in self.dict_connections:
-            try:
-                cursor = self.dict_connections["wnjpn"].cursor()
-                
-                cursor.execute("SELECT wordid FROM word WHERE lemma = ?", (normalized_word,))
-                word_rows = cursor.fetchall()
-                if not word_rows:
-                    return inferred_supertypes
-
-                for word_row in word_rows:
-                    wordid = word_row[0]
-                    cursor.execute("SELECT synset FROM sense WHERE wordid = ?", (wordid,))
-                    sense_rows = cursor.fetchall()
-                    
-                    synsets_to_process = [row[0] for row in sense_rows]
-                    processed_synsets = set(synsets_to_process)
-
-                    while synsets_to_process:
-                        current_synset = synsets_to_process.pop(0)
-                        
-                        cursor.execute("SELECT def FROM synset_def WHERE synset = ? AND lang = 'jpn'", (current_synset,))
-                        def_row = cursor.fetchone()
-                        if def_row:
-                            definition = def_row[0].lower()
-                            if any(kw in definition for kw in food_keywords):
-                                inferred_supertypes.add("食べ物")
-                            if any(kw in definition for kw in object_keywords):
-                                inferred_supertypes.add("物体")
-
-                        cursor.execute("SELECT synset2 FROM synlink WHERE synset1 = ? AND link = 'hype'", (current_synset,))
-                        hypernym_rows = cursor.fetchall()
-                        for hypernym_row in hypernym_rows:
-                            hypernym_synset = hypernym_row[0]
-                            if hypernym_synset not in processed_synsets:
-                                synsets_to_process.append(hypernym_synset)
-                                processed_synsets.add(hypernym_synset)
-
-                    if inferred_supertypes:
-                        return inferred_supertypes
-
-            except sqlite3.Error as e:
-                print(f"Warning: Error searching in dictionary 'wnjpn': {e}")
-                
+            
         return inferred_supertypes
+
 
     def get_all_supertypes(self, node_id: str) -> set:
         """
