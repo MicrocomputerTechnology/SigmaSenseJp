@@ -6,7 +6,7 @@ import os
 import sys
 
 # プロジェクトのルートをシステムパスに追加
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.world_model import WorldModel
 from src.symbolic_reasoner import SymbolicReasoner
@@ -54,8 +54,5 @@ def run_test(word: str):
     wm.close()
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run a semantic category test for a given word.')
-    parser.add_argument('word', type=str, help='The word to be tested.')
-    args = parser.parse_args()
-
-    run_test(args.word)
+    run_test('りんご')
+    run_test('毛布')
