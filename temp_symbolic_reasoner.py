@@ -3,11 +3,7 @@
 import os
 import json
 import sqlite3
-import unicodedata
 from .world_model import WorldModel
-
-def _normalize_str(s: str) -> str:
-    return unicodedata.normalize("NFKC", s)
 
 class SymbolicReasoner:
     """
@@ -35,7 +31,7 @@ class SymbolicReasoner:
             except sqlite3.Error as e:
                 print(f"Warning: Could not connect to dictionary 'wnjpn' at {wnjpn_path}: {e}")
         else:
-            print(f"Warning: Dictionary file not found for 'wnjpn' at {wnjpn_path}. Run scripts/download_models.py")
+            print(f"Warning: Dictionary file not found for 'wnjpn' at {wnjpn_path}")
 
     def reason(self, context):
         """
@@ -84,61 +80,49 @@ class SymbolicReasoner:
         print(f"SymbolicReasoner: Updated knowledge: {source_id} -[{relationship}]-> {target_id}")
 
     def _search_internal_dictionaries(self, word: str) -> set:
-        """Search for a word in the internal dictionaries and infer supertypes by traversing hypernyms and checking keywords."""
+        """Search for a word in the internal dictionaries and infer supertypes."""
         inferred_supertypes = set()
-        food_keywords = [_normalize_str(kw) for kw in ["food", "fruit", "vegetable", "菓子", "料理", "食べ物", "果物", "りんご", "リンゴ", "林檎", "おはぎ", "御萩", "羊羹"]]
-        object_keywords = [_normalize_str(kw) for kw in ["tool", "device", "instrument", "道具", "装置", "物体", "文鎮", "鉛筆", "筆", "万年筆", "黒鉛"]]
+        food_keywords = ["food", "fruit", "vegetable", "菓子", "料理", "食べ物", "果物", "おはぎ", "御萩"]
+        object_keywords = ["tool", "device", "instrument", "道具", "装置", "物体", "文鎮"]
 
-        normalized_word = _normalize_str(word)
-
-        # 1. Direct keyword check
-        if normalized_word in food_keywords:
-            inferred_supertypes.add("食べ物")
-        if normalized_word in object_keywords:
-            inferred_supertypes.add("物体")
-        if inferred_supertypes:
-            return inferred_supertypes
-
-        # 2. WordNet search (hypernym traversal)
         if "wnjpn" in self.dict_connections:
             try:
                 cursor = self.dict_connections["wnjpn"].cursor()
                 
-                cursor.execute("SELECT wordid FROM word WHERE lemma = ?", (normalized_word,))
-                word_rows = cursor.fetchall()
-                if not word_rows:
-                    return inferred_supertypes
-
-                for word_row in word_rows:
+                # 1. Find wordid from lemma
+                cursor.execute("SELECT wordid FROM word WHERE lemma = ?", (word,))
+                word_row = cursor.fetchone()
+                
+                if word_row:
                     wordid = word_row[0]
-                    cursor.execute("SELECT synset FROM sense WHERE wordid = ?", (wordid,))
-                    sense_rows = cursor.fetchall()
                     
-                    synsets_to_process = [row[0] for row in sense_rows]
-                    processed_synsets = set(synsets_to_process)
+                    # 2. Find synset from wordid
+                    cursor.execute("SELECT synset FROM sense WHERE wordid = ?", (wordid,))
+                    sense_row = cursor.fetchone()
 
-                    while synsets_to_process:
-                        current_synset = synsets_to_process.pop(0)
-                        
-                        cursor.execute("SELECT def FROM synset_def WHERE synset = ? AND lang = 'jpn'", (current_synset,))
+                    if sense_row:
+                        synset = sense_row[0]
+
+                        # 3. Find definition from synset
+                        cursor.execute("SELECT def FROM synset_def WHERE synset = ? AND lang = 'jpn'", (synset,))
                         def_row = cursor.fetchone()
+
                         if def_row:
                             definition = def_row[0].lower()
+                            print(f"  -> Found definition for '{word}' in 'wnjpn': {definition[:50]}...")
+
                             if any(kw in definition for kw in food_keywords):
                                 inferred_supertypes.add("食べ物")
                             if any(kw in definition for kw in object_keywords):
                                 inferred_supertypes.add("物体")
-
-                        cursor.execute("SELECT synset2 FROM synlink WHERE synset1 = ? AND link = 'hype'", (current_synset,))
-                        hypernym_rows = cursor.fetchall()
-                        for hypernym_row in hypernym_rows:
-                            hypernym_synset = hypernym_row[0]
-                            if hypernym_synset not in processed_synsets:
-                                synsets_to_process.append(hypernym_synset)
-                                processed_synsets.add(hypernym_synset)
-
-                    if inferred_supertypes:
-                        return inferred_supertypes
+                            
+                            if inferred_supertypes:
+                                return inferred_supertypes
+                else: # Word not found, check keywords directly
+                    if word in food_keywords:
+                        inferred_supertypes.add("食べ物")
+                    if word in object_keywords:
+                        inferred_supertypes.add("物体")
 
             except sqlite3.Error as e:
                 print(f"Warning: Error searching in dictionary 'wnjpn': {e}")
@@ -151,10 +135,9 @@ class SymbolicReasoner:
         If not in WorldModel, consults internal dictionaries.
         e.g., penguin -> {'bird', 'animal'}
         """
-        normalized_node_id = _normalize_str(node_id)
-        if self.world_model.has_node(normalized_node_id):
+        if self.world_model.has_node(node_id):
             supertypes = set()
-            facts_to_process = [normalized_node_id]
+            facts_to_process = [node_id]
             processed_facts = set()
 
             while facts_to_process:
@@ -175,7 +158,7 @@ class SymbolicReasoner:
             return supertypes
         else:
             # Stage 0: Consult pocket library
-            return self._search_internal_dictionaries(normalized_node_id)
+            return self._search_internal_dictionaries(node_id)
 
     def check_category_consistency(self, item_ids: list[str]) -> dict:
         """
