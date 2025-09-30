@@ -4,6 +4,7 @@ import os
 import json
 import sqlite3
 import unicodedata
+import spacy
 from .world_model import WorldModel
 
 def _normalize_str(s: str) -> str:
@@ -22,6 +23,7 @@ class SymbolicReasoner:
         """
         self.world_model = world_model
         self._init_dictionary_connections()
+        self._init_ner_engine()
 
     def _init_dictionary_connections(self):
         """Initialize connections to internal dictionary databases."""
@@ -37,40 +39,49 @@ class SymbolicReasoner:
         else:
             print(f"Warning: Dictionary file not found for 'wnjpn' at {wnjpn_path}. Run scripts/download_models.py")
 
-    def reason(self, context):
+    def _init_ner_engine(self):
+        """Initializes the Named Entity Recognition engine (GiNZA)."""
+        self.nlp = None
+        try:
+            self.nlp = spacy.load("ja_ginza")
+            print("SymbolicReasoner: GiNZA model loaded successfully for NER.")
+        except (OSError, ImportError):
+            print("SymbolicReasoner: Warning - GiNZA not found. Proper noun detection will be limited.")
+            print("To enable full functionality, run: pip install -U ginza ja-ginza")
+
+    def _is_proper_noun(self, text: str) -> tuple[bool, str | None]:
         """
-        与えられたコンテキストに基づき、WorldModelを再帰的に探索して推論を行う。
-        主に'is_a'（上位概念）の関係をたどる。
-
-        Args:
-            context (dict): 推論の起点となる事実の辞書（例: {'penguin': True}）。
-
-        Returns:
-            dict: 推論によって導き出された新しい事実の辞書（例: {'bird': True, 'animal': True}）。
+        Identifies if a text is a proper noun using GiNZA.
+        Returns a tuple: (is_proper_noun, entity_type).
         """
-        inferred_facts = {}
-        facts_to_process = list(context.keys()) # これから処理する事実のリスト
-        processed_facts = set(context.keys())      # すでに処理した、または起点となった事実のセット
+        if not self.nlp:
+            return False, None
 
-        while facts_to_process:
-            fact = facts_to_process.pop(0)
-            
-            # WorldModelに問い合わせて、現在の事実から'is_a'関係で繋がるノードを取得
-            related_nodes = self.world_model.find_related_nodes(fact, relationship='is_a')
-            
-            for item in related_nodes:
-                target_node_info = item.get('target_node')
-                if not target_node_info:
-                    continue
-                
-                inferred_fact_id = target_node_info.get('id')
-                # まだ推論されておらず、起点でもない新しい事実であれば
-                if inferred_fact_id and inferred_fact_id not in processed_facts:
-                    inferred_facts[inferred_fact_id] = True       # 推論結果に追加
-                    processed_facts.add(inferred_fact_id)      # 処理済みセットに追加
-                    facts_to_process.append(inferred_fact_id)  # さらなる推論のためにリストに追加
+        # PROPN (固有名詞) or specific entity types like PERSON, ORG, GPE
+        doc = self.nlp(text)
+        for ent in doc.ents:
+            # Return the first recognized entity that covers the whole text
+            if ent.text == text:
+                return True, ent.label_
+        
+        # Fallback for single tokens that are proper nouns but not entities
+        if len(doc) == 1 and doc[0].pos_ == "PROPN":
+            return True, "PROPN"
 
-        return inferred_facts
+        return False, None
+
+    def reason(self, context: dict) -> dict:
+        """
+        Given a context, infers all possible supertypes for the facts.
+        e.g., {'penguin': True, '東京': True} -> {'bird': True, 'animal': True, '都市': True, '場所': True}
+        """
+        all_inferred_facts = {}
+        for fact in context.keys():
+            # get_all_supertypes will handle whether 'fact' is a proper noun or not
+            supertypes = self.get_all_supertypes(fact)
+            for supertype in supertypes:
+                all_inferred_facts[supertype] = True
+        return all_inferred_facts
 
     def update_knowledge(self, source_id, target_id, relationship, **attributes):
         """
@@ -148,34 +159,66 @@ class SymbolicReasoner:
     def get_all_supertypes(self, node_id: str) -> set:
         """
         Recursively finds all 'is_a' supertypes for a given node.
-        If not in WorldModel, consults internal dictionaries.
-        e.g., penguin -> {'bird', 'animal'}
+        It handles proper nouns by first looking up their category and then
+        finding the supertypes of that category.
+        e.g., "東京" -> {"都市", "場所", "概念"}
         """
         normalized_node_id = _normalize_str(node_id)
-        if self.world_model.has_node(normalized_node_id):
-            supertypes = set()
-            facts_to_process = [normalized_node_id]
-            processed_facts = set()
-
-            while facts_to_process:
-                fact = facts_to_process.pop(0)
-                if fact in processed_facts:
-                    continue
-                processed_facts.add(fact)
-
-                related_nodes = self.world_model.find_related_nodes(fact, relationship='is_a')
-                for item in related_nodes:
-                    target_node_info = item.get('target_node')
-                    if not target_node_info:
-                        continue
-                    supertype_id = target_node_info.get('id')
-                    if supertype_id:
-                        supertypes.add(supertype_id)
-                        facts_to_process.append(supertype_id)
-            return supertypes
+        supertypes = set()
+        
+        # 1. Check if it's a known proper noun
+        category = self.world_model.get_category_for_proper_noun(normalized_node_id)
+        if category:
+            supertypes.add(category)
+            # Now, find supertypes of the category
+            facts_to_process = [category]
         else:
-            # Stage 0: Consult pocket library
-            return self._search_internal_dictionaries(normalized_node_id)
+            # 2. Not a known proper noun, check if it's a regular node in the graph
+            if self.world_model.has_node(normalized_node_id):
+                facts_to_process = [normalized_node_id]
+            else:
+                # 3. New word: determine if it's a proper noun or a common noun
+                is_proper, ent_type = self._is_proper_noun(normalized_node_id)
+                if is_proper:
+                    # It's a proper noun, try to infer its category
+                    inferred_categories = self._search_internal_dictionaries(normalized_node_id)
+                    # For now, just pick the first one if available
+                    inferred_category = next(iter(inferred_categories), None)
+                    
+                    if inferred_category:
+                        print(f"SymbolicReasoner: Inferred '{normalized_node_id}' is a '{inferred_category}'. Storing in ProperNounStore.")
+                        self.world_model.add_proper_noun(normalized_node_id, inferred_category, provenance='inferred_by_ner')
+                        supertypes.add(inferred_category)
+                        facts_to_process = [inferred_category]
+                    else:
+                        # Cannot infer category, return empty set
+                        facts_to_process = []
+                else:
+                    # It's a common noun, search dictionaries for its supertypes
+                    inferred_supertypes = self._search_internal_dictionaries(normalized_node_id)
+                    # For now, we don't automatically add new common nouns to the main graph.
+                    # We just return what the dictionary says.
+                    return inferred_supertypes
+        
+        # Common logic for traversing the graph
+        processed_facts = set()
+        while facts_to_process:
+            fact = facts_to_process.pop(0)
+            if fact in processed_facts:
+                continue
+            processed_facts.add(fact)
+
+            related_nodes = self.world_model.find_related_nodes(fact, relationship='is_a')
+            for item in related_nodes:
+                target_node_info = item.get('target_node')
+                if not target_node_info:
+                    continue
+                supertype_id = target_node_info.get('id')
+                if supertype_id:
+                    supertypes.add(supertype_id)
+                    facts_to_process.append(supertype_id)
+                    
+        return supertypes
 
     def check_category_consistency(self, item_ids: list[str]) -> dict:
         """
