@@ -15,3 +15,4 @@ gh_issue_body_*.md
 config/sigma_product_database_custom_ai_generated.json
 *.sqlite3
 data/wnjpn.db
+data/*.sqlite
