@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.terrier_vector_generator import generate_terrier_vector
+from src.sigmasense.terrier_vector_generator import generate_terrier_vector
 
 import argparse
 

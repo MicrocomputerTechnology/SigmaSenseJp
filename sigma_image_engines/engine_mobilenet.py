@@ -43,8 +43,16 @@ class MobileNetV1Engine:
             img = image_path_or_obj.convert('RGB')
 
         img = img.resize((self.input_width, self.input_height))
-        # The model expects float32 input, normalized to [0, 1]
-        input_data = np.array(img, dtype=np.float32) / 255.0
+        
+        input_type = self.input_details[0]['dtype']
+        if input_type == np.uint8:
+            input_data = np.array(img, dtype=np.uint8)
+        elif input_type == np.float32:
+            input_data = np.array(img, dtype=np.float32) / 255.0
+        else:
+            # Fallback or error
+            input_data = np.array(img, dtype=np.float32) / 255.0
+
         input_data = np.expand_dims(input_data, axis=0)
         return input_data
 

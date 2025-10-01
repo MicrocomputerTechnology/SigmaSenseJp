@@ -1,4 +1,3 @@
-
 import unittest
 import os
 import json
@@ -8,11 +7,11 @@ import sys
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, project_root)
 sys.path.insert(0, os.path.join(project_root, 'src'))
-from src.generate_ai_dimensions import generate_dimensions_with_algorithms
+from src.sigmasense.generate_ai_dimensions import generate_dimensions_with_algorithms
 
 class TestGenerateAiDimensions(unittest.TestCase):
 
-    @patch('src.generate_ai_dimensions.GeminiClient')
+    @patch('src.sigmasense.generate_ai_dimensions.GeminiClient')
     def test_generate_dimensions_with_algorithms_success(self, MockGeminiClient):
         """
         Test that the function successfully generates and saves dimensions
@@ -52,7 +51,7 @@ class TestGenerateAiDimensions(unittest.TestCase):
         # 5. Cleanup
         os.remove(output_filepath)
 
-    @patch('src.generate_ai_dimensions.GeminiClient')
+    @patch('src.sigmasense.generate_ai_dimensions.GeminiClient')
     def test_generate_dimensions_with_algorithms_api_failure(self, MockGeminiClient):
         """
         Test that the function handles the case where the Gemini client returns None.

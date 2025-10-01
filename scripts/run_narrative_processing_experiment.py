@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import json
 import multiprocessing
 import time
@@ -5,10 +8,7 @@ import datetime
 import os
 import importlib.util
 import inspect
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.temporary_handler_base import BaseHandler
+from src.sigmasense.temporary_handler_base import BaseHandler
 import RestrictedPython # Add this line
 
 # --- グローバル定義 ---
@@ -59,16 +59,14 @@ def load_permanent_handlers(registry: dict):
 def sandboxed_executor(handler_code: str, narrative: dict, result_queue: multiprocessing.Queue):
     import sys
     import os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     import inspect
     from RestrictedPython import compile_restricted, safe_builtins, Eval
     from RestrictedPython.PrintCollector import PrintCollector
-    from src.temporary_handler_base import BaseHandler
+    from src.sigmasense.temporary_handler_base import BaseHandler
     try:
         safe_globals = {
             '__builtins__': safe_builtins, '__name__': '__restricted__', '__metaclass__': type,
             '_getiter_': Eval.default_guarded_getiter, '_print_': PrintCollector, 'dict': dict,
-            '_getitem_': auditing_getitem,
         }
         safe_globals['BaseHandler'] = BaseHandler
         byte_code = compile_restricted(handler_code, filename='<inline code>', mode='exec')

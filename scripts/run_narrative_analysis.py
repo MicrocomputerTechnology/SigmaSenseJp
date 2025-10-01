@@ -5,7 +5,7 @@ import sys
 # プロジェクトのルートをシステムパスに追加
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.narrative_analyzer import NarrativeAnalyzer
+from src.nova.narrative_analyzer import NarrativeAnalyzer
 
 def main():
     parser = argparse.ArgumentParser(

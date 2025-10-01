@@ -7,7 +7,7 @@ import json
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.gemini_client import GeminiClient
+from src.orient.gemini_client import GeminiClient
 
 class TestGeminiClientFallback(unittest.TestCase):
 
@@ -30,7 +30,7 @@ class TestGeminiClientFallback(unittest.TestCase):
         if os.path.exists(self.config_path):
             os.remove(self.config_path)
 
-    @patch('src.gemini_client.VetraLLMCore')
+    @patch('src.orient.gemini_client.VetraLLMCore')
     @patch('google.generativeai.GenerativeModel')
     def test_query_text_fallback_on_api_error(self, MockGenerativeModel, MockVetraLLMCore):
         """Gemini APIがエラーを返した際に、ローカルLLMへのフォールバックが正しく機能するかをテスト"""

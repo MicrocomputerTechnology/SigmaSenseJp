@@ -5,9 +5,9 @@ import json
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.sigma_database_loader import load_sigma_database
-from src.sigma_sense import SigmaSense
-from src.dimension_loader import DimensionLoader
+from src.sigmasense.sigma_database_loader import load_sigma_database
+from src.sigmasense.sigma_sense import SigmaSense
+from src.sigmasense.dimension_loader import DimensionLoader
 
 def run_test(sigma_instance, test_name, narrative_text):
     """指定されたテキストで倫理チェックを実行し、結果を表示する"""
@@ -48,7 +48,7 @@ def main():
     # データベースのロードはダミーでOK
     database, ids, vectors, layers = [], [], [], []
     try:
-        database, ids, vectors, layers = load_sigma_database("sigma_product_database_custom_ai_generated.json")
+        database, ids, vectors, layers = load_sigma_database("data/world_model.sqlite")
     except FileNotFoundError:
         print("Warning: Main database not found. Proceeding with empty DB for ethics check.")
 

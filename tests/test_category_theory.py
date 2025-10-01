@@ -11,14 +11,14 @@ from unittest.mock import MagicMock
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.sigma_sense import SigmaSense
-from src.dimension_loader import DimensionLoader
-from src.sigma_database_loader import load_sigma_database
-from src.build_database import build_database
-from src.image_transformer import identity as identity_transform
-from src.sigma_functor import SigmaFunctor
-from src.vector_transforms import VectorTransforms
-from src.world_model import WorldModel
+from src.sigmasense.sigma_sense import SigmaSense
+from src.sigmasense.dimension_loader import DimensionLoader
+from src.sigmasense.sigma_database_loader import load_sigma_database
+from src.sigmasense.build_database import build_database
+from src.sigmasense.image_transformer import identity as identity_transform
+from src.sigmasense.sigma_functor import SigmaFunctor
+from src.sigmasense.vector_transforms import VectorTransforms
+from src.sigmasense.world_model import WorldModel
 
 class TestCategoryTheory(unittest.TestCase):
 

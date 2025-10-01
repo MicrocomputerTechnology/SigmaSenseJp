@@ -10,11 +10,11 @@ sys.path.insert(0, project_root)
 sys.path.insert(0, os.path.join(project_root, 'src'))
 sys.path.insert(0, os.path.join(project_root, 'sigma_image_engines'))# Set the dimension loader to use our test file BEFORE importing sigma_sense
 os.environ['DIMENSION_FILE_PATH'] = 'config/vector_dimensions_test_logic.json'
-from src.sigma_sense import SigmaSense
-from src.dimension_loader import DimensionLoader
+from src.sigmasense.sigma_sense import SigmaSense
+from src.sigmasense.dimension_loader import DimensionLoader
 from engine_opencv import OpenCVEngine
 
-from src.world_model import WorldModel
+from src.sigmasense.world_model import WorldModel
 
 class TestSigmaSenseLogicIntegration(unittest.TestCase):
 

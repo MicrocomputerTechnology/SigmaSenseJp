@@ -19,7 +19,7 @@ except (OSError, ImportError):
     GINZA_UNAVAILABLE = True
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.meaning_axis_designer import MeaningAxisDesigner
+from src.saphiel.meaning_axis_designer import MeaningAxisDesigner
 
 # WorldModelの簡易的なモック（テスト用）
 class MockWorldModel:

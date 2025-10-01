@@ -9,9 +9,9 @@ import inspect
 import sys
 import subprocess
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.config_loader import ConfigLoader
-from src.temporary_handler_base import BaseHandler
-from src.vetra_llm_core import VetraLLMCore # ヴェトラ先生の頭脳をインポート
+from src.sigmasense.config_loader import ConfigLoader
+
+from src.vetra.vetra_llm_core import VetraLLMCore # ヴェトラ先生の頭脳をインポート
 import RestrictedPython # Add this line
 
 # --- グローバル定義 ---
@@ -74,10 +74,10 @@ def sandboxed_executor(handler_code: str, objective: dict, result_queue: multipr
     import inspect
     from RestrictedPython import compile_restricted, safe_builtins, PrintCollector
     from RestrictedPython.Guards import guarded_unpack_sequence, safer_getattr
+    from src.sigmasense.temporary_handler_base import BaseHandler
     
     # Add project root to sys.path for the sandbox process
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-    from src.temporary_handler_base import BaseHandler
 
     try:
         # Define a safe getitem function for the sandbox

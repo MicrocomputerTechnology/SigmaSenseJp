@@ -5,8 +5,8 @@ import numpy as np
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.config_loader import ConfigLoader
-from src.reconstruction_trigger import ReconstructionTrigger
+from src.sigmasense.config_loader import ConfigLoader
+from src.sigmasense.reconstruction_trigger import ReconstructionTrigger
 
 def print_header(title):
     bar = "="*60

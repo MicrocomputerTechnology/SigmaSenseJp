@@ -5,9 +5,9 @@ import numpy as np
 # 親ディレクトリをパスに追加
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+    sys.path.insert(0, os.path.join(project_root, 'src'))
 
-from src.semantic_axis_aggregator import aggregate_semantic_axes
+from saphiel.semantic_axis_aggregator import aggregate_semantic_axes
 
 def generate_narrative(source_image_name, match_result, source_vector, target_vector, dimensions, hint=None, top_n=3):
     """

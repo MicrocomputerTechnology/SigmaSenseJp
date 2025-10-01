@@ -8,9 +8,12 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.dimension_loader import DimensionLoader
-from src import image_transformer as it
-from src import vector_transformer as vt
+from src.sigmasense.dimension_loader import DimensionLoader
+from src.sigmasense import image_transformer as it
+from src.sigmasense import vector_transformer as vt
+from src.sigmasense.sigma_database_loader import load_sigma_database
+from src.sigmasense.sigma_sense import SigmaSense
+from src.sigmasense.sigma_functor import SigmaFunctor
 
 def print_header(title):
     bar = "="*70
@@ -24,8 +27,8 @@ def main():
     # DimensionLoaderを初期化
     dim_loader = DimensionLoader()
     try:
-        database, ids, vectors = load_sigma_database("sigma_product_database_custom_ai_generated.json")
-        sigma_instance = SigmaSense(database, ids, vectors, dimension_loader=dim_loader)
+        database, ids, vectors, layers = load_sigma_database("data/world_model.sqlite")
+        sigma_instance = SigmaSense(database, ids, vectors, layers, dimension_loader=dim_loader)
         print("SigmaSense instance created successfully.")
     except Exception as e:
         print(f"Error initializing SigmaSense: {e}")

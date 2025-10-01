@@ -6,12 +6,20 @@ import json
 script_dir = os.path.dirname(__file__)
 project_root = os.path.abspath(os.path.join(script_dir, '..'))
 if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+    sys.path.insert(0, os.path.join(project_root, 'src'))
 
-from src.evaluation_template import display_result
-from src.dimension_loader import DimensionLoader
+from sigmasense.evaluation_template import display_result
+from vetra.vetra_llm_core import VetraLLMCore
+from sigmasense.sigma_sense import SigmaSense
+from sigmasense.sigma_database_loader import load_sigma_database
+from sigmasense.dimension_loader import DimensionLoader
 
 # ログファイルのパス
+script_dir = os.path.dirname(__file__)
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 LOG_DIR = os.path.join(project_root, "sigma_logs")
 
 def evaluate_logs():
@@ -47,6 +55,9 @@ def evaluate_logs():
             print(f"❗ ログファイルの読み込み中にエラーが発生しました: {e}")
 
     print("\n✅ ログファイルの評価が完了しました。")
+
+def main():
+    db_path = os.path.join(project_root, "data", "world_model.sqlite")
 
 if __name__ == "__main__":
     evaluate_logs()

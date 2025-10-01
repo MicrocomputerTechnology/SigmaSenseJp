@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.temporary_handler_base import BaseHandler
+from src.sigmasense.temporary_handler_base import BaseHandler
 
 class ImageContourCountHandler(BaseHandler):
     """

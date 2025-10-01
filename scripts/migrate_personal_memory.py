@@ -5,7 +5,7 @@ import sys
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.sqlite_knowledge_store import SQLiteStore
+from src.hoho.sqlite_knowledge_store import SQLiteStore
 
 def migrate_personal_memory():
     """

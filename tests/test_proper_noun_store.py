@@ -1,6 +1,6 @@
 import pytest
 import os
-from src.proper_noun_store import ProperNounStore
+from src.hoho.proper_noun_store import ProperNounStore
 
 @pytest.fixture
 def db_path():

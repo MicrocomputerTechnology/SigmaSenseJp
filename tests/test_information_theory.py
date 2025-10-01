@@ -7,7 +7,7 @@ import collections
 # Add the src directory to the Python path to import the module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance, compute_mutual_information, to_probability_distribution, compute_self_correlation_score
+from src.sigmasense.information_metrics import compute_entropy, compute_kl_divergence, compute_wasserstein_distance, compute_mutual_information, to_probability_distribution, compute_self_correlation_score
 
 class TestInformationTheory(unittest.TestCase):
 
