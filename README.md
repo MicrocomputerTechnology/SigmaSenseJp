@@ -98,3 +98,4 @@ SigmaSenseの知的活動は、個性豊かな仲間たちとして擬人化す�
 - **[📄 関手性に基づく自己修正ワークフロー](./doc/functoriality_workflow.md)**
 - **[📄 GitHub Actionsワークフロー](./doc/github_actions.md)**
 - **[📄 データセットの来歴と品質保証](./doc/datasets.md)**
+
