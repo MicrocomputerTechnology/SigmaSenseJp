@@ -4,10 +4,10 @@ import os
 import json
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.sigma_database_loader import load_sigma_database
-from src.sigma_sense import SigmaSense
-from src.response_logger import ResponseLogger
-from src.dimension_loader import DimensionLoader
+from src.sigmasense.sigma_database_loader import load_sigma_database
+from src.sigmasense.sigma_sense import SigmaSense
+from src.selia.response_logger import ResponseLogger
+from src.sigmasense.dimension_loader import DimensionLoader
 import numpy as np
 
 def convert_numpy_types(obj):
@@ -76,7 +76,7 @@ def main():
     parser.add_argument(
         '--db_path', 
         type=str, 
-        default=os.path.join(project_root, "config", "sigma_product_database_stabilized.json"),
+        default=os.path.join(project_root, "data", "world_model.sqlite"),
         help='Path to the Sigma product database JSON file.'
     )
     parser.add_argument(
@@ -157,8 +157,8 @@ def main():
         print("--- Batch processing complete. ---")
 
     print(f"\n✅ All processed images logged to {logger.log_path}")
-    print(f"Knowledge graph saved to {sigma.world_model.graph_path}")
-    print(f"Memory log saved to {sigma.memory_graph.memory_path}")
+    print(f"Knowledge graph saved to {sigma.world_model.store.db_path}")
+    print(f"Memory log saved to {sigma.memory_graph.store.db_path}")
 
 if __name__ == "__main__":
     main()

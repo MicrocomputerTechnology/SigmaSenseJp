@@ -4,7 +4,7 @@ import unittest
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.publication_gatekeeper import PublicationGatekeeper
+from src.aegis.publication_gatekeeper import PublicationGatekeeper
 
 class TestPublicationGatekeeper(unittest.TestCase):
 

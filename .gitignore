@@ -16,3 +16,8 @@ config/sigma_product_database_custom_ai_generated.json
 *.sqlite3
 data/wnjpn.db
 data/*.sqlite
+src/data/world_model.sqlite
+data/world_model.sqlite
+config/sigma_product_database_stabilized.json
+data/world_model.sqlite
+sigma_images/number_5.png

@@ -2,10 +2,10 @@ import os
 import json
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.dimension_editor import DimensionEditor
-from src.symbolic_reasoner import SymbolicReasoner
-from src.logical_expression_engine import parse_expression
-from src.fusion_mapper import FusionMapper
+from src.saphiel.dimension_editor import DimensionEditor
+from src.hoho.symbolic_reasoner import SymbolicReasoner
+from src.sigmasense.logical_expression_engine import parse_expression
+from src.sigmasense.fusion_mapper import FusionMapper
 
 def run_test():
     """

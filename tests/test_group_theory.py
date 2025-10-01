@@ -8,7 +8,7 @@ import cv2
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../sigma_image_engines')))
 
-from group_theory_action import GroupAction, get_rotation_group_2d, get_affine_group_2d
+from src.sigmasense.group_theory_action import GroupAction, get_rotation_group_2d, get_affine_group_2d
 from engine_opencv import OpenCVEngine
 
 class TestGroupTheoryAction(unittest.TestCase):

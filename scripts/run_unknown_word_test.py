@@ -8,8 +8,8 @@ import sys
 # プロジェクトのルートをシステムパスに追加
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.world_model import WorldModel
-from src.symbolic_reasoner import SymbolicReasoner
+from src.sigmasense.world_model import WorldModel
+from src.hoho.symbolic_reasoner import SymbolicReasoner
 
 def run_test(word: str):
     """

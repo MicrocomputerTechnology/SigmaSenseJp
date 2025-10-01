@@ -6,9 +6,9 @@ from collections import Counter
 # プロジェクトのルートをシステムパスに追加
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.sigma_database_loader import load_sigma_database
-from src.sigma_sense import SigmaSense
-from src.dimension_loader import DimensionLoader
+from src.sigmasense.sigma_database_loader import load_sigma_database
+from src.sigmasense.sigma_sense import SigmaSense
+from src.sigmasense.dimension_loader import DimensionLoader
 
 # プロジェクトのルートディレクトリ
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -30,7 +30,7 @@ def run_benchmark():
     print("--- Running Benchmark for Geometric Shape Classification ---")
 
     # --- SigmaSenseの初期化 ---
-    db_path = os.path.join(project_root, "config", "sigma_product_database_stabilized.json")
+    db_path = os.path.join(project_root, "data", "world_model.sqlite")
     if not os.path.exists(db_path):
         print(f"Error: Database file not found at {db_path}")
         print("Please run 'python src/build_database.py' first.")

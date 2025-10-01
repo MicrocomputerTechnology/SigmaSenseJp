@@ -7,10 +7,10 @@ import argparse
 # 親ディレクトリをパスに追加
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+    sys.path.insert(0, os.path.join(project_root, 'src'))
 
-from src.sigma_sense import SigmaSense
-from src.dimension_loader import DimensionLoader
+from sigmasense.sigma_sense import SigmaSense
+from sigmasense.dimension_loader import DimensionLoader
 
 def test_single_image_vector(image_path):
     """単一の画像を指定して、その複合意味ベクトルを計算し、結果を詳細に表示する"""
@@ -36,11 +36,11 @@ def test_single_image_vector(image_path):
     dummy_vectors = np.empty((0, vector_size), dtype=np.float32)
 
     # Loaderを注入してSigmaSenseをインスタンス化
-    sigma = SigmaSense([], [], dummy_vectors, dimension_loader=dim_loader)
+    sigma = SigmaSense([], [], dummy_vectors, [], dimension_loader=dim_loader)
 
     # --- ベクトルを計算 ---
     # 再構成は詳細な値を見る上でノイズになるため無効化
-    result = sigma.match(image_path, reconstruct=False)
+    result = sigma.process_experience(image_path)
     vector = result.get('vector')
 
     if not vector:

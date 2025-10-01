@@ -17,7 +17,7 @@ except (OSError, ImportError):
     GINZA_UNAVAILABLE = True
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.growth_tracker import GrowthTracker
+from src.nova.growth_tracker import GrowthTracker
 
 # PersonalMemoryGraphの簡易的なモック（テスト用）
 class MockMemoryGraph:

@@ -4,7 +4,7 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.config_loader import ConfigLoader
-from src.psyche_logger import PsycheLogger
+from src.selia.psyche_logger import PsycheLogger
 from src.toyokawa_model import ToyokawaModel
 from src.sigma_reactor import SigmaReactor
 

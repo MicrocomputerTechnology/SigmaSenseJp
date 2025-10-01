@@ -9,8 +9,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from src.pocket_library.dictionary_service import DictionaryService
 from src.pocket_library.specialized_vocabulary_service import SpecializedVocabularyService
 from src.world_model import WorldModel
-from src.symbolic_reasoner import SymbolicReasoner
-from src.gemini_client import GeminiClient
+from src.hoho.symbolic_reasoner import SymbolicReasoner
+from src.orient.gemini_client import GeminiClient
 
 def analyze_sentence(sentence: str):
     """

@@ -5,7 +5,7 @@ import shutil
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
-from config_loader import ConfigLoader
+from src.sigmasense.config_loader import ConfigLoader
 
 class TestConfigLoader(unittest.TestCase):
 

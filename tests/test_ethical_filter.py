@@ -4,7 +4,7 @@ import unittest
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.ethical_filter import EthicalFilter
+from src.aegis.ethical_filter import EthicalFilter
 
 class TestEthicalFilter(unittest.TestCase):
 

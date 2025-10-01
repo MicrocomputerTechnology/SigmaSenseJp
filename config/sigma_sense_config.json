@@ -1,4 +1,4 @@
 {
-  "world_model_path": "config/world_model.json",
+  "world_model_path": "data/world_model.sqlite",
   "personal_memory_path": "sigma_logs/personal_memory.jsonl"
 }

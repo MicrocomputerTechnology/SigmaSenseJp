@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 's
 
 import cv2
 import numpy as np
-from information_metrics import compute_kl_divergence, compute_wasserstein_distance
+from src.sigmasense.information_metrics import compute_kl_divergence, compute_wasserstein_distance
 
 class OpenCVEngine:
     """

@@ -4,7 +4,7 @@ import unittest
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.instinct_monitor import InstinctMonitor
+from src.dog_of_sigmasense.instinct_monitor import InstinctMonitor
 
 # PersonalMemoryGraphの簡易的なモック（テスト用）
 class MockMemoryGraph:

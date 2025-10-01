@@ -5,11 +5,11 @@ import pytest
 # プロジェクトのルートをシステムパスに追加
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.sigma_database_loader import load_sigma_database
-from src.sigma_sense import SigmaSense
-from src.dimension_loader import DimensionLoader
+from src.sigmasense.sigma_database_loader import load_sigma_database
+from src.sigmasense.sigma_sense import SigmaSense
+from src.sigmasense.dimension_loader import DimensionLoader
 
-from src.world_model import WorldModel
+from src.sigmasense.world_model import WorldModel
 
 # プロジェクトのルートディレクトリ
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))

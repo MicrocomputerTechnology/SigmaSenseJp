@@ -5,10 +5,10 @@ import sys
 # Add the src directory to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.sigma_sense import SigmaSense
-from src.sigma_database_loader import load_sigma_database
-from src.dimension_loader import DimensionLoader
-from src.sheaf_analyzer import SheafAnalyzer
+from src.sigmasense.sigma_sense import SigmaSense
+from src.sigmasense.sigma_database_loader import load_sigma_database
+from src.sigmasense.dimension_loader import DimensionLoader
+from src.sigmasense.sheaf_analyzer import SheafAnalyzer
 
 import argparse
 
@@ -23,9 +23,9 @@ def main(image_path, db_path):
         print(f"Error: Database file not found at {db_path}")
         return
 
-    database, ids, vectors = load_sigma_database(db_path)
+    database, ids, vectors, layers = load_sigma_database(db_path)
     dim_loader = DimensionLoader() 
-    sigma = SigmaSense(database, ids, vectors, dimension_loader=dim_loader)
+    sigma = SigmaSense(database, ids, vectors, layers, dimension_loader=dim_loader)
     print("SigmaSense initialized successfully.")
 
     # 2. Initialize the SheafAnalyzer
@@ -57,7 +57,7 @@ def main(image_path, db_path):
 if __name__ == "__main__":
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     default_image = os.path.join(project_root, 'sigma_images', 'multi_object.jpg')
-    default_db = os.path.join(project_root, 'config', 'sigma_product_database_custom_ai_generated.json')
+    default_db = os.path.join(project_root, 'data', 'world_model.sqlite')
 
     parser = argparse.ArgumentParser(description='Run Sheaf Analysis on an image.')
     parser.add_argument('--image_path', type=str, default=default_image, help='Path to the image to analyze.')
