@@ -18,7 +18,7 @@ jobs:
         pip install -U ginza
         pip install https://github.com/megagonlabs/ginza/releases/download/v5.2.0/ja_ginza-5.2.0-py3-none-any.whl
         pip install -r requirements.txt
-        pip install ruff pytest pytest-cov
+        pip install ruff pytest pytest-cov mypy
     - name: Check GiNZA functionality
       run: python check_ginza.py
     - name: Verify model downloads
@@ -33,6 +33,12 @@ jobs:
 
     - name: Build Vector Database
       run: python -m src.sigmasense.build_database --img_dir sigma_images
+
+    - name: Run Ruff Linter
+      run: ruff check .
+
+    - name: Run Mypy Type Checker
+      run: mypy src/
 
     - name: Test with pytest
       run: PYTHONPATH=.:src pytest --cov=src --cov-report=xml
