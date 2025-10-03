@@ -1,6 +1,13 @@
 name: Python CI
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+      - 'fix/**'
+      - 'docs/**'
+  pull_request:
 
 jobs:
   build:
