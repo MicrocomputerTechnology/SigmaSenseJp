@@ -4,6 +4,9 @@ PocketLibraryを管理する賢いフクロウ。プロジェクトに蓄積さ�
 
 このディレクトリには、システムの知識ベースへのアクセスを抽象化し、管理するモジュールが含まれています。
 
+## 関連設計ドキュメント
+- **[Hyperon超越計画 詳細設計ドキュメント一覧](../../doc/project-agi/)**
+
 - **`pocket_library/`**: 複数の外部辞書（WordNet, EJDictなど）を統一的なインターフェースでラップするライブラリです。
 - **`symbolic_reasoner.py`**: `WorldModel`や`PocketLibrary`の知識を利用して、観測された特徴に論理的な制約を与える推論エンジンです。
 - **`proper_noun_store.py`**: 固有名詞を管理するストアです。
