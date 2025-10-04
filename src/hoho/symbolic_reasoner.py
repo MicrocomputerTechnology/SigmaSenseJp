@@ -219,11 +219,8 @@ if __name__ == '__main__':
     with open(test_profile_path, 'w', encoding='utf-8') as f:
         json.dump({"graph_path": test_graph_path}, f)
     
-    # 正しいdb_pathを使ってWorldModelを初期化
-    with open(test_profile_path, 'r', encoding='utf-8') as f:
-        wm_config = json.load(f)
-    db_path = wm_config.get("graph_path", test_graph_path) # フォールバック
-    wm = WorldModel(db_path=db_path)
+    # WorldModelを直接db_pathで初期化
+    wm = WorldModel(db_path=test_graph_path)
 
     # --- 既存のテストデータ ---
     wm.add_node('penguin', name_ja="ペンギン")
