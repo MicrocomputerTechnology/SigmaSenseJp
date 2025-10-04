@@ -1,14 +1,8 @@
 
+from typing import Optional
 import json
 import random
 import os
-
-
-def print_header(title):
-    bar = "="*60
-    print(f"\n{bar}\n=== {title.upper()} ===\n{bar}")
-
-from typing import Optional
 
 class PsycheLogger:
     def __init__(self, config: Optional[dict] = None, output_path: Optional[str] = None):
