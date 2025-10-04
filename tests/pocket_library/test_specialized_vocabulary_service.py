@@ -1,6 +1,6 @@
 
 import pytest
-from src.pocket_library.specialized_vocabulary_service import SpecializedVocabularyService
+from src.hoho.pocket_library.specialized_vocabulary_service import SpecializedVocabularyService
 
 @pytest.fixture
 def service():

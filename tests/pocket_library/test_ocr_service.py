@@ -1,6 +1,6 @@
 import pytest
 import shutil
-from src.pocket_library.ocr_service import OCRService
+from src.hoho.pocket_library.ocr_service import OCRService
 
 @pytest.fixture
 def service():

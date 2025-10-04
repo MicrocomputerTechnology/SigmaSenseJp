@@ -1,6 +1,6 @@
 
 import pytest
-from src.pocket_library.dictionary_service import DictionaryService
+from src.hoho.pocket_library.dictionary_service import DictionaryService
 
 @pytest.fixture
 def service():
