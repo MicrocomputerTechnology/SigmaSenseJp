@@ -1,7 +1,6 @@
 # instinct_monitor.py - 犬のシグマセンスの誓い
 
 import numpy as np
-from src.sigmasense.information_metrics import compute_self_correlation_score
 
 class InstinctMonitor:
     """
@@ -93,7 +92,7 @@ class InstinctMonitor:
         final_log_message = " ".join(log_messages)
 
         return {
-            "passed": True, # このモジュールは警告のみでブロックはしない
+            "passed": is_normal_overall, # このモジュールは警告のみでブロックはしない
             "log": final_log_message,
             "narratives": narratives
         }

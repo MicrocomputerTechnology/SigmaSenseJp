@@ -1,7 +1,6 @@
 # run_ethics_check_on_text.py
 # 外部テキストに対して倫理チェックを実行するための専用スクリプト
 
-import json
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

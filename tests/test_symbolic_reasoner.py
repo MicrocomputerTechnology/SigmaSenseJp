@@ -1,14 +1,13 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import os
 import sys
-import pytest
 
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.sigmasense.world_model import WorldModel
-from src.hoho.symbolic_reasoner import SymbolicReasoner, _normalize_str
+from src.hoho.symbolic_reasoner import SymbolicReasoner
 
 # GiNZAが利用可能かチェック
 try:

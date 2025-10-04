@@ -1,11 +1,10 @@
 import unittest
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 import os
 import sys
 import shutil
 import cv2 # Import cv2
-from unittest.mock import MagicMock
 import json
 import yaml
 
@@ -19,7 +18,6 @@ from src.sigmasense.sigma_database_loader import load_sigma_database
 from src.sigmasense.build_database import build_database
 from src.sigmasense.world_model import WorldModel
 
-import yaml
 
 # ... (imports) ...
 

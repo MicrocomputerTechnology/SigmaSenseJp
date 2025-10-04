@@ -1,5 +1,8 @@
 import os
+import sys
 import argparse
+import yaml
+import numpy as np
 
 def print_header(title):
     bar = "="*60
@@ -20,6 +23,15 @@ def reset_config_file(config_path, optimized_path):
     print(f"'{config_path}' has been reset.\nRemoved old '{optimized_path}' if it existed.")
 
 if __name__ == '__main__':
+    # Add project root to sys.path to allow for module imports
+    project_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.append(project_root_path)
+
+    from src.sigmasense.sigma_local_core import SigmaLocalCore
+    from src.sigmasense.dimension_generator_local import DimensionGenerator
+    from src.saphiel.dimension_suggester import DimensionSuggester
+    from src.saphiel.dimension_optimizer import DimensionOptimizer
+
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     config_dir = os.path.join(project_root, 'config')
 
@@ -45,7 +57,8 @@ if __name__ == '__main__':
     print_header("Cycle 1: Baseline Comparison (Before Evolution)")
     core_v1 = SigmaLocalCore(config_path=CONFIG_PATH)
     result_baseline = core_v1.compare_images(args.img_circle, args.img_cat)
-    if not result_baseline: exit()
+    if not result_baseline:
+        exit()
     print(f"  -> Similarity (Circle vs Cat): {result_baseline['similarity_score']:.4f}")
 
     # === CYCLE 2: DISCOVERING NEW DIMENSION (via Suggester) ===

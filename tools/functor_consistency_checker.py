@@ -2,19 +2,13 @@ import os
 import sys
 import yaml
 import json
-from PIL import Image
 
 # Add project root to path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
-from src.sigmasense.sigma_sense import SigmaSense
-from src.sigmasense.sigma_database_loader import load_sigma_database
-from src.sigmasense.dimension_loader import DimensionLoader
-from src.sigmasense.sigma_functor import SigmaFunctor
-from src.sigmasense import image_transformer as it
-from src.sigmasense.vector_transforms import VectorTransforms # Import VectorTransforms
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+src_path = os.path.join(project_root, 'src')
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
 
 def load_octasense_config(config_path=None):
     """Loads the OctaSense configuration file."""
@@ -58,7 +52,20 @@ def run_functoriality_check(functor, image_path, image_transform_func, vector_tr
     return is_consistent, failure_log
 
 def main():
-    """Main verification process."""
+    import os
+    
+    # Add project root to path
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+    from src.sigmasense.sigma_sense import SigmaSense
+    from src.sigmasense.sigma_database_loader import load_sigma_database
+    from src.sigmasense.dimension_loader import DimensionLoader
+    from src.sigmasense.sigma_functor import SigmaFunctor
+    from src.sigmasense import image_transformer as it
+    from src.sigmasense.vector_transforms import VectorTransforms # Import VectorTransforms
+
     config_dir = os.path.join(project_root, 'config')
     
     load_octasense_config(os.path.join(config_dir, 'octasense_config.yaml'))

@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import os
-import sys
 
 def generate_number_image(number_text, output_path):
     """Generates an image of a given number and saves it to the specified path."""

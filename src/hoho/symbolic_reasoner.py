@@ -2,11 +2,8 @@
 
 import os
 import json
-import sqlite3
 import unicodedata
 import spacy
-from sudachipy import tokenizer
-from sudachipy import dictionary
 from src.sigmasense.world_model import WorldModel
 from .pocket_library.dictionary_service import DictionaryService
 

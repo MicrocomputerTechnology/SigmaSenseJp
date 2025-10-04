@@ -2,7 +2,6 @@
 
 import numpy as np
 import os
-import json
 from sigmasense.dimension_loader import DimensionLoader
 from sigmasense.information_metrics import compute_kl_similarity, compute_wasserstein_similarity, compute_self_correlation_score
 

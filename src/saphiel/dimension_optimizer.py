@@ -2,7 +2,6 @@
 import yaml
 import numpy as np
 import os
-from src.config_loader import ConfigLoader
 
 class DimensionOptimizer:
     """

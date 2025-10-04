@@ -1,20 +1,20 @@
 import sys
 import os
-import json
 import numpy as np
 import argparse
 
-# 親ディレクトリをパスに追加
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if project_root not in sys.path:
+def test_single_image_vector(image_path):
+    
+    # Add project root to sys.path
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.insert(0, project_root)
     sys.path.insert(0, os.path.join(project_root, 'src'))
 
-from sigmasense.sigma_sense import SigmaSense
-from sigmasense.dimension_loader import DimensionLoader
+    from sigmasense.sigma_sense import SigmaSense
+    from sigmasense.dimension_loader import DimensionLoader
 
-def test_single_image_vector(image_path):
     """単一の画像を指定して、その複合意味ベクトルを計算し、結果を詳細に表示する"""
-    print(f"🧪 ベクトル生成テストを開始します...")
+    print("🧪 ベクトル生成テストを開始します...")
     print(f"   対象画像: {image_path}")
     print("-" * 70)
 

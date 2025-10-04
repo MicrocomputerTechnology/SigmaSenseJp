@@ -3,7 +3,6 @@ import re
 import json
 import google.generativeai as genai
 import google.api_core.exceptions
-from PIL import Image
 from src.vetra.vetra_llm_core import VetraLLMCore
 
 class GeminiClient:
@@ -88,7 +87,7 @@ class GeminiClient:
         テキストプロンプトをAPIに送信し、レスポンスを返す。
         API呼び出しに失敗した場合、ローカルLLMにフォールバックする。
         """
-        print(f"   - (Text) プライマリAPIにクエリを送信中...")
+        print("   - (Text) プライマリAPIにクエリを送信中...")
         try:
             response = self.text_model.generate_content(prompt)
             return self._parse_response(response.text)
@@ -121,7 +120,7 @@ class GeminiClient:
         prompt_parts: [Image, "text", Image, "text", ...] の形式のリスト
         NOTE: このメソッドは現在ローカルLLMへのフォールバックをサポートしていません。
         """
-        print(f"   - (Vision) APIにクエリを送信中...")
+        print("   - (Vision) APIにクエリを送信中...")
         try:
             response = self.vision_model.generate_content(prompt_parts)
             return self._parse_response(response.text)

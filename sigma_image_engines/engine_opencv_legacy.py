@@ -52,7 +52,7 @@ class LegacyOpenCVEngine:
             return feature_map
 
         except Exception as e:
-            print(f"❗ LegacyOpenCVEngineでエラーが発生しました ({image_path}): {e}")
+            print(f"❗ LegacyOpenCVEngineでエラーが発生しました: {e}")
             return {}
 
     def _calculate_selia_features(self, feature_map, img, gray_img, hsv_img, l_channel, contours, img_area, w, h, diagonal_length):
@@ -134,7 +134,8 @@ class LegacyOpenCVEngine:
             'dominant_hue_of_shapes', 'aspect_ratio_consistency', 'density_of_small_shapes',
             'average_convexity_index', 'contour_roughness_score', 'alignment_strength'
         ]
-        for dim_id in shape_dim_ids: feature_map[dim_id] = 0.0
+        for dim_id in shape_dim_ids:
+            feature_map[dim_id] = 0.0
         feature_map['aspect_ratio_consistency'] = 1.0
         feature_map['alignment_strength'] = 1.0
 
@@ -156,26 +157,32 @@ class LegacyOpenCVEngine:
 
         for c in contours:
             area = cv2.contourArea(c)
-            if area < 50: continue
+            if area < 50:
+                continue
             total_shape_area += area
             areas.append(area)
             perimeter = cv2.arcLength(c, True)
-            if perimeter == 0: continue
+            if perimeter == 0:
+                continue
             circularities.append((4 * np.pi * area) / (perimeter ** 2))
             try:
                 _, (width, height), _ = cv2.minAreaRect(c)
                 if width * height > 0:
                     rectangularities.append(area / (width * height))
                     aspect_ratios.append(max(width, height) / (min(width, height) + 1e-6))
-            except: pass
+            except Exception:
+                pass
             try:
                 hull = cv2.convexHull(c)
-                if cv2.contourArea(hull) > 0: convexities.append(area / cv2.contourArea(hull))
-            except: pass
+                if cv2.contourArea(hull) > 0:
+                    convexities.append(area / cv2.contourArea(hull))
+            except Exception:
+                pass
             approx = cv2.approxPolyDP(c, 0.01 * perimeter, True)
             roughnesses.append(abs(perimeter - cv2.arcLength(approx, True)) / perimeter)
             M = cv2.moments(c)
-            if M["m00"] != 0: centroids.append((int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])))
+            if M["m00"] != 0:
+                centroids.append((int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])))
             mask = np.zeros((h, w), dtype=np.uint8)
             cv2.drawContours(mask, [c], -1, 255, -1)
             shape_masks.append(mask)
@@ -201,9 +208,8 @@ class LegacyOpenCVEngine:
 
         if shape_masks:
             combined_mask = np.zeros((h, w), dtype=np.uint8)
-            for mask in shape_masks: combined_mask = cv2.bitwise_or(combined_mask, mask)
-            rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            hsv_img_rgb = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2HSV)
+            for mask in shape_masks:
+                combined_mask = cv2.bitwise_or(combined_mask, mask)
             all_shape_pixels_hsv = cv2.bitwise_and(hsv_img, hsv_img, mask=combined_mask)
             # Debugging: Save hsv_img and combined_mask
 
@@ -238,15 +244,19 @@ class LegacyOpenCVEngine:
             blurred_img = cv2.medianBlur(gray_img, 5)
             binary_img = cv2.adaptiveThreshold(blurred_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
             contours, _ = cv2.findContours(binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            if not contours: return 0.0
+            if not contours:
+                return 0.0
             main_contour = max(contours, key=cv2.contourArea)
             contour_length = cv2.arcLength(main_contour, True)
-            if contour_length == 0: return 0.0
+            if contour_length == 0:
+                return 0.0
             hull = cv2.convexHull(main_contour)
             hull_length = cv2.arcLength(hull, True)
-            if hull_length == 0: return 0.0
+            if hull_length == 0:
+                return 0.0
             return np.clip(((contour_length / hull_length) - 1.0) * 2.0, 0.0, 1.0)
-        except Exception: return 0.0
+        except Exception:
+            return 0.0
 
     def _calculate_edge_softness(self, gray_img):
         try:
@@ -256,25 +266,29 @@ class LegacyOpenCVEngine:
             soft_edge_threshold = 50
             soft_pixels = np.sum(magnitude < soft_edge_threshold)
             return np.clip(soft_pixels / gray_img.size, 0.0, 1.0)
-        except Exception: return 0.0
+        except Exception:
+            return 0.0
 
     def _calculate_motion_resonance(self, gray_img):
         try:
             laplacian_var = cv2.Laplacian(gray_img, cv2.CV_64F).var()
             return np.clip(1.0 - (laplacian_var / 1000.0), 0.0, 1.0)
-        except Exception: return 0.0
+        except Exception:
+            return 0.0
 
     def _calculate_gaze_impression(self, gray_img):
         try:
             h, w = gray_img.shape
             center_roi = gray_img[h//4:h*3//4, w//4:w*3//4]
-            if center_roi.size == 0: return 0.0
+            if center_roi.size == 0:
+                return 0.0
             contrast = center_roi.std()
             brightness = center_roi.mean()
             _, highlight_mask = cv2.threshold(center_roi, 240, 255, cv2.THRESH_BINARY)
             highlight_ratio = np.count_nonzero(highlight_mask) / center_roi.size
             return np.clip(((contrast / 100.0) + (brightness / 255.0) + (highlight_ratio * 3.0)) / 3.0, 0.0, 1.0)
-        except Exception: return 0.0
+        except Exception:
+            return 0.0
 
     def _calculate_form_presence(self, hsv_img):
         try:
@@ -285,7 +299,8 @@ class LegacyOpenCVEngine:
             contrast_strength = (dark_pixels + bright_pixels) / v_channel.size
             std_dev = v_channel.std()
             return np.clip((contrast_strength * 5.0) + (std_dev / 100.0), 0.0, 1.0)
-        except Exception: return 0.0
+        except Exception:
+            return 0.0
 
     def _calculate_approachability(self, gray_img):
         try:
@@ -293,15 +308,19 @@ class LegacyOpenCVEngine:
             circles = cv2.HoughCircles(blurred_img, cv2.HOUGH_GRADIENT, dp=1.2, minDist=100, param1=50, param2=30, minRadius=10, maxRadius=100)
             circle_score = np.clip(len(circles) / 10.0, 0.0, 1.0) if circles is not None else 0.0
             contours, _ = cv2.findContours(cv2.adaptiveThreshold(blurred_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            if not contours: return circle_score
+            if not contours:
+                return circle_score
             main_contour = max(contours, key=cv2.contourArea)
             area = cv2.contourArea(main_contour)
-            if area == 0: return circle_score
+            if area == 0:
+                return circle_score
             perimeter = cv2.arcLength(main_contour, True)
-            if perimeter == 0: return circle_score
+            if perimeter == 0:
+                return circle_score
             circularity = 4 * np.pi * area / (perimeter**2)
             return np.clip((circle_score + circularity) / 2.0, 0.0, 1.0)
-        except Exception: return 0.0
+        except Exception:
+            return 0.0
 
     def _calculate_inner_vitality(self, hsv_img, gray_img):
         try:
@@ -312,13 +331,15 @@ class LegacyOpenCVEngine:
             energy = graycoprops(glcm, 'energy')[0, 0]
             texture_richness = np.clip(energy * 5.0, 0.0, 1.0)
             return np.clip((mean_saturation + value_diversity + texture_richness) / 3.0, 0.0, 1.0)
-        except Exception: return 0.0
+        except Exception:
+            return 0.0
 
     def _calculate_gracefulness(self, gray_img):
         try:
             edges = cv2.Canny(gray_img, 50, 150)
             contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            if not contours: return 0.0
+            if not contours:
+                return 0.0
             total_smoothness, total_length = 0, 0
             for cnt in contours:
                 length = cv2.arcLength(cnt, False)
@@ -327,6 +348,8 @@ class LegacyOpenCVEngine:
                     smoothness = 1.0 - np.clip(len(approx) / (length / 10.0 + 1e-6), 0.0, 1.0)
                     total_smoothness += smoothness * length
                     total_length += length
-            if total_length == 0: return 0.0
+            if total_length == 0:
+                return 0.0
             return np.clip(total_smoothness / total_length, 0.0, 1.0)
-        except Exception: return 0.0
+        except Exception:
+            return 0.0

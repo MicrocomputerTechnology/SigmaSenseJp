@@ -1,4 +1,4 @@
-from PIL import Image, ImageOps, ImageFilter
+from PIL import Image, ImageOps
 
 def identity(image: Image.Image) -> Image.Image:
     """恒等射：画像を何も変更しない"""

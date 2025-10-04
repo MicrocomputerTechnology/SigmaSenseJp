@@ -1,4 +1,3 @@
-import json
 import os
 from src.sigmasense.config_loader import ConfigLoader
 

@@ -145,7 +145,7 @@ if __name__ == '__main__':
     OUTPUT_PATH = os.path.join(config_dir, "vector_dimensions_custom_ai_integrated.json")
 
     if not comparator_config:
-        print(f"ERROR: Dimension Comparator config 'dimension_comparator_profile.json' not found.")
+        print("ERROR: Dimension Comparator config 'dimension_comparator_profile.json' not found.")
         print("Please ensure the config file exists.")
     else:
         comparator = DimensionComparator(config=comparator_config)

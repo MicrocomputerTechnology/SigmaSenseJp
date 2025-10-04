@@ -1,5 +1,4 @@
 
-import os
 from collections import defaultdict
 
 # Scripts manually registered in .github/workflows/main.yml and .github/workflows/run-scripts.yml

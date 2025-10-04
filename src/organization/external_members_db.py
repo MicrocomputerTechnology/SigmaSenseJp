@@ -1,5 +1,4 @@
-import sqlite3
-import os
+import json
 from src.hoho.pocket_library.database_handler import DatabaseHandler
 
 class ExternalMembersDB(DatabaseHandler):

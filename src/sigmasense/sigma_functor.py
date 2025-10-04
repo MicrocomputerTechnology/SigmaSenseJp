@@ -53,7 +53,6 @@ class SigmaFunctor:
             raise AttributeError(f"VectorTransforms does not have method: {vector_transform_func_name}")
         
         vector_transform_method = getattr(self.vector_transforms, vector_transform_func_name)
-        import inspect
         vector_transform_method = getattr(self.vector_transforms, vector_transform_func_name)
         sig = inspect.signature(vector_transform_method)
         if 'dimension_loader' in sig.parameters:

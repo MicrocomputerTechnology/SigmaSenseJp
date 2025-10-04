@@ -1,7 +1,6 @@
 import sys
 import os
 import argparse
-import json
 
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -21,7 +20,6 @@ def analyze_sentence(sentence: str):
 
     dict_service = None
     spec_service = None
-    results = {}
     key_lemmas = []
 
     try:
@@ -38,7 +36,8 @@ def analyze_sentence(sentence: str):
         parenthesized_terms = re.findall(r'[（\(](.*?)[）\)]', sentence)
         for term in parenthesized_terms:
             term = term.strip()
-            if not term or not term.isascii(): continue
+            if not term or not term.isascii():
+                continue
             if term not in key_lemmas:
                 key_lemmas.append(term)
 

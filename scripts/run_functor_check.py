@@ -1,12 +1,6 @@
-
 import os
 import sys
 import numpy as np
-
-# 親ディレクトリ（プロジェクトルート）をパスに追加
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
 
 from src.sigmasense.dimension_loader import DimensionLoader
 from src.sigmasense import image_transformer as it
@@ -15,9 +9,14 @@ from src.sigmasense.sigma_database_loader import load_sigma_database
 from src.sigmasense.sigma_sense import SigmaSense
 from src.sigmasense.sigma_functor import SigmaFunctor
 
+# 親ディレクトリ（プロジェクトルート）をパスに追加
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 def print_header(title):
     bar = "="*70
-    print(f"\n{bar}\n=== {title.upper()} ===\n{bar}")
+    print(f"\n{bar}\n=== {title.upper()} ===\n{bar}\n")
 
 def main():
     print_header("Functoriality Consistency Check")
@@ -62,7 +61,7 @@ def main():
         diff, is_consistent, actual_vector, expected_vector = functor.check_functoriality(image_path, image_transform, vector_transform_func_name)
 
         if diff is None:
-            print(f"  -> ⚠️ SKIPPED: Vector generation failed for this test case.")
+            print("  -> ⚠️ SKIPPED: Vector generation failed for this test case.")
             continue
 
         if is_consistent:

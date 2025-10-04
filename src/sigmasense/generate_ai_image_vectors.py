@@ -111,11 +111,11 @@ def main(dim_path, image_dir, output_path):
                 "id": image_id,
                 "meaning_vector": ordered_vector
             })
-            print(f"   -> 生成成功")
+            print("   -> 生成成功")
         else:
-            print(f"   -> 生成失敗")
+            print("   -> 生成失敗")
 
-    print(f"\n✅ 全画像のベクトル生成が完了しました。")
+    print("\n✅ 全画像のベクトル生成が完了しました。")
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(database_entries, f, indent=2, ensure_ascii=False)
     

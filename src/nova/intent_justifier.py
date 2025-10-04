@@ -4,7 +4,6 @@ from src.sigmasense.world_model import WorldModel
 from src.selia.personal_memory_graph import PersonalMemoryGraph
 from src.sigmasense.config_loader import ConfigLoader
 
-import json
 import os
 
 class IntentJustifier:

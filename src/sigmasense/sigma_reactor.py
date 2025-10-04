@@ -1,6 +1,4 @@
 
-import json
-import os
 
 def print_header(title):
     bar = "="*60

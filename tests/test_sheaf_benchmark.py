@@ -5,8 +5,6 @@ from PIL import Image
 import os
 import sys
 import shutil
-import cv2
-from unittest.mock import MagicMock
 
 
 # Add the project root to the Python path for module imports

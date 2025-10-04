@@ -1,10 +1,8 @@
 # === 第十五次実験 実装ファイル ===
 
-import json
 import os
 
 from src.selia.personal_memory_graph import PersonalMemoryGraph
-from .config_loader import ConfigLoader
 from collections import defaultdict
 
 class TemporalReasoning:

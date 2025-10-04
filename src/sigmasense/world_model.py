@@ -1,5 +1,4 @@
 import os
-import json
 from src.hoho.sqlite_knowledge_store import SQLiteStore
 from src.hoho.proper_noun_store import ProperNounStore
 

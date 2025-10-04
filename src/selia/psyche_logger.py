@@ -3,8 +3,6 @@ import json
 import random
 import os
 
-import json
-import os
 
 def print_header(title):
     bar = "="*60
@@ -63,7 +61,8 @@ class PsycheLogger:
                 for agent in self.agents:
                     base = self.base_emotions[agent]
                     fluctuation = random.uniform(self.fluctuation_range["min"], self.fluctuation_range["max"])
-                    if agent in ["nova", "lyra"]: fluctuation *= self.fluctuation_multiplier_volatile_agents
+                    if agent in ["nova", "lyra"]:
+                        fluctuation *= self.fluctuation_multiplier_volatile_agents
                     emotions[f"E_{agent}"] = round(max(0, min(1, base + fluctuation)), 4)
                 log_entry.update(emotions)
 

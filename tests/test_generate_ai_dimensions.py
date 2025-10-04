@@ -1,13 +1,6 @@
 import unittest
-import os
 import json
-from unittest.mock import patch, MagicMock
-
-import sys
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, project_root)
-sys.path.insert(0, os.path.join(project_root, 'src'))
-from src.sigmasense.generate_ai_dimensions import generate_dimensions_with_algorithms
+from unittest.mock import patch
 
 class TestGenerateAiDimensions(unittest.TestCase):
 
@@ -72,4 +65,10 @@ class TestGenerateAiDimensions(unittest.TestCase):
         self.assertFalse(os.path.exists(output_filepath))
 
 if __name__ == '__main__':
+    import os
+    import sys
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.insert(0, project_root)
+    sys.path.insert(0, os.path.join(project_root, 'src'))
+    from src.sigmasense.generate_ai_dimensions import generate_dimensions_with_algorithms
     unittest.main()

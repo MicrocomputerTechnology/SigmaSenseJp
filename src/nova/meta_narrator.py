@@ -4,7 +4,6 @@ from src.selia.personal_memory_graph import PersonalMemoryGraph
 from src.sigmasense.config_loader import ConfigLoader
 from collections import defaultdict
 
-import json
 import os
 
 class MetaNarrator:
@@ -64,7 +63,6 @@ class MetaNarrator:
 
                 # 心理状態が「混乱」から「穏やか」などに変化した場合を「学習」と見なす
                 learning_from_state = self.learning_state_transition.get("from", "confused")
-                learning_to_state = self.learning_state_transition.get("to", "calm") # 現在は使わないが、将来的な拡張のため
 
                 if first_psyche == learning_from_state and last_psyche != learning_from_state:
                     story = self.narrative_templates.get("learning_story", "").format(

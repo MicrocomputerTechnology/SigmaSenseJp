@@ -1,4 +1,3 @@
-import json
 import os
 from src.hoho.sqlite_knowledge_store import SQLiteStore
 
@@ -16,8 +15,8 @@ def load_sigma_database(db_path):
 
     # Reconstruct the original 'data' list of dicts for compatibility
     data = [
-        {"id": i, "meaning_vector": v, "layer": l}
-        for i, v, l in zip(ids, vectors, layers)
+        {"id": i, "meaning_vector": v, "layer": layer}
+        for i, v, layer in zip(ids, vectors, layers)
     ]
 
     return data, ids, vectors, layers
