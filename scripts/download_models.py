@@ -26,7 +26,6 @@ MOBILEVIT_ZIP_URL = "https://itb.co.jp/wp-content/uploads/mobilevit-tensorflow2-
 MOBILEVIT_DIR_NAME = "mobilevit-tensorflow2-xxs-1k-256-v1"
 
 # Dictionaries
-EJDICT_URL = "https://github.com/kujirahand/EJDict/archive/refs/heads/master.zip"
 WNJPN_URL = "https://github.com/bond-lab/wnja/releases/download/v1.1/wnjpn.db.gz"
 
 # --- Helper Functions ---
@@ -96,63 +95,25 @@ def download_mobilevit_model():
         print(f"{MOBILEVIT_DIR_NAME} already exists. Skipping.")
 
 def download_ejdict():
-    """Downloads and extracts the EJDict-hand database with robust error handling."""
+    """Downloads the EJDict-hand database directly as a sqlite3 file."""
     print("\n--- Downloading EJDict-hand ---")
-    zip_path = os.path.join(DATA_DIR, "ejdict.zip")
     db_path = os.path.join(DATA_DIR, "ejdict.sqlite3")
-    extracted_dir = os.path.join(DATA_DIR, "EJDict-master")
     
     if os.path.exists(db_path):
         print("ejdict.sqlite3 already exists. Skipping download.")
         return
 
-    print(f"Downloading {EJDICT_URL} to {zip_path}...")
-    if not download_file(EJDICT_URL, zip_path):
-        raise RuntimeError("Failed to download EJDict-hand zip file.")
+    # This URL provides the pre-converted sqlite3 file
+    ejdict_sqlite_url = "https://kujirahand.com/web-tools/EJDictFreeDL.php?key=e924bf30fe04fdf45dac553182e525a5&type=1"
 
-    try:
-        print(f"Extracting {zip_path}...")
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(DATA_DIR)
-        print(f"Extracted to {DATA_DIR}.")
-
-        # Generate sqlite3 from text files
-        php_script_path = os.path.join(extracted_dir, "tools", "tosqlite.php")
-        if not os.path.exists(php_script_path):
-            raise FileNotFoundError(f"tosqlite.php not found at {php_script_path}")
-
-        print(f"Running tosqlite.php to generate database...")
-        # The script expects to be run from its directory
-        result = subprocess.run(["php", "tosqlite.php"], cwd=os.path.join(extracted_dir, "tools"), capture_output=True, text=True)
-        
-        if result.returncode != 0:
-            print("PHP script stdout:", result.stdout)
-            print("PHP script stderr:", result.stderr)
-            raise RuntimeError("Failed to generate ejdict.sqlite3 using tosqlite.php")
-
-        generated_db_path = os.path.join(extracted_dir, "tools", "ejdict.sqlite3")
-        if not os.path.exists(generated_db_path):
-            raise FileNotFoundError("ejdict.sqlite3 not found after running tosqlite.php")
-
-        print(f"Moving {generated_db_path} to {db_path}...")
-        os.rename(generated_db_path, db_path)
-
-        if not os.path.exists(db_path):
-            raise FileNotFoundError(f"Failed to move database to {db_path}")
-        
+    print(f"Downloading ejdict.sqlite3 from {ejdict_sqlite_url}...")
+    if not download_file(ejdict_sqlite_url, db_path):
+        raise RuntimeError("Failed to download ejdict.sqlite3 file.")
+    
+    if os.path.exists(db_path):
         print("Successfully installed ejdict.sqlite3.")
-
-    except Exception as e:
-        print(f"An error occurred during EJDict-hand processing: {e}")
-        raise
-    finally:
-        # Cleanup
-        if os.path.exists(zip_path):
-            os.remove(zip_path)
-            print(f"Removed temporary file: {zip_path}")
-        if os.path.exists(extracted_dir):
-            shutil.rmtree(extracted_dir)
-            print(f"Removed temporary directory: {extracted_dir}")
+    else:
+        raise FileNotFoundError("ejdict.sqlite3 not found after download.")
 
 
 def download_wnjpn():
