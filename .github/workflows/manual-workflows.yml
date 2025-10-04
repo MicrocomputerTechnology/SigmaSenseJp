@@ -1,6 +1,13 @@
 name: Manual Workflows
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      script_to_run:
+        description: 'Script to run (e.g., run_benchmark, run_sigma, or all). Use "all" to run all scripts.'
+        required: true
+        default: 'all'
+        type: string
 
 jobs:
   integration-check:
@@ -62,43 +69,62 @@ jobs:
         touch config/functor_consistency_failures.jsonl
         python src/build_database.py --img_dir sigma_images
     - name: Run sigma script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_sigma'
       run: python scripts/run_sigma.py --img_dir sigma_images --db_path config/sigma_product_database_stabilized.json
     - name: Run benchmark script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_benchmark'
       run: python scripts/run_benchmark.py
     - name: Run learning objective script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_learning_objective'
       run: python scripts/run_learning_objective.py --objective "Test Objective"
     - name: Run sheaf analysis script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_sheaf_analysis'
       run: python scripts/run_sheaf_analysis.py --image_path sigma_images/circle_center.jpg
     - name: Run functor consistency checker
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_functor_consistency_checker'
       run: python tools/functor_consistency_checker.py
     - name: Run stabilize database script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_stabilize_database'
       run: python src/stabilize_database.py --source config/sigma_product_database_stabilized.json --output config/sigma_product_database_stabilized.json
     - name: Run ethics check on text script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_ethics_check_on_text'
       run: python scripts/run_ethics_check_on_text.py
     - name: Run narrative analysis script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_narrative_analysis'
       run: python scripts/run_narrative_analysis.py --subject circle_center
     - name: Run narrative processing experiment
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_narrative_processing_experiment'
       run: python scripts/run_narrative_processing_experiment.py
     - name: Run offline evolution cycle
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_offline_evolution_cycle'
       run: python scripts/run_offline_evolution_cycle.py --img_circle sigma_images/circle_center.jpg --img_cat sigma_images/cat_01.jpg --img_new_phenomenon sigma_images/pentagon_center_blue.jpg
     - name: Run online integration
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_online_integration'
       run: python scripts/run_online_integration.py
     - name: Run reconstruction experiment
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_reconstruction_experiment'
       run: python scripts/run_reconstruction_experiment.py
     - name: Generate test images
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'generate_test_images'
       run: python src/generate_test_image.py
     - name: Generate number image
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'generate_number_image'
       run: python src/generate_number_image.py --number 123 --output_path generated_number.png
     - name: Generate AI image vectors
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'generate_ai_image_vectors'
       run: python src/generate_ai_image_vectors.py --single_image_path sigma_images/circle_center.jpg
     - name: Generate AI dimensions
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'generate_ai_dimensions'
       run: python src/generate_ai_dimensions.py selia
     - name: Run terrier comparison script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_terrier_comparison'
       run: python scripts/run_terrier_comparison.py sigma_images/circle_center.jpg sigma_images/square_left.jpg
     - name: Run psyche simulation script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_psyche_simulation'
       run: python scripts/run_psyche_simulation.py
 
     - name: Run New/Modified Feature Checks
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'feature_checks'
       run: |
         # Phase 2.1: 使命の定義
         python -c "from src.orient.orien_vision import OrienVision; print('OrienVision imported')"
