@@ -3,7 +3,7 @@ class AgentBuffer:
         pass
 
     def send_message(self, sender_id: str, receiver_id: str, message: dict) -> bool:
-        pass
+        return False
 
     def receive_message(self, receiver_id: str) -> list[dict]:
-        pass
+        return []

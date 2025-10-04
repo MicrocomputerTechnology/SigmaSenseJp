@@ -3,4 +3,4 @@ class JapaneseNLPFrontend:
         pass
 
     def analyze_text(self, text: str) -> dict:
-        pass
+        return {}

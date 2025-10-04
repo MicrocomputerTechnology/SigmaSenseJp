@@ -3,7 +3,7 @@ class WorldSimulator:
         pass
 
     def simulate_next_state(self, current_state: dict, action: dict) -> dict:
-        pass
+        return {}
 
     def get_state_representation(self) -> dict:
-        pass
+        return {}

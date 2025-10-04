@@ -3,7 +3,7 @@ class CollectiveIntelligenceModel:
         pass
 
     def formulate_model(self, data_sources: list) -> dict:
-        pass
+        return {}
 
     def analyze_attractors(self, cognitive_state_data: dict):
         pass

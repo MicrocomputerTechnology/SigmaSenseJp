@@ -22,7 +22,7 @@
 #      ヘルパーとして残存する可能性がある。
 #
 import os
-from dimension_loader import DimensionLoader
+from sigmasense.dimension_loader import DimensionLoader
 
 class NarrativeJustifier:
     """

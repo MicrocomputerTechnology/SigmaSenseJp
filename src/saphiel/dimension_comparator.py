@@ -1,8 +1,9 @@
+from typing import Optional
 import yaml
 import json
 import os
 from difflib import SequenceMatcher
-from src.config_loader import ConfigLoader
+from sigmasense.config_loader import ConfigLoader
 
 def print_header(title):
     bar = "="*60
@@ -14,7 +15,7 @@ class DimensionComparator:
     Orien (online/Gemini) and recommends integration actions.
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: Optional[dict] = None):
         print_header("Initializing Dimension Comparator")
         if config is None:
             config = {}

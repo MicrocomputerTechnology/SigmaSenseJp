@@ -6,7 +6,7 @@ class GoalManager:
         pass
 
     def get_current_goals(self) -> list[dict]:
-        pass
+        return []
 
     def update_goal_status(self, goal_id: str, status: str):
         pass

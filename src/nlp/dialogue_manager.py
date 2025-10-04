@@ -3,7 +3,7 @@ class DialogueManager:
         pass
 
     def process_utterance(self, parsed_text: dict, current_dialogue_state: dict) -> dict:
-        pass
+        return {}
 
     def get_response_intent(self, dialogue_state: dict) -> dict:
-        pass
+        return {}

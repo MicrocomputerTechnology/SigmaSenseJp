@@ -1,5 +1,7 @@
+from typing import Optional
+
 class UnifiedDictionaryService:
-    def __init__(self, config: dict = None):
+    def __init__(self, config: Optional[dict] = None):
         pass
 
     def tokenize_japanese_text(self, text: str, mode: str = 'A'):

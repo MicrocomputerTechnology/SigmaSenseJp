@@ -2,12 +2,10 @@ import json
 import os
 import numpy as np
 
+from typing import Optional
+
 class CorrectionApplicator:
-    """
-    functor_consistency_failures.jsonl に基づいて、ベクトルまたはデータベース全体に
-    一貫性補正を適用する責務を持つ。
-    """
-    def __init__(self, config: dict = None, failure_log_path: str = None):
+    def __init__(self, config: Optional[dict] = None, failure_log_path: Optional[str] = None):
         if config is None:
             config = {}
 

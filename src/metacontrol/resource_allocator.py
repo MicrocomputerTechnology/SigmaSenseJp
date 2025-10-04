@@ -3,4 +3,4 @@ class ResourceAllocator:
         pass
 
     def allocate_resources(self, current_task_states: dict) -> dict:
-        pass
+        return {}

@@ -1,3 +1,5 @@
+from typing import Optional
+
 # meaning_axis_designer.py - サフィールの誓い
 
 import spacy
@@ -7,7 +9,7 @@ class MeaningAxisDesigner:
     語りの意味軸が偏らないよう設計・調整する。
     語りの多様性とバランスを評価する。
     """
-    def __init__(self, config: dict = None):
+    def __init__(self, config: Optional[dict] = None):
         self.config = config if config is not None else {}
         self.balance_threshold = self.config.get("balance_threshold", 3)
         # GiNZAモデルのロード。初回は時間がかかる場合がある。

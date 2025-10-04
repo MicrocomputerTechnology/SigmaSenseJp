@@ -6,4 +6,4 @@ class KnowledgeActivationModel:
         pass
 
     def get_activated_knowledge(self, query: str, threshold: float) -> list[str]:
-        pass
+        return []

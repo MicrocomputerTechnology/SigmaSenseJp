@@ -6,7 +6,7 @@ class SymbolGroundingEngine:
         pass
 
     def ground_perception(self, perception_data: dict) -> list[str]:
-        pass
+        return []
 
     def generate_perception(self, symbol: str) -> dict:
-        pass
+        return {}

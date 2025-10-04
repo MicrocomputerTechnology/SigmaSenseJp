@@ -1,5 +1,6 @@
 # === 第十五次実験 実装ファイル ===
 
+from typing import Optional
 from src.sigmasense.world_model import WorldModel
 from src.selia.personal_memory_graph import PersonalMemoryGraph
 from src.sigmasense.config_loader import ConfigLoader
@@ -12,7 +13,7 @@ class IntentJustifier:
     根拠となった過去の経験を具体的に語る。
     """
 
-    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config: dict = None):
+    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config: Optional[dict] = None):
         """
         WorldModelとPersonalMemoryGraphのインスタンスを受け取って初期化する。
         """

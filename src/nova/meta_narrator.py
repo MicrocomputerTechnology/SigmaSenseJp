@@ -6,12 +6,11 @@ from collections import defaultdict
 
 import os
 
+from typing import Optional
+
 class MetaNarrator:
-    """
-    PersonalMemoryGraphに記録された過去の経験を俯瞰し、
-    「私はどのように学習し、成長してきたか」というメタ的な語りを生成する。
-    """
-    def __init__(self, config: dict = None):
+
+    def __init__(self, config: Optional[dict] = None):
         if config is None:
             config = {}
         

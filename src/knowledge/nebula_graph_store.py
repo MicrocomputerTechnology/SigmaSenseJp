@@ -1,4 +1,5 @@
 from src.hoho.knowledge_store_base import KnowledgeStoreBase
+from typing import Optional
 
 class NebulaGraphStore(KnowledgeStoreBase):
     def __init__(self, host: str, port: int, space: str):
@@ -13,7 +14,7 @@ class NebulaGraphStore(KnowledgeStoreBase):
     def get_node(self, node_id: str):
         pass
 
-    def find_related_nodes(self, source_id: str, relationship: str = None):
+    def find_related_nodes(self, source_id: str, relationship: Optional[str] = None):
         pass
 
     def add_memory(self, memory_data: dict):

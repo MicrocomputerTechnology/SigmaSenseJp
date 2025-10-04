@@ -3,7 +3,7 @@ class MildInsight:
         pass
 
     def detect_special_case(self, context: dict) -> bool:
-        pass
+        return False
 
     def introduce_temporary_member(self, party_id: str, member_type: str) -> str:
-        pass
+        return ""

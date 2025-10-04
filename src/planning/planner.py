@@ -3,7 +3,7 @@ class Planner:
         pass
 
     def generate_plan(self, goal: dict, current_state: dict) -> list[dict]:
-        pass
+        return []
 
     def evaluate_plan(self, plan: list[dict]) -> float:
-        pass
+        return 0.0

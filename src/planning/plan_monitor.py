@@ -3,10 +3,10 @@ class PlanMonitor:
         pass
 
     def monitor_plan(self, plan: list[dict]) -> dict:
-        pass
+        return {}
 
     def detect_deviation(self, plan: list[dict], current_state: dict) -> bool:
-        pass
+        return False
 
     def request_replanning(self, current_state: dict, failed_step: dict) -> list[dict]:
-        pass
+        return []

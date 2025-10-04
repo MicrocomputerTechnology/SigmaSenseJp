@@ -3,7 +3,7 @@ class MildMother:
         pass
 
     def optimize_party_formation(self, party_members: list[str]) -> list[str]:
-        pass
+        return []
 
     def intervene_party_member(self, member_id: str, intervention_type: str):
         pass

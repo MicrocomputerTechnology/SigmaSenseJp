@@ -1,11 +1,10 @@
 from .information_metrics import compute_entropy, compute_kl_divergence
 
-class ReconstructionTrigger:
-    """
-    再構成トリガーの発火条件を判定するクラス。
-    """
+from typing import Optional
 
-    def __init__(self, config: dict = None):
+class ReconstructionTrigger:
+
+    def __init__(self, config: Optional[dict] = None):
         if config is None:
             config = {}
         

@@ -3,7 +3,7 @@ class TimeConstrainedReasoner:
         pass
 
     def reason_with_time_limit(self, context: dict, time_limit_ms: int) -> dict:
-        pass
+        return {}
 
     def plan_with_time_limit(self, goal: dict, current_state: dict, time_limit_ms: int) -> list[dict]:
-        pass
+        return []

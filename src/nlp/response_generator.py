@@ -3,4 +3,4 @@ class ResponseGenerator:
         pass
 
     def generate_response(self, response_intent: dict, dialogue_state: dict) -> str:
-        pass
+        return ""

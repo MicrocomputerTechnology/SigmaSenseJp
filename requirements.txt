@@ -17,6 +17,8 @@ tf_keras
 # google-generativeai is deprecated and will be replaced by google-genai.
 google-generativeai==0.8.5
 ollama==0.5.4
+tflite-runtime
+ai-edge-litert
 
 spacy
 # Utilities

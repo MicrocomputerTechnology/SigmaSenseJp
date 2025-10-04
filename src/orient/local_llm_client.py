@@ -3,7 +3,7 @@ class LocalLLMClient:
         pass
 
     def query_text(self, prompt: str, system_prompt: str = "") -> str:
-        pass
+        return ""
 
     def query_multimodal(self, prompt_parts: list) -> str:
-        pass
+        return ""

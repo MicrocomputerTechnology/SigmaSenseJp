@@ -2,27 +2,27 @@
 
 import numpy as np
 import os
-from sigmasense.dimension_loader import DimensionLoader
-from sigmasense.information_metrics import compute_kl_similarity, compute_wasserstein_similarity, compute_self_correlation_score
+from .dimension_loader import DimensionLoader
+from .information_metrics import compute_kl_similarity, compute_wasserstein_similarity, compute_self_correlation_score
 
 # --- 旧来のコンポーネント ---
-from sigmasense.dimension_generator_local import DimensionGenerator
+from .dimension_generator_local import DimensionGenerator
 from leila.psyche_modulator import PsycheModulator
-from sigmasense.logical_pattern_suggester import LogicalPatternSuggester
-from sigmasense.contextual_override_engine import ContextualOverrideEngine
-from sigmasense.logical_expression_engine import parse_expression
+from .logical_pattern_suggester import LogicalPatternSuggester
+from .contextual_override_engine import ContextualOverrideEngine
+from .logical_expression_engine import parse_expression
 
 import uuid
 import datetime
 
 # --- 第十五次実験で導入されたコンポーネント ---
-from sigmasense.world_model import WorldModel
+from .world_model import WorldModel
 from selia.personal_memory_graph import PersonalMemoryGraph
 from hoho.symbolic_reasoner import SymbolicReasoner
 from nova.intent_justifier import IntentJustifier
 from nova.meta_narrator import MetaNarrator
-from sigmasense.causal_discovery import CausalDiscovery
-from sigmasense.temporal_reasoning import TemporalReasoning
+from .causal_discovery import CausalDiscovery
+from .temporal_reasoning import TemporalReasoning
 
 # --- 第十六次実験で導入される新しいコンポーネント（八人の誓い） ---
 from aegis.ethical_filter import EthicalFilter
@@ -57,7 +57,7 @@ class SigmaSense:
         log_dir = os.path.join(project_root, "sigma_logs")
 
         # --- 設定ローダーの初期化 ---
-        from sigmasense.config_loader import ConfigLoader
+        from .config_loader import ConfigLoader
         self.all_agent_configs = ConfigLoader(config_dir)
 
         # --- 基本的なデータベースと次元設定 ---

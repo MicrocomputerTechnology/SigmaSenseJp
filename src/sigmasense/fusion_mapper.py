@@ -1,13 +1,14 @@
 import os
 from src.sigmasense.config_loader import ConfigLoader
 
+from typing import Optional
+
 class FusionMapper:
     """
-    Generates a graph visualization of the connection between
-    neural features and logical terms.
+    Maps the relationship between logical terms and meaning vectors.
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: Optional[dict] = None):
         """
         Initializes the mapper with fusion data loaded from a config object.
 
