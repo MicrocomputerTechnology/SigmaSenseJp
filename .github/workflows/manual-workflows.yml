@@ -36,7 +36,7 @@ jobs:
       run: |
         curl -fsSL https://ollama.com/install.sh | sh
         ollama serve & # Run Ollama in background
-        sleep 5 # Give Ollama time to start
+        sleep 15 # Give Ollama time to start
         ollama pull codegemma:latest
     - name: Verify Ollama setup
       run: ollama list | grep codegemma:latest
