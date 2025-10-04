@@ -54,4 +54,4 @@ jobs:
       run: mypy src/
 
     - name: Test with pytest
-      run: PYTHONPATH=.:src pytest --cov=src --cov-report=xml
+      run: PYTHONPATH=.:src pytest -vv --cov=src --cov-report=xml
