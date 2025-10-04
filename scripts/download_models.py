@@ -101,8 +101,7 @@ def download_ejdict():
     zip_path = os.path.join(DATA_DIR, "ejdict.zip")
     db_path = os.path.join(DATA_DIR, "ejdict.sqlite3")
     extracted_dir = os.path.join(DATA_DIR, "EJDict-master")
-    final_db_path_in_zip = os.path.join(extracted_dir, "ejdict.sqlite3")
-
+    
     if os.path.exists(db_path):
         print("ejdict.sqlite3 already exists. Skipping download.")
         return
@@ -114,8 +113,20 @@ def download_ejdict():
     try:
         print(f"Extracting {zip_path}...")
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            # Print all file names in the zip
+            print("Files in zip:", zip_ref.namelist())
             zip_ref.extractall(DATA_DIR)
         print(f"Extracted to {DATA_DIR}.")
+        
+        # Print the directory structure after extraction
+        print("Directory structure after extraction:")
+        for root, dirs, files in os.walk(DATA_DIR):
+            for name in files:
+                print(os.path.join(root, name))
+            for name in dirs:
+                print(os.path.join(root, name))
+
+        final_db_path_in_zip = os.path.join(extracted_dir, "ejdict.sqlite3")
 
         if not os.path.exists(final_db_path_in_zip):
             # Fallback: Check if the structure is different (e.g., nested directory)
@@ -128,7 +139,7 @@ def download_ejdict():
                 final_db_path_in_zip = found_db
                 print(f"Found database at non-standard path: {found_db}")
             else:
-                raise FileNotFoundError(f"ejdict.sqlite3 not found in the expected directory: {final_db_path_in_zip}")
+                raise FileNotFoundError(f"ejdict.sqlite3 not found in the expected directory after extraction.")
 
         print(f"Moving {final_db_path_in_zip} to {db_path}...")
         os.rename(final_db_path_in_zip, db_path)
