@@ -130,6 +130,8 @@ jobs:
         python -c "from src.orient.orien_vision import OrienVision; print('OrienVision imported')"
         # Phase 2.2: 倫理的透明性の確保
         python -c "from src.aegis.aegis_log_manager import AegisLogManager; print('AegisLogManager imported')"
+        # Phase 2.3: 物語性の強化
+        python -c "from src.nova.meta_narrator import MetaNarrator; print('MetaNarrator imported')"
         # Phase 3: 理論モデルの構築
         python -c "from src.theory.collective_intelligence_model import CollectiveIntelligenceModel; print('CollectiveIntelligenceModel imported')"
         python -c "from src.theory.attractor_dynamics import AttractorDynamics; print('AttractorDynamics imported')"
