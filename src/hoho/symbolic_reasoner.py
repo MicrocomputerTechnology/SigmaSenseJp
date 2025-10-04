@@ -2,12 +2,9 @@
 
 import os
 import json
-import sqlite3
 import unicodedata
 import spacy
-from sudachipy import tokenizer
-from sudachipy import dictionary
-from src.sigmasense.world_model import WorldModel
+from sigmasense.world_model import WorldModel
 from .pocket_library.dictionary_service import DictionaryService
 
 def _normalize_str(s: str) -> str:
@@ -222,8 +219,8 @@ if __name__ == '__main__':
     with open(test_profile_path, 'w', encoding='utf-8') as f:
         json.dump({"graph_path": test_graph_path}, f)
     
-    # 正しいconfig_pathを使ってWorldModelを初期化
-    wm = WorldModel(config_path=test_profile_path)
+    # WorldModelを直接db_pathで初期化
+    wm = WorldModel(db_path=test_graph_path)
 
     # --- 既存のテストデータ ---
     wm.add_node('penguin', name_ja="ペンギン")

@@ -3,13 +3,11 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import json
 import multiprocessing
-import time
 import datetime
 import os
 import importlib.util
 import inspect
 from src.sigmasense.temporary_handler_base import BaseHandler
-import RestrictedPython # Add this line
 
 # --- グローバル定義 ---
 # メタ情報を英語に変換するマップ
@@ -57,8 +55,6 @@ def load_permanent_handlers(registry: dict):
 
 # --- サンドボックス実行環境の定義 (変更なし) ---
 def sandboxed_executor(handler_code: str, narrative: dict, result_queue: multiprocessing.Queue):
-    import sys
-    import os
     import inspect
     from RestrictedPython import compile_restricted, safe_builtins, Eval
     from RestrictedPython.PrintCollector import PrintCollector
@@ -80,13 +76,17 @@ def sandboxed_executor(handler_code: str, narrative: dict, result_queue: multipr
         if handler_class:
             handler_instance = handler_class()
             result = handler_instance.execute(narrative)
+            
             if '_print' in local_scope:
                 result['printed_output'] = local_scope['_print'].text
             else:
                 result['printed_output'] = ''
+            
             result_queue.put(result)
-        else: result_queue.put({"status": "error", "message": "有効なハンドラクラスが見つかりません。"})
-    except Exception as e: result_queue.put({"status": "error", "message": f"サンドボックス実行エラー: {type(e).__name__}: {e}"})
+        else:
+            result_queue.put({"status": "error", "message": "有効なハンドラクラスが見つかりません。"})
+    except Exception as e:
+        result_queue.put({"status": "error", "message": f"サンドボックス実行エラー: {type(e).__name__}: {e}"})
 
 # --- ステージ1: 処理ハンドラの登録 ---
 handler_registry = {}
@@ -108,7 +108,8 @@ def log_for_permanentization(narrative: dict, result: dict):
         with open("permanentization_log.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
         print("   - 臨時ハンドラのコードと実行結果を `permanentization_log.jsonl` に記録しました。")
-    except Exception as e: print(f"   - ログ記録エラー: {e}")
+    except Exception as e:
+        print(f"   - ログ記録エラー: {e}")
 
 # --- コアロジック: 三段階処理 ---
 def process_narrative(narrative):
@@ -133,19 +134,25 @@ def process_narrative(narrative):
     if "temporary_handler" in meta_jp:
         result_queue = multiprocessing.Queue()
         process = multiprocessing.Process(target=sandboxed_executor, args=(meta_jp["temporary_handler"], narrative, result_queue))
-        process.start(); process.join(timeout=5)
+        process.start()
+        process.join(timeout=5)
         if process.is_alive():
-            process.terminate(); process.join()
+            process.terminate()
+            process.join()
             result = {"status": "error", "message": "実行がタイムアウトしました（5秒）。"}
         else:
-            try: result = result_queue.get_nowait()
-            except multiprocessing.queues.Empty: result = {"status": "error", "message": "サンドボックスから結果が返されませんでした。"}
+            try:
+                result = result_queue.get_nowait()
+            except multiprocessing.queues.Empty:
+                result = {"status": "error", "message": "サンドボックスから結果が返されませんでした。"}
         print(f"   - 処理結果: {result}")
         if result.get('status') == 'interpreted':
             print("   - 集団心理状態 C(t) に影響を反映させます（シミュレーション）。")
             log_for_permanentization(narrative, result)
-        elif result.get('status') == 'error': print("   - エラーが発生したため、恒久化はスキップされます。")
-    else: print("   - 臨時対応コードが見つかりませんでした。")
+        elif result.get('status') == 'error':
+            print("   - エラーが発生したため、恒久化はスキップされます。")
+    else:
+        print("   - 臨時対応コードが見つかりませんでした。")
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()

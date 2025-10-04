@@ -3,6 +3,9 @@ import sys
 import os
 import spacy
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src.nova.growth_tracker import GrowthTracker
+
 # GiNZAが利用可能かどうかのフラグ
 GINZA_UNAVAILABLE = False
 try:
@@ -15,9 +18,6 @@ try:
 except (OSError, ImportError):
     print("Warning: GiNZA model not found. Skipping GiNZA-dependent tests.")
     GINZA_UNAVAILABLE = True
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.nova.growth_tracker import GrowthTracker
 
 # PersonalMemoryGraphの簡易的なモック（テスト用）
 class MockMemoryGraph:

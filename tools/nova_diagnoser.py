@@ -1,16 +1,17 @@
+import sys
+import os
 import json
 import numpy as np
 import argparse
-import os
-import sys
 
-# スクリプトのディレクトリからプロジェクトのルートディレクトリを特定し、sys.pathに追加
-script_dir = os.path.dirname(__file__)
+# Add project root to path
+script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(script_dir, '..'))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+src_path = os.path.join(project_root, 'src')
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
 
-from src.dimension_loader import DimensionLoader # 修正: クラスをインポート
+from sigmasense.dimension_loader import DimensionLoader  # noqa: E402
 
 # DimensionLoaderのインスタンスを生成
 try:
@@ -60,10 +61,7 @@ def diagnose_unrelated(log_entry):
     return diagnoses
 
 def main(log_file):
-    """
-    ログファイルを読み込み、照合不能（Unrelated）な結果を診断する。
-    """
-    print(f"🩺 Nova Diagnoser: 照合不能群の診断を開始します。")
+    print("🩺 Nova Diagnoser: 照合不能群の診断を開始します。")
     print(f"   ログファイル: {log_file}")
     print("="*70)
 

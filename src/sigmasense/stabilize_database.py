@@ -96,7 +96,7 @@ def stabilize_database(source_db_path, stabilized_db_path):
     try:
         with open(stabilized_db_path, 'w', encoding='utf-8') as f:
             json.dump(stabilized_db_data, f, indent=2, ensure_ascii=False)
-        print(f"\n✅ データベースの安定化が完了しました。")
+        print("\n✅ データベースの安定化が完了しました。")
         print(f"   新しいデータベースが {stabilized_db_path} に保存されました。")
     except IOError as e:
         print(f"\n❗ エラー: 安定化済みデータベースの書き込みに失敗しました: {e}")

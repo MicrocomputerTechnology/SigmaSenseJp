@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import os
+from typing import List
 
 os.makedirs("sigma_images", exist_ok=True)
 
@@ -24,26 +25,26 @@ cv2.imwrite("sigma_images/triangle_top.jpg", img3)
 img4 = np.ones((256, 256, 3), dtype=np.uint8) * 255
 center_x, center_y = 128, 128
 radius = 50
-pts = []
+pts_list_pentagon: List[List[int]] = []
 for i in range(5):
     angle = i * 2 * np.pi / 5 - np.pi / 2
     x = int(center_x + radius * np.cos(angle))
     y = int(center_y + radius * np.sin(angle))
-    pts.append([x, y])
-cv2.drawContours(img4, [np.array(pts)], 0, (0, 0, 0), -1)
+    pts_list_pentagon.append([x, y])
+cv2.drawContours(img4, [np.array(pts_list_pentagon)], 0, (0, 0, 0), -1)
 cv2.imwrite("sigma_images/pentagon_center.jpg", img4)
 
 # 5. 中央の六角形 (hexagon_center.jpg)
 img5 = np.ones((256, 256, 3), dtype=np.uint8) * 255
 center_x, center_y = 128, 128
 radius = 50
-pts = []
+pts_list_hexagon: List[List[int]] = []
 for i in range(6):
     angle = i * 2 * np.pi / 6
     x = int(center_x + radius * np.cos(angle))
     y = int(center_y + radius * np.sin(angle))
-    pts.append([x, y])
-cv2.drawContours(img5, [np.array(pts)], 0, (0, 0, 0), -1)
+    pts_list_hexagon.append([x, y])
+cv2.drawContours(img5, [np.array(pts_list_hexagon)], 0, (0, 0, 0), -1)
 cv2.imwrite("sigma_images/hexagon_center.jpg", img5)
 
 # 6. 5光星 (star_five.jpg)
@@ -51,14 +52,14 @@ img6 = np.ones((256, 256, 3), dtype=np.uint8) * 255
 center_x, center_y = 128, 128
 outer_radius = 60
 inner_radius = 25
-pts = []
+pts_list_star: List[List[int]] = []
 for i in range(10):
     radius = outer_radius if i % 2 == 0 else inner_radius
     angle = i * np.pi / 5 - np.pi / 2
     x = int(center_x + radius * np.cos(angle))
     y = int(center_y + radius * np.sin(angle))
-    pts.append([x, y])
-cv2.drawContours(img6, [np.array(pts)], 0, (0, 0, 0), -1)
+    pts_list_star.append([x, y])
+cv2.drawContours(img6, [np.array(pts_list_star)], 0, (0, 0, 0), -1)
 cv2.imwrite("sigma_images/star_five.jpg", img6)
 
 # 7. 垂直線 (line_vertical.jpg)
@@ -80,13 +81,13 @@ cv2.imwrite("sigma_images/circle_center_red.jpg", img9)
 img10 = np.ones((256, 256, 3), dtype=np.uint8) * 255
 center_x, center_y = 128, 128
 radius = 50
-pts = []
+pts_list_blue_pentagon: List[List[int]] = []
 for i in range(5):
     angle = i * 2 * np.pi / 5 - np.pi / 2
     x = int(center_x + radius * np.cos(angle))
     y = int(center_y + radius * np.sin(angle))
-    pts.append([x, y])
-cv2.drawContours(img10, [np.array(pts)], 0, (255, 0, 0), -1)
+    pts_list_blue_pentagon.append([x, y])
+cv2.drawContours(img10, [np.array(pts_list_blue_pentagon)], 0, (255, 0, 0), -1)
 cv2.imwrite("sigma_images/pentagon_center_blue.jpg", img10)
 
 # --- 追加の画像 ---

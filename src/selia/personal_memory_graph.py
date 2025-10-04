@@ -1,9 +1,8 @@
 # === 第十五次実験 実装ファイル (Issue #255 改修) ===
 
-import json
 import uuid
 import datetime
-from src.hoho.knowledge_store_base import KnowledgeStoreBase
+from hoho.knowledge_store_base import KnowledgeStoreBase
 
 class PersonalMemoryGraph:
     """
@@ -19,7 +18,7 @@ class PersonalMemoryGraph:
             store (KnowledgeStoreBase): データベース操作を行うための知識ストアインスタンス。
         """
         self.store = store
-        print(f"PersonalMemoryGraph: Initialized with a knowledge store.")
+        print("PersonalMemoryGraph: Initialized with a knowledge store.")
 
     def add_experience(self, experience_data):
         """

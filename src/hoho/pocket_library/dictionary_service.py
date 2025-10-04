@@ -1,7 +1,6 @@
 # Handles dictionary lookups and translation services.
 import os
 import sqlite3
-import sudachipy
 from sudachipy import tokenizer
 from sudachipy import dictionary
 import MeCab

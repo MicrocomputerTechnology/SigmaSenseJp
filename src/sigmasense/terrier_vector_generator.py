@@ -287,7 +287,7 @@ def generate_terrier_vector(img_path, dim_path=None):
             cascades_path = os.path.join(os.path.dirname(cv2.__file__), '..', '..', '..', '..', 'share', 'opencv4', 'haarcascades')
             eye_cascade_path = os.path.join(cascades_path, 'haarcascade_eye.xml')
             if not os.path.exists(eye_cascade_path):
-                 raise FileNotFoundError(f"Could not find haarcascade_eye.xml in standard paths.")
+                 raise FileNotFoundError("Could not find haarcascade_eye.xml in standard paths.")
 
         eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
 

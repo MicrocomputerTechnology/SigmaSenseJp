@@ -10,7 +10,6 @@ def compute_symmetry(contour):
     moments = cv2.moments(contour)
     if moments["m00"] == 0:
         return 0.0
-    cx = int(moments["m10"] / moments["m00"])
 
     # 重心で左右に分割して比較するのは複雑なので、
     # バウンディングボックスの縦横比の対称性で代用する

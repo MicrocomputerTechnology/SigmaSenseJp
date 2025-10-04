@@ -1,5 +1,4 @@
 import yaml
-import os
 import json
 import ollama
 import transformers

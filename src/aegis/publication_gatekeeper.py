@@ -1,3 +1,5 @@
+from typing import Optional
+
 # publication_gatekeeper.py - イージスの誓い
 
 class PublicationGatekeeper:
@@ -5,7 +7,7 @@ class PublicationGatekeeper:
     語りの公開・保存の可否を倫理的に判断する。
     語りのリスク評価と公開制御。
     """
-    def __init__(self, config: dict = None):
+    def __init__(self, config: Optional[dict] = None):
         self.config = config if config is not None else {}
 
     def check(self, narratives: dict) -> dict:

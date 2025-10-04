@@ -1,10 +1,9 @@
 # === 第十五次実験 実装ファイル ===
 
-import json
 import os
+from typing import Optional
 
-from src.selia.personal_memory_graph import PersonalMemoryGraph
-from .config_loader import ConfigLoader
+from selia.personal_memory_graph import PersonalMemoryGraph
 from collections import defaultdict
 
 class TemporalReasoning:
@@ -12,7 +11,7 @@ class TemporalReasoning:
     時系列データ（経験のログ）から、時間的な順序性やパターンを学習する。
     """
 
-    def __init__(self, memory_graph: PersonalMemoryGraph, config: dict = None):
+    def __init__(self, memory_graph: PersonalMemoryGraph, config: Optional[dict] = None):
         """
         PersonalMemoryGraphのインスタンスを受け取って初期化する。
         """
@@ -65,7 +64,7 @@ if __name__ == '__main__':
     import time
     import uuid
     import datetime
-    from src.hoho.sqlite_knowledge_store import SQLiteStore
+    from hoho.sqlite_knowledge_store import SQLiteStore
 
     print("--- TemporalReasoning Self-Test --- ")
     test_db_path = 'tr_test.sqlite'

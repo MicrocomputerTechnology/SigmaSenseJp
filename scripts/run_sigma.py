@@ -1,7 +1,6 @@
 # === 第十六次実験 実行スクリプト ===
 
 import os
-import json
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.sigmasense.sigma_database_loader import load_sigma_database
@@ -9,6 +8,8 @@ from src.sigmasense.sigma_sense import SigmaSense
 from src.selia.response_logger import ResponseLogger
 from src.sigmasense.dimension_loader import DimensionLoader
 import numpy as np
+import argparse
+import time
 
 def convert_numpy_types(obj):
     """JSONシリアライズのためにNumpyの型をPythonネイティブ型に変換する"""
@@ -23,9 +24,6 @@ def convert_numpy_types(obj):
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
     return obj
-
-import argparse
-import time
 
 # --- 定数定義 ---
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))

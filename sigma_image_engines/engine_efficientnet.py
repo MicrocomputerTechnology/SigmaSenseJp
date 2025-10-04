@@ -49,7 +49,7 @@ class EfficientNetEngine:
     def extract_features(self, image_path_or_obj):
         if not self.interpreter:
             # To avoid cluttering the log, we don't print the path/object itself
-            print(f"EfficientNet-Lite: Model not loaded. Skipping feature extraction.")
+            print("EfficientNet-Lite: Model not loaded. Skipping feature extraction.")
             return {}
 
         try:

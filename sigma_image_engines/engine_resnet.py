@@ -42,7 +42,7 @@ class ResNetEngine:
 
     def extract_features(self, image_path_or_obj):
         if not self.model:
-            print(f"ResNet: Model not loaded. Skipping feature extraction.")
+            print("ResNet: Model not loaded. Skipping feature extraction.")
             return {}
 
         try:

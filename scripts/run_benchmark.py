@@ -1,7 +1,5 @@
 import os
 import sys
-import numpy as np
-from collections import Counter
 
 # プロジェクトのルートをシステムパスに追加
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

@@ -58,7 +58,7 @@ class MobileNetV1Engine:
 
     def extract_features(self, image_path_or_obj):
         if not self.interpreter:
-            print(f"MobileNetV1: Model not loaded. Skipping feature extraction.")
+            print("MobileNetV1: Model not loaded. Skipping feature extraction.")
             return {}
 
         try:

@@ -22,7 +22,7 @@ def run_test():
     with open(dim_file, 'w', encoding='utf-8') as f:
         json.dump(initial_dims, f, indent=2)
     
-    print(f"\n[1. DimensionEditor Test]")
+    print("\n[1. DimensionEditor Test]")
     # 1. Use DimensionEditor to add a new dimension with a logical_rule
     editor = DimensionEditor(dim_file)
     new_canine_dim = {
@@ -43,11 +43,11 @@ def run_test():
         "is_wolf": False,
         "is_cat": False
     }
-    print(f"\n[2. Initial Context]")
+    print("\n[2. Initial Context]")
     print(context)
 
     # 3. Use SymbolicReasoner to infer new facts
-    print(f"\n[3. SymbolicReasoner Test]")
+    print("\n[3. SymbolicReasoner Test]")
     # Ensure the rulebase exists
     if not os.path.exists('common_sense_rulebase.json'):
         print("Error: common_sense_rulebase.json not found. Skipping reasoner test.")
@@ -62,7 +62,7 @@ def run_test():
     print(f"Updated context: {context}")
 
     # 4. Use LogicalExpressionEngine to evaluate the new dimension's rule
-    print(f"\n[4. LogicalExpressionEngine Test]")
+    print("\n[4. LogicalExpressionEngine Test]")
     canine_dim = editor.get_dimension('is_canine')
     if canine_dim and 'logical_rule' in canine_dim:
         rule_str = canine_dim['logical_rule']
@@ -77,7 +77,7 @@ def run_test():
         print("Could not find 'is_canine' dimension or its rule.")
 
     # 5. Use FusionMapper to visualize the connections
-    print(f"\n[5. FusionMapper Test]")
+    print("\n[5. FusionMapper Test]")
     mock_fusion_data = {
         "logical_terms": {
             "is_dog": {"source_engine": "engine_resnet", "feature_indices": [100]},

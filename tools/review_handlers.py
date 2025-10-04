@@ -12,6 +12,7 @@ translation_map = {
 }
 
 def review_and_permanentize(log_file_path):
+    HANDLERS_DIR = "handlers"
     """
     恒久化ログを読み込み、レビュー待ちのハンドラを対話的に処理する。
     語り・学習目標の両方のログ形式に対応。

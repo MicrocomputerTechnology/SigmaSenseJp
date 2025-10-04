@@ -1,4 +1,10 @@
-# Orient (大賢者オリエン)
+# Orien (大賢者オリエン)
+
+このディレクトリには、SigmaSenseJpのオンライン知性の中枢であるOrien関連モジュールが含まれています。
+
+## 関連設計ドキュメント
+- **[Phase 2.1: 使命の定義 - 詳細設計](../../doc/project-agi/detail-2.1.md)**
+- **[Phase 5.1: 分散集合知アーキテクチャ設計 - 詳細設計](../../doc/project-agi/detail-5.1.md)**
 
 オンライン知性の中枢。世界中のSigmaSenseの語りとスキルを統合・判断する。
 

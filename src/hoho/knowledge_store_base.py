@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 class KnowledgeStoreBase(ABC):
     """Abstract base class for a knowledge store, defining the interface."""
@@ -24,7 +25,7 @@ class KnowledgeStoreBase(ABC):
         pass
 
     @abstractmethod
-    def find_related_nodes(self, source_id: str, relationship: str = None):
+    def find_related_nodes(self, source_id: str, relationship: Optional[str] = None):
         """Finds nodes connected from a given source node."""
         pass
 

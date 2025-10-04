@@ -1,5 +1,4 @@
 import pytest
-import os
 from src.hoho.proper_noun_store import ProperNounStore
 
 @pytest.fixture

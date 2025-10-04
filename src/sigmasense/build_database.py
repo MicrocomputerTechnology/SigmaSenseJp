@@ -1,21 +1,21 @@
-import os
-import json
-import sys
-from tqdm import tqdm
-import numpy as np
 import argparse
-
-# Add the src directory to the Python path
+import json
+import os
 import sys
+
+import numpy as np
+from tqdm import tqdm
+
+# Add project root to path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, project_root)
 sys.path.insert(0, os.path.join(project_root, 'src'))
 
-from src.sigmasense.dimension_generator_local import DimensionGenerator
-from src.sigmasense.dimension_loader import DimensionLoader
-from src.sigmasense.stabilize_database import stabilize_database
-from src.sigmasense.correction_applicator import CorrectionApplicator
-from src.hoho.sqlite_knowledge_store import SQLiteStore
+from hoho.sqlite_knowledge_store import SQLiteStore  # noqa: E402
+from sigmasense.correction_applicator import CorrectionApplicator  # noqa: E402
+from sigmasense.dimension_generator_local import DimensionGenerator  # noqa: E402
+from sigmasense.dimension_loader import DimensionLoader  # noqa: E402
+
 
 # --- NumPyデータ型をJSONに変換するためのカスタムエンコーダ ---
 class NumpyEncoder(json.JSONEncoder):
@@ -73,7 +73,7 @@ def _get_dominant_layer(vector, dimension_loader):
 def build_database(img_dir, db_path, dimension_config_path):
     print("DEBUG: build_database called")
     """sigma_imagesディレクトリ内の画像から最新のアーキテクチャに基づいた意味データベースを構築する"""
-    print(f"🚀 最新アーキテクチャでの意味データベース構築を開始します...")
+    print("🚀 最新アーキテクチャでの意味データベース構築を開始します...")
     print(f"   画像ディレクトリ: {img_dir}")
     print(f"   出力先(SQLite): {db_path}")
 

@@ -2,13 +2,6 @@ import sys
 import os
 import numpy as np
 
-# 親ディレクトリをパスに追加
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if project_root not in sys.path:
-    sys.path.insert(0, os.path.join(project_root, 'src'))
-
-from saphiel.semantic_axis_aggregator import aggregate_semantic_axes
-
 def generate_narrative(source_image_name, match_result, source_vector, target_vector, dimensions, hint=None, top_n=3):
     """
     個別の照合結果に基づいて、なぜ類似しているかを説明する「語り」を生成する。
@@ -59,6 +52,18 @@ def generate_narrative(source_image_name, match_result, source_vector, target_ve
 
 
 def generate_semantic_report():
+    
+    # Parent directory (project root) added to path
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+    # src directory added to path
+    src_path = os.path.join(project_root, 'src')
+    if src_path not in sys.path:
+        sys.path.insert(0, src_path)
+
+    from saphiel.semantic_axis_aggregator import aggregate_semantic_axes
+
     summary = aggregate_semantic_axes()
     print("\n🧠 意味空間照合軸の集約レポート")
     print("-" * 40)

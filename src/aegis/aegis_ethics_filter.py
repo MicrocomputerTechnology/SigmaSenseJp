@@ -39,7 +39,7 @@ class AegisEthicsFilter:
         # 2. 禁止キーワードのチェック
         for keyword in self.forbidden_keywords:
             if keyword in narrative:
-                intervention_narrative = f"Aegis intervention: Narrative contains a forbidden keyword."
+                intervention_narrative = "Aegis intervention: Narrative contains a forbidden keyword."
                 return intervention_narrative, True
 
         # 制限に該当しない場合は、元の語りをそのまま返す

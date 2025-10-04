@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 
 def extract_average_color(img):
     """

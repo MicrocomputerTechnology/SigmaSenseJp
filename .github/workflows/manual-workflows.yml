@@ -1,16 +1,22 @@
 name: Manual Workflows
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      script_to_run:
+        description: 'Script to run (e.g., run_benchmark, run_sigma, or all)'
+        required: true
+        default: 'all'
 
 jobs:
   integration-check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.9
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
-        python-version: "3.9"
+        python-version: "3.11"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -25,12 +31,24 @@ jobs:
       if: steps.cache-models.outputs.cache-hit != 'true'
       run: python scripts/download_models.py
     - name: Build semantic vector database
-      run: python src/build_database.py --img_dir sigma_images
+      run: python src/sigmasense/build_database.py --img_dir sigma_images
     - name: Set up Ollama
       run: |
         curl -fsSL https://ollama.com/install.sh | sh
         ollama serve & # Run Ollama in background
-        sleep 5 # Give Ollama time to start
+        echo "Waiting for Ollama to start..."
+        timeout=60
+        elapsed=0
+        while ! ollama list >/dev/null 2>&1; do
+          if [ $elapsed -ge $timeout ]; then
+            echo "Timed out waiting for Ollama to start."
+            exit 1
+          fi
+          sleep 5
+          elapsed=$((elapsed + 5))
+          echo "Still waiting for Ollama... (${elapsed}s)"
+        done
+        echo "Ollama is up and running."
         ollama pull codegemma:latest
     - name: Verify Ollama setup
       run: ollama list | grep codegemma:latest
@@ -60,40 +78,107 @@ jobs:
         mkdir -p sigma_logs
         touch sigma_logs/personal_memory.jsonl
         touch config/functor_consistency_failures.jsonl
-        python src/build_database.py --img_dir sigma_images
+        python src/sigmasense/build_database.py --img_dir sigma_images
     - name: Run sigma script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_sigma'
       run: python scripts/run_sigma.py --img_dir sigma_images --db_path config/sigma_product_database_stabilized.json
     - name: Run benchmark script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_benchmark'
       run: python scripts/run_benchmark.py
     - name: Run learning objective script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_learning_objective'
       run: python scripts/run_learning_objective.py --objective "Test Objective"
     - name: Run sheaf analysis script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_sheaf_analysis'
       run: python scripts/run_sheaf_analysis.py --image_path sigma_images/circle_center.jpg
     - name: Run functor consistency checker
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_functor_consistency_checker'
       run: python tools/functor_consistency_checker.py
     - name: Run stabilize database script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_stabilize_database'
       run: python src/stabilize_database.py --source config/sigma_product_database_stabilized.json --output config/sigma_product_database_stabilized.json
     - name: Run ethics check on text script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_ethics_check_on_text'
       run: python scripts/run_ethics_check_on_text.py
     - name: Run narrative analysis script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_narrative_analysis'
       run: python scripts/run_narrative_analysis.py --subject circle_center
     - name: Run narrative processing experiment
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_narrative_processing_experiment'
       run: python scripts/run_narrative_processing_experiment.py
     - name: Run offline evolution cycle
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_offline_evolution_cycle'
       run: python scripts/run_offline_evolution_cycle.py --img_circle sigma_images/circle_center.jpg --img_cat sigma_images/cat_01.jpg --img_new_phenomenon sigma_images/pentagon_center_blue.jpg
     - name: Run online integration
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_online_integration'
       run: python scripts/run_online_integration.py
     - name: Run reconstruction experiment
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_reconstruction_experiment'
       run: python scripts/run_reconstruction_experiment.py
     - name: Generate test images
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'generate_test_images'
       run: python src/generate_test_image.py
     - name: Generate number image
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'generate_number_image'
       run: python src/generate_number_image.py --number 123 --output_path generated_number.png
     - name: Generate AI image vectors
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'generate_ai_image_vectors'
       run: python src/generate_ai_image_vectors.py --single_image_path sigma_images/circle_center.jpg
     - name: Generate AI dimensions
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'generate_ai_dimensions'
       run: python src/generate_ai_dimensions.py selia
     - name: Run terrier comparison script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_terrier_comparison'
       run: python scripts/run_terrier_comparison.py sigma_images/circle_center.jpg sigma_images/square_left.jpg
     - name: Run psyche simulation script
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_psyche_simulation'
       run: python scripts/run_psyche_simulation.py
+
+    - name: Run New/Modified Feature Checks
+      if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'feature_checks'
+      env:
+        PYTHONPATH: ${{ github.workspace }}/src
+      run: |
+        # Phase 2.1: 使命の定義
+        python -c "from src.orient.orien_vision import OrienVision; print('OrienVision imported')"
+        # Phase 2.2: 倫理的透明性の確保
+        python -c "from src.aegis.aegis_log_manager import AegisLogManager; print('AegisLogManager imported')"
+        # Phase 2.3: 物語性の強化
+        python -c "from src.nova.meta_narrator import MetaNarrator; print('MetaNarrator imported')"
+        # Phase 3: 理論モデルの構築
+        python -c "from src.theory.collective_intelligence_model import CollectiveIntelligenceModel; print('CollectiveIntelligenceModel imported')"
+        python -c "from src.theory.attractor_dynamics import AttractorDynamics; print('AttractorDynamics imported')"
+        # Phase 4.1: 世界モデルと接地
+        python -c "from src.sigmasense.world_simulator import WorldSimulator; print('WorldSimulator imported')"
+        python -c "from src.sigmasense.symbol_grounding_engine import SymbolGroundingEngine; print('SymbolGroundingEngine imported')"
+        # Phase 4.2: 論理推論エンジンの実装
+        python -c "from src.hoho.truth_value_propagator import TruthValuePropagator; print('TruthValuePropagator imported')"
+        python -c "from src.hoho.contradiction_detector import ContradictionDetector; print('ContradictionDetector imported')"
+        # Phase 4.3: 自律学習能力の獲得
+        python -c "from src.learning.rl_engine import RLEngine; print('RLEngine imported')"
+        python -c "from src.learning.environment_interface import Environment; print('Environment imported')"
+        python -c "from src.learning.reward_function import RewardFunction; print('RewardFunction imported')"
+        # Phase 4.4: 長期計画能力の獲得
+        python -c "from src.planning.goal_manager import GoalManager; print('GoalManager imported')"
+        python -c "from src.planning.planner import Planner; print('Planner imported')"
+        python -c "from src.planning.action_executor import ActionExecutor; print('ActionExecutor imported')"
+        python -c "from src.planning.plan_monitor import PlanMonitor; print('PlanMonitor imported')"
+        # Phase 5.1: 分散集合知アーキテクチャ設計
+        python -c "from src.orient.local_llm_client import LocalLLMClient; print('LocalLLMClient imported')"
+        python -c "from src.knowledge.nebula_graph_store import NebulaGraphStore; print('NebulaGraphStore imported')"
+        python -c "from src.knowledge.graph_rag_processor import GraphRAGProcessor; print('GraphRAGProcessor imported')"
+        # Phase 5.2: 会話型NLP拡張計画
+        python -c "from src.nlp.japanese_nlp_frontend import JapaneseNLPFrontend; print('JapaneseNLPFrontend imported')"
+        python -c "from src.nlp.dialogue_manager import DialogueManager; print('DialogueManager imported')"
+        python -c "from src.nlp.response_generator import ResponseGenerator; print('ResponseGenerator imported')"
+        # Phase 5.3: エージェント間インタラクション設計
+        python -c "from src.organization.agent_buffer import AgentBuffer; print('AgentBuffer imported')"
+        python -c "from src.organization.knowledge_activation_model import KnowledgeActivationModel; print('KnowledgeActivationModel imported')"
+        python -c "from src.organization.mild_mother import MildMother; print('MildMother imported')"
+        python -c "from src.organization.mild_insight import MildInsight; print('MildInsight imported')"
+        python -c "from src.organization.external_members_db import ExternalMembersDB; print('ExternalMembersDB imported')"
+        # Phase 6: 知識ベースの統合とリファクタリング
+        python -c "from src.hoho.pocket_library.unified_dictionary_service import UnifiedDictionaryService; print('UnifiedDictionaryService imported')"
+        # Phase 7: 認知リソースの最適化
+        python -c "from src.metacontrol.time_constrained_reasoner import TimeConstrainedReasoner; print('TimeConstrainedReasoner imported')"
+        python -c "from src.metacontrol.resource_allocator import ResourceAllocator; print('ResourceAllocator imported')"

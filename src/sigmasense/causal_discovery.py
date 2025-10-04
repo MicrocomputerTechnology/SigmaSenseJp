@@ -1,10 +1,10 @@
 # === 第十五次実験 実装ファイル ===
 
-import json
 import os
+from typing import Optional
 
 from .world_model import WorldModel
-from src.selia.personal_memory_graph import PersonalMemoryGraph
+from selia.personal_memory_graph import PersonalMemoryGraph
 from .config_loader import ConfigLoader
 from collections import defaultdict
 
@@ -13,7 +13,7 @@ class CausalDiscovery:
     経験から因果関係を発見し、WorldModelを自律的に成長させる。
     """
 
-    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config: dict = None):
+    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config: Optional[dict] = None):
         """
         WorldModelとPersonalMemoryGraphのインスタンスを受け取って初期化する。
         """
@@ -99,7 +99,7 @@ class CausalDiscovery:
 
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
-    from src.hoho.sqlite_knowledge_store import SQLiteStore
+    from hoho.sqlite_knowledge_store import SQLiteStore
 
     print("--- CausalDiscovery Self-Test --- ")
     # 1. モックと設定の準備

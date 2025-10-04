@@ -102,4 +102,13 @@ SigmaSenseの知的活動は、個性豊かな仲間たちとして擬人化す�
 - **[📄 GitHub Actionsワークフロー](./doc/github_actions.md)**
 - **[📄 データセットの来歴と品質保証](./doc/datasets.md)**
 
+---
+
+## 5. Hyperon超越計画 (Surpass Hyperon Plan)
+
+SigmaSenseJpが最先端AGIであるHyperonを凌駕するための、壮大な計画の設計ドキュメントです。
+
+- **[計画概要とIssueリスト](./issue/open_issues_summary.md)**
+- **[フェーズ別詳細設計ドキュメント](./doc/project-agi/)**
+
 

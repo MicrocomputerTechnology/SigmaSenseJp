@@ -1,12 +1,7 @@
-
-import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 import numpy as np
 import cv2
-import json
-import time
-from PIL import Image
+import yaml
 from sigma_image_engines.engine_opencv_legacy import LegacyOpenCVEngine
 from sigma_image_engines.engine_mobilenet import MobileNetV1Engine
 from sigma_image_engines.engine_mobilevit import MobileViTEngine
@@ -67,7 +62,7 @@ class DimensionGenerator:
                         provenance[feature_key] = engine_name
                     print(f"  -> Extracted {len(features)} features.")
                 else:
-                    print(f"  -> No features extracted.")
+                    print("  -> No features extracted.")
                 
                 # Store engine metadata
                 engine_info[engine_name] = {"model": getattr(engine, 'model_path', 'N/A')}
@@ -157,7 +152,7 @@ if __name__ == '__main__':
         os.makedirs("sigma_images")
     
     image = np.zeros((200, 200, 3), dtype=np.uint8)
-    image = cv2.circle(image, (100, 100), 50, (255, 100, 50), -1)
+    image = cv2.circle(image, (100, 100), 50, (255, 100, 50), -1).astype(np.uint8)
     cv2.imwrite(test_image, image)
 
     if not os.path.exists(test_image):

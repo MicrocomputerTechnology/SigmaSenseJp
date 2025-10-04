@@ -41,7 +41,7 @@ class MobileViTEngine:
 
     def extract_features(self, image_path_or_obj):
         if not self.model:
-            print(f"MobileViT: Model not loaded. Skipping feature extraction.")
+            print("MobileViT: Model not loaded. Skipping feature extraction.")
             return {}
 
         try:

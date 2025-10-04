@@ -1,18 +1,16 @@
 # === 第十五次実験 実装ファイル ===
 
-from src.selia.personal_memory_graph import PersonalMemoryGraph
+from selia.personal_memory_graph import PersonalMemoryGraph
 from src.sigmasense.config_loader import ConfigLoader
 from collections import defaultdict
 
-import json
 import os
 
+from typing import Optional
+
 class MetaNarrator:
-    """
-    PersonalMemoryGraphに記録された過去の経験を俯瞰し、
-    「私はどのように学習し、成長してきたか」というメタ的な語りを生成する。
-    """
-    def __init__(self, config: dict = None):
+
+    def __init__(self, config: Optional[dict] = None):
         if config is None:
             config = {}
         
@@ -64,7 +62,6 @@ class MetaNarrator:
 
                 # 心理状態が「混乱」から「穏やか」などに変化した場合を「学習」と見なす
                 learning_from_state = self.learning_state_transition.get("from", "confused")
-                learning_to_state = self.learning_state_transition.get("to", "calm") # 現在は使わないが、将来的な拡張のため
 
                 if first_psyche == learning_from_state and last_psyche != learning_from_state:
                     story = self.narrative_templates.get("learning_story", "").format(

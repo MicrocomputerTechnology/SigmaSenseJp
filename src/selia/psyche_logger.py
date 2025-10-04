@@ -1,9 +1,6 @@
-
+from typing import Optional
 import json
 import random
-import os
-
-import json
 import os
 
 def print_header(title):
@@ -11,17 +8,11 @@ def print_header(title):
     print(f"\n{bar}\n=== {title.upper()} ===\n{bar}")
 
 class PsycheLogger:
-    """
-    Simulates and logs the emotional states (E), coherence (I), and
-    divergence (R) of the Octa agents over time.
-    This serves as the input data generator for the Toyokawa Model.
-    """
-
-    def __init__(self, config: dict = None, output_path: str = None):
+    def __init__(self, config: Optional[dict] = None, output_path: Optional[str] = None):
         if config is None:
             config = {}
 
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
         log_dir = os.path.join(project_root, "sigma_logs")
         
         self.output_path = output_path or os.path.join(log_dir, "psyche_log.jsonl")
@@ -63,7 +54,8 @@ class PsycheLogger:
                 for agent in self.agents:
                     base = self.base_emotions[agent]
                     fluctuation = random.uniform(self.fluctuation_range["min"], self.fluctuation_range["max"])
-                    if agent in ["nova", "lyra"]: fluctuation *= self.fluctuation_multiplier_volatile_agents
+                    if agent in ["nova", "lyra"]:
+                        fluctuation *= self.fluctuation_multiplier_volatile_agents
                     emotions[f"E_{agent}"] = round(max(0, min(1, base + fluctuation)), 4)
                 log_entry.update(emotions)
 

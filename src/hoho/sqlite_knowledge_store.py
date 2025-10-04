@@ -2,7 +2,8 @@ import sqlite3
 import json
 import os
 from datetime import datetime, UTC
-from src.hoho.knowledge_store_base import KnowledgeStoreBase
+from typing import Optional
+from hoho.knowledge_store_base import KnowledgeStoreBase
 
 class SQLiteStore(KnowledgeStoreBase):
     """SQLite-backed implementation of the KnowledgeStore."""
@@ -112,7 +113,7 @@ class SQLiteStore(KnowledgeStoreBase):
         ''', (source_id, target_id, relationship, weight, confidence, provenance, last_updated))
         self.connection.commit()
 
-    def find_related_nodes(self, source_id: str, relationship: str = None):
+    def find_related_nodes(self, source_id: str, relationship: Optional[str] = None):
         cursor = self.connection.cursor()
         query = """
             SELECT e.target_id, n.attributes, e.relationship, e.weight, e.confidence, e.provenance

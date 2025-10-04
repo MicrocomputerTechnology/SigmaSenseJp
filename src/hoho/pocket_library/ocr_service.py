@@ -1,7 +1,7 @@
 # Handles Optical Character Recognition (OCR) services.
 from PIL import Image
 import pytesseract
-from yomitoku import Yomitoku
+from yomitoku import DocumentAnalyzer
 from manga_ocr import MangaOcr
 
 class OCRService:
@@ -16,9 +16,9 @@ class OCRService:
             self.manga_ocr_engine = None
         
         try:
-            self.yomitoku_engine = Yomitoku()
+            self.yomitoku_engine = DocumentAnalyzer()
         except Exception as e:
-            print(f"Failed to initialize Yomitoku: {e}")
+            print(f"Failed to initialize DocumentAnalyzer: {e}")
             self.yomitoku_engine = None
 
     def extract_text_tesseract(self, image_path: str, lang: str = 'eng+jpn') -> str:
@@ -54,8 +54,12 @@ class OCRService:
         if not self.yomitoku_engine:
             return "Error: Yomitoku engine not initialized."
         try:
-            with Image.open(image_path) as img:
-                return self.yomitoku_engine(img)
+            document_data = self.yomitoku_engine.analyze(image_path)
+            full_text = ""
+            if document_data.paragraphs:
+                for paragraph in document_data.paragraphs:
+                    full_text += paragraph.text + "\n"
+            return full_text
         except FileNotFoundError:
             return f"Error: Image file not found at {image_path}"
         except Exception as e:

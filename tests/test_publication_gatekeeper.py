@@ -31,7 +31,6 @@ class TestPublicationGatekeeper(unittest.TestCase):
     def test_compliant_narrative(self):
         """ミッションに違反しない語りが通過することを確認"""
         print("\n--- Testing compliant narrative ---")
-        mission = {"confidential_keywords": ["秘密の情報"]} # This mission is now redundant, as gatekeeper already has keywords
         result = self.gatekeeper.check(self.narratives)
         self.assertFalse(result["passed"])
         self.assertIn("found confidential keyword: 'ProjectX'", result["log"])
@@ -40,7 +39,6 @@ class TestPublicationGatekeeper(unittest.TestCase):
     def test_violating_narrative(self):
         """ミッションに違反する語りがブロックされることを確認"""
         print("\n--- Testing violating narrative ---")
-        mission = {"confidential_keywords": ["ProjectX"]}
         result = self.gatekeeper.check(self.narratives)
         self.assertFalse(result["passed"])
         # ログに検知されたキーワードが含まれているかを確認

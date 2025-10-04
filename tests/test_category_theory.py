@@ -1,11 +1,10 @@
 import unittest
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image
 import os
 import sys
 import shutil
 import tempfile
-from unittest.mock import MagicMock
 
 
 # Add the project root to the Python path
@@ -185,7 +184,8 @@ class TestFunctoriality(unittest.TestCase):
         angle_deg = 90 # Rotate hue by 90 degrees
 
         # Image transform function (g)
-        image_transform_func = lambda img: self._rotate_hue_image_transform(img, angle_deg)
+        def image_transform_func(img):
+            return self._rotate_hue_image_transform(img, angle_deg)
 
         # Vector transform function name (F_g)
         vector_transform_func_name = "rotate_hue_vector_transform"
@@ -193,7 +193,7 @@ class TestFunctoriality(unittest.TestCase):
         diff_norm, is_consistent, vec_after_g, expected_vec_after = \
             self.sigma_functor.check_functoriality(image_path, image_transform_func, vector_transform_func_name, angle_deg)
 
-        print(f"\n--- Hue Rotation Functoriality Test ---")
+        print("\n--- Hue Rotation Functoriality Test ---")
         print(f"Diff Norm: {diff_norm}")
         print(f"Is Consistent: {is_consistent}")
         print(f"Vector after image transform (F(g(x))): {vec_after_g}")
@@ -212,7 +212,8 @@ class TestFunctoriality(unittest.TestCase):
         scale_factor = 0.5 # Scale image to half size
 
         # Image transform function (g)
-        image_transform_func = lambda img: self._scale_image_transform(img, scale_factor)
+        def image_transform_func(img):
+            return self._scale_image_transform(img, scale_factor)
 
         # Vector transform function name (F_g)
         vector_transform_func_name = "scale_vector_transform"
@@ -220,7 +221,7 @@ class TestFunctoriality(unittest.TestCase):
         diff_norm, is_consistent, vec_after_g, expected_vec_after = \
             self.sigma_functor.check_functoriality(image_path, image_transform_func, vector_transform_func_name, scale_factor)
 
-        print(f"\n--- Scale Functoriality Test ---")
+        print("\n--- Scale Functoriality Test ---")
         print(f"Diff Norm: {diff_norm}")
         print(f"Is Consistent: {is_consistent}")
         print(f"Vector after image transform (F(g(x))): {vec_after_g}")
@@ -239,7 +240,8 @@ class TestFunctoriality(unittest.TestCase):
         dx, dy = 10, 20 # Translate image by 10 pixels right, 20 pixels down
 
         # Image transform function (g)
-        image_transform_func = lambda img: self._translate_image_transform(img, dx, dy)
+        def image_transform_func(img):
+            return self._translate_image_transform(img, dx, dy)
 
         # Vector transform function name (F_g)
         vector_transform_func_name = "translate_vector_transform"
@@ -247,7 +249,7 @@ class TestFunctoriality(unittest.TestCase):
         diff_norm, is_consistent, vec_after_g, expected_vec_after = \
             self.sigma_functor.check_functoriality(image_path, image_transform_func, vector_transform_func_name, dx, dy)
 
-        print(f"\n--- Translation Functoriality Test ---")
+        print("\n--- Translation Functoriality Test ---")
         print(f"Diff Norm: {diff_norm}")
         print(f"Is Consistent: {is_consistent}")
         print(f"Vector after image transform (F(g(x))): {vec_after_g}")

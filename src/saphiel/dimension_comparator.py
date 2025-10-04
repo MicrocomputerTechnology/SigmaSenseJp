@@ -1,8 +1,9 @@
+from typing import Optional
 import yaml
 import json
 import os
 from difflib import SequenceMatcher
-from src.config_loader import ConfigLoader
+from sigmasense.config_loader import ConfigLoader
 
 def print_header(title):
     bar = "="*60
@@ -14,7 +15,7 @@ class DimensionComparator:
     Orien (online/Gemini) and recommends integration actions.
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: Optional[dict] = None):
         print_header("Initializing Dimension Comparator")
         if config is None:
             config = {}
@@ -145,7 +146,7 @@ if __name__ == '__main__':
     OUTPUT_PATH = os.path.join(config_dir, "vector_dimensions_custom_ai_integrated.json")
 
     if not comparator_config:
-        print(f"ERROR: Dimension Comparator config 'dimension_comparator_profile.json' not found.")
+        print("ERROR: Dimension Comparator config 'dimension_comparator_profile.json' not found.")
         print("Please ensure the config file exists.")
     else:
         comparator = DimensionComparator(config=comparator_config)

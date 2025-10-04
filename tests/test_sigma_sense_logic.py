@@ -1,20 +1,9 @@
 import unittest
 import numpy as np
-import os
 from unittest.mock import MagicMock
 import cv2
-
-import sys
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, project_root)
-sys.path.insert(0, os.path.join(project_root, 'src'))
-sys.path.insert(0, os.path.join(project_root, 'sigma_image_engines'))# Set the dimension loader to use our test file BEFORE importing sigma_sense
-os.environ['DIMENSION_FILE_PATH'] = 'config/vector_dimensions_test_logic.json'
-from src.sigmasense.sigma_sense import SigmaSense
-from src.sigmasense.dimension_loader import DimensionLoader
-from engine_opencv import OpenCVEngine
-
-from src.sigmasense.world_model import WorldModel
+import os
+from sigma_image_engines.engine_opencv import OpenCVEngine
 
 class TestSigmaSenseLogicIntegration(unittest.TestCase):
 
@@ -113,4 +102,17 @@ class TestProbabilisticImageComparison(unittest.TestCase):
         self.assertLess(results["h_hist_wasserstein_distance"], 5.0, "Wasserstein distance for similar hues should be low.")
 
 if __name__ == '__main__':
+    import os
+    import sys
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.insert(0, project_root)
+    sys.path.insert(0, os.path.join(project_root, 'src'))
+    sys.path.insert(0, os.path.join(project_root, 'sigma_image_engines'))
+
+    os.environ['DIMENSION_FILE_PATH'] = 'config/vector_dimensions_test_logic.json'
+    from src.sigmasense.sigma_sense import SigmaSense
+    from src.sigmasense.dimension_loader import DimensionLoader
+    from engine_opencv import OpenCVEngine
+
+    from src.sigmasense.world_model import WorldModel
     unittest.main()

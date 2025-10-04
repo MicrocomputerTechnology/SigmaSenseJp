@@ -70,7 +70,7 @@ def build_knowledge_store():
 
     # 6. 完了
     store.close()
-    print(f"--- Knowledge Store build complete. ---")
+    print("--- Knowledge Store build complete. ---")
 
 if __name__ == '__main__':
     build_knowledge_store()

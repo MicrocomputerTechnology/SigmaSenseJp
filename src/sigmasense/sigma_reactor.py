@@ -1,6 +1,5 @@
+from typing import Optional
 
-import json
-import os
 
 def print_header(title):
     bar = "="*60
@@ -12,7 +11,7 @@ class SigmaReactor:
     group psychological state C(t) calculated by the Toyokawa Model.
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: Optional[dict] = None):
         print_header("Initializing Sigma Reactor")
         if config is None:
             config = {}

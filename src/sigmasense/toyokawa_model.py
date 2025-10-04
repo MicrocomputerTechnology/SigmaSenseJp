@@ -1,3 +1,4 @@
+from typing import Optional
 
 import json
 import os
@@ -13,7 +14,7 @@ class ToyokawaModel:
     C(t) = Σₗ αₗ × Eₗ(t) + β × I(t) + γ × R(t)
     """
 
-    def __init__(self, config: dict = None, log_path: str = None):
+    def __init__(self, config: Optional[dict] = None, log_path: Optional[str] = None):
         print_header("Initializing Toyokawa Model")
         if config is None:
             config = {}

@@ -1,6 +1,4 @@
-
-import json
-import os
+from typing import Optional, Dict, Tuple
 
 import numpy as np
 from PIL import Image
@@ -10,8 +8,9 @@ class SheafAnalyzer:
     """
     画像に層理論の考え方を適用し、局所的な特徴の整合性を検証するクラス。
     """
+    local_data: Dict[Tuple[int, int, int, int], np.ndarray]
 
-    def __init__(self, image_path, sigma_instance, config: dict = None):
+    def __init__(self, image_path, sigma_instance, config: Optional[dict] = None):
         """
         Args:
             image_path (str): 分析対象の画像ファイルパス。

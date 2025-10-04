@@ -1,7 +1,6 @@
 import cv2
 import json
 import multiprocessing
-import time
 import datetime
 import os
 import importlib.util
@@ -12,7 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.sigmasense.config_loader import ConfigLoader
 
 from src.vetra.vetra_llm_core import VetraLLMCore # ヴェトラ先生の頭脳をインポート
-import RestrictedPython # Add this line
+from src.sigmasense.temporary_handler_base import BaseHandler
 
 # --- グローバル定義 ---
 translation_map = {
@@ -192,9 +191,13 @@ else:
 def process_learning_objective(objective: dict):
     print(f"\n--- 学習目標処理開始: {objective['title']} ---")
     mode = objective.get("mode")
-    if mode == "オリエン": print("🧠 オリエンモード（オンライン）が選択されました。")
-    elif mode == "ヴェトラ": print("💡 ヴェトラモード（オフライン）が選択されました。")
-    else: print(f"⚠️ 不明なモードです: {mode}"); return
+    if mode == "オリエン":
+        print("🧠 オリエンモード（オンライン）が選択されました。")
+    elif mode == "ヴェトラ":
+        print("💡 ヴェトラモード（オフライン）が選択されました。")
+    else:
+        print(f"⚠️ 不明なモードです: {mode}")
+        return
 
     handler_key = translation_map.get(objective['title'])
 
@@ -225,7 +228,7 @@ def process_learning_objective(objective: dict):
         
         generated_code = vetra.generate_handler_code(task_description)
         if generated_code.startswith("エラー:"):
-            print(f"  - 失敗: コード生成中にエラーが発生しました。")
+            print("  - 失敗: コード生成中にエラーが発生しました。")
             print("--------------------------------------------------")
             # エラーメッセージを整形して表示
             error_lines = generated_code.split('\n')
@@ -253,13 +256,17 @@ def process_learning_objective(objective: dict):
     if handler_code:
         result_queue = multiprocessing.Queue()
         process = multiprocessing.Process(target=sandboxed_executor, args=(handler_code, objective, result_queue))
-        process.start(); process.join(timeout=15)
+        process.start()
+        process.join(timeout=15)
         if process.is_alive():
-            process.terminate(); process.join()
+            process.terminate()
+            process.join()
             result = {"status": "error", "message": "実行がタイムアウトしました（15秒）。"}
         else:
-            try: result = result_queue.get_nowait()
-            except multiprocessing.queues.Empty: result = {"status": "error", "message": "サンドボックスから結果が返されませんでした。"}
+            try:
+                result = result_queue.get_nowait()
+            except multiprocessing.queues.Empty:
+                result = {"status": "error", "message": "サンドボックスから結果が返されませんでした。"}
         
         print(f"  - 処理結果: {result}")
         

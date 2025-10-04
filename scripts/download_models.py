@@ -4,7 +4,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import zipfile
 import requests
-import urllib.request
+
 
 # --- Configuration ---
 MODEL_DIR = "models"
@@ -26,7 +26,6 @@ MOBILEVIT_ZIP_URL = "https://itb.co.jp/wp-content/uploads/mobilevit-tensorflow2-
 MOBILEVIT_DIR_NAME = "mobilevit-tensorflow2-xxs-1k-256-v1"
 
 # Dictionaries
-EJDICT_URL = "https://github.com/kujirahand/EJDict/archive/refs/heads/master.zip"
 WNJPN_URL = "https://github.com/bond-lab/wnja/releases/download/v1.1/wnjpn.db.gz"
 
 # --- Helper Functions ---
@@ -96,34 +95,26 @@ def download_mobilevit_model():
         print(f"{MOBILEVIT_DIR_NAME} already exists. Skipping.")
 
 def download_ejdict():
-    """Downloads and extracts the EJDict-hand database."""
+    """Downloads the EJDict-hand database directly as a sqlite3 file."""
     print("\n--- Downloading EJDict-hand ---")
-    zip_path = os.path.join(DATA_DIR, "ejdict.zip")
     db_path = os.path.join(DATA_DIR, "ejdict.sqlite3")
-    extracted_dir = os.path.join(DATA_DIR, "EJDict-master")
-
+    
     if os.path.exists(db_path):
         print("ejdict.sqlite3 already exists. Skipping download.")
         return
 
-    try:
-        print(f"Downloading {EJDICT_URL}...")
-        urllib.request.urlretrieve(EJDICT_URL, zip_path)
-        print("Download complete. Extracting...")
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(DATA_DIR)
-        
-        source_db = os.path.join(extracted_dir, "ejdict.sqlite3")
-        if os.path.exists(source_db):
-            os.rename(source_db, db_path)
-            print("Successfully moved ejdict.sqlite3.")
-        
-        os.remove(zip_path)
-        subprocess.run(["rm", "-rf", extracted_dir], check=True)
-        print("Cleaned up temporary files.")
+    # This URL provides the pre-converted sqlite3 file
+    ejdict_sqlite_url = "https://kujirahand.com/web-tools/EJDictFreeDL.php?key=e924bf30fe04fdf45dac553182e525a5&type=1"
 
-    except Exception as e:
-        print(f"Failed to download or process EJDict-hand: {e}")
+    print(f"Downloading ejdict.sqlite3 from {ejdict_sqlite_url}...")
+    if not download_file(ejdict_sqlite_url, db_path):
+        raise RuntimeError("Failed to download ejdict.sqlite3 file.")
+    
+    if os.path.exists(db_path):
+        print("Successfully installed ejdict.sqlite3.")
+    else:
+        raise FileNotFoundError("ejdict.sqlite3 not found after download.")
+
 
 def download_wnjpn():
     """Downloads and extracts the Japanese WordNet database."""

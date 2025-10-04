@@ -3,20 +3,20 @@
 import sys
 import os
 
-# 親ディレクトリ（プロジェクトルート）をパスに追加
-script_dir = os.path.dirname(__file__)
-project_root = os.path.abspath(os.path.join(script_dir, '..'))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-# srcディレクトリをパスに追加
-src_path = os.path.join(project_root, 'src')
-if src_path not in sys.path:
-    sys.path.insert(0, src_path)
-
-from src.sigmasense.critical_structure_mapper import map_critical_structure
-from src.sigmasense.config_loader import ConfigLoader
-
 def generate_critical_report():
+    from src.sigmasense.critical_structure_mapper import map_critical_structure
+    from src.sigmasense.config_loader import ConfigLoader
+
+    # Parent directory (project root) added to path
+    script_dir = os.path.dirname(__file__)
+    project_root = os.path.abspath(os.path.join(script_dir, '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+    # src directory added to path
+    src_path = os.path.join(project_root, 'src')
+    if src_path not in sys.path:
+        sys.path.insert(0, src_path)
+
     config_loader = ConfigLoader(os.path.join(project_root, 'config'))
     cs_config = config_loader.get_config('critical_structure_mapper_profile')
     if not cs_config:
