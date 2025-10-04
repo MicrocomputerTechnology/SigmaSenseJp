@@ -1,19 +1,20 @@
-import os
-import json
-import sys
-from tqdm import tqdm
-import numpy as np
 import argparse
-from src.sigmasense.dimension_generator_local import DimensionGenerator
-from src.sigmasense.dimension_loader import DimensionLoader
-from src.sigmasense.correction_applicator import CorrectionApplicator
-from src.hoho.sqlite_knowledge_store import SQLiteStore
+import json
+import os
+import sys
+
+import numpy as np
+from tqdm import tqdm
 
 # Add project root to path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, project_root)
-# This is a new addition to fix the path for subsequent imports
 sys.path.insert(0, os.path.join(project_root, 'src'))
+
+from src.hoho.sqlite_knowledge_store import SQLiteStore  # noqa: E402
+from src.sigmasense.correction_applicator import CorrectionApplicator  # noqa: E402
+from src.sigmasense.dimension_generator_local import DimensionGenerator  # noqa: E402
+from src.sigmasense.dimension_loader import DimensionLoader  # noqa: E402
 
 
 # --- NumPyデータ型をJSONに変換するためのカスタムエンコーダ ---
