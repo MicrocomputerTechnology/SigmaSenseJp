@@ -31,7 +31,7 @@ jobs:
       if: steps.cache-models.outputs.cache-hit != 'true'
       run: python scripts/download_models.py
     - name: Build semantic vector database
-      run: python src/build_database.py --img_dir sigma_images
+      run: python src/sigmasense/build_database.py --img_dir sigma_images
     - name: Set up Ollama
       run: |
         curl -fsSL https://ollama.com/install.sh | sh
@@ -66,7 +66,7 @@ jobs:
         mkdir -p sigma_logs
         touch sigma_logs/personal_memory.jsonl
         touch config/functor_consistency_failures.jsonl
-        python src/build_database.py --img_dir sigma_images
+        python src/sigmasense/build_database.py --img_dir sigma_images
     - name: Run sigma script
       if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'run_sigma'
       run: python scripts/run_sigma.py --img_dir sigma_images --db_path config/sigma_product_database_stabilized.json
