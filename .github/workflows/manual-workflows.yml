@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.9
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
-        python-version: "3.9"
+        python-version: "3.11"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -124,6 +124,8 @@ jobs:
 
     - name: Run New/Modified Feature Checks
       if: github.event.inputs.script_to_run == 'all' || github.event.inputs.script_to_run == 'feature_checks'
+      env:
+        PYTHONPATH: ${{ github.workspace }}/src
       run: |
         # Phase 2.1: 使命の定義
         python -c "from src.orient.orien_vision import OrienVision; print('OrienVision imported')"
