@@ -1,6 +1,7 @@
 # === 第十五次実験 実装ファイル ===
 
 import os
+from typing import Optional
 
 from .world_model import WorldModel
 from selia.personal_memory_graph import PersonalMemoryGraph
@@ -12,7 +13,7 @@ class CausalDiscovery:
     経験から因果関係を発見し、WorldModelを自律的に成長させる。
     """
 
-    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config: dict = None):
+    def __init__(self, world_model: WorldModel, memory_graph: PersonalMemoryGraph, config: Optional[dict] = None):
         """
         WorldModelとPersonalMemoryGraphのインスタンスを受け取って初期化する。
         """

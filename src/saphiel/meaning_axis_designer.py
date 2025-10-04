@@ -3,6 +3,7 @@ from typing import Optional
 # meaning_axis_designer.py - サフィールの誓い
 
 import spacy
+from spacy.language import Language
 
 class MeaningAxisDesigner:
     """
@@ -14,7 +15,7 @@ class MeaningAxisDesigner:
         self.balance_threshold = self.config.get("balance_threshold", 3)
         # GiNZAモデルのロード。初回は時間がかかる場合がある。
         try:
-            self.nlp = spacy.load('ja_ginza')
+            self.nlp: Optional[Language] = spacy.load('ja_ginza')
             print("MeaningAxisDesigner: GiNZA model loaded successfully.")
         except OSError:
             print("MeaningAxisDesigner: GiNZA model not found. Please run 'python -m spacy download ja_ginza'")

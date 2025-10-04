@@ -152,7 +152,7 @@ if __name__ == '__main__':
         os.makedirs("sigma_images")
     
     image = np.zeros((200, 200, 3), dtype=np.uint8)
-    image = cv2.circle(image, (100, 100), 50, (255, 100, 50), -1)
+    image = cv2.circle(image, (100, 100), 50, (255, 100, 50), -1).astype(np.uint8)
     cv2.imwrite(test_image, image)
 
     if not os.path.exists(test_image):
