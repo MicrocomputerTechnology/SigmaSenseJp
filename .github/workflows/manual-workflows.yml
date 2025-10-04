@@ -36,7 +36,19 @@ jobs:
       run: |
         curl -fsSL https://ollama.com/install.sh | sh
         ollama serve & # Run Ollama in background
-        sleep 15 # Give Ollama time to start
+        echo "Waiting for Ollama to start..."
+        timeout=60
+        elapsed=0
+        while ! ollama list >/dev/null 2>&1; do
+          if [ $elapsed -ge $timeout ]; then
+            echo "Timed out waiting for Ollama to start."
+            exit 1
+          fi
+          sleep 5
+          elapsed=$((elapsed + 5))
+          echo "Still waiting for Ollama... (${elapsed}s)"
+        done
+        echo "Ollama is up and running."
         ollama pull codegemma:latest
     - name: Verify Ollama setup
       run: ollama list | grep codegemma:latest
