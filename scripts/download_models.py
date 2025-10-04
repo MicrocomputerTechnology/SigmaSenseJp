@@ -4,7 +4,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import zipfile
 import requests
-import urllib.request
+import shutil
 
 # --- Configuration ---
 MODEL_DIR = "models"
@@ -96,34 +96,62 @@ def download_mobilevit_model():
         print(f"{MOBILEVIT_DIR_NAME} already exists. Skipping.")
 
 def download_ejdict():
-    """Downloads and extracts the EJDict-hand database."""
+    """Downloads and extracts the EJDict-hand database with robust error handling."""
     print("\n--- Downloading EJDict-hand ---")
     zip_path = os.path.join(DATA_DIR, "ejdict.zip")
     db_path = os.path.join(DATA_DIR, "ejdict.sqlite3")
     extracted_dir = os.path.join(DATA_DIR, "EJDict-master")
+    final_db_path_in_zip = os.path.join(extracted_dir, "ejdict.sqlite3")
 
     if os.path.exists(db_path):
         print("ejdict.sqlite3 already exists. Skipping download.")
         return
 
+    print(f"Downloading {EJDICT_URL} to {zip_path}...")
+    if not download_file(EJDICT_URL, zip_path):
+        raise RuntimeError("Failed to download EJDict-hand zip file.")
+
     try:
-        print(f"Downloading {EJDICT_URL}...")
-        urllib.request.urlretrieve(EJDICT_URL, zip_path)
-        print("Download complete. Extracting...")
+        print(f"Extracting {zip_path}...")
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(DATA_DIR)
+        print(f"Extracted to {DATA_DIR}.")
+
+        if not os.path.exists(final_db_path_in_zip):
+            # Fallback: Check if the structure is different (e.g., nested directory)
+            found_db = None
+            for root, _, files in os.walk(extracted_dir):
+                if "ejdict.sqlite3" in files:
+                    found_db = os.path.join(root, "ejdict.sqlite3")
+                    break
+            if found_db:
+                final_db_path_in_zip = found_db
+                print(f"Found database at non-standard path: {found_db}")
+            else:
+                raise FileNotFoundError(f"ejdict.sqlite3 not found in the expected directory: {final_db_path_in_zip}")
+
+        print(f"Moving {final_db_path_in_zip} to {db_path}...")
+        os.rename(final_db_path_in_zip, db_path)
+
+        if not os.path.exists(db_path):
+            raise FileNotFoundError(f"Failed to move database to {db_path}")
         
-        source_db = os.path.join(extracted_dir, "ejdict.sqlite3")
-        if os.path.exists(source_db):
-            os.rename(source_db, db_path)
-            print("Successfully moved ejdict.sqlite3.")
-        
-        os.remove(zip_path)
-        subprocess.run(["rm", "-rf", extracted_dir], check=True)
-        print("Cleaned up temporary files.")
+        print("Successfully installed ejdict.sqlite3.")
 
     except Exception as e:
-        print(f"Failed to download or process EJDict-hand: {e}")
+        print(f"An error occurred during EJDict-hand processing: {e}")
+        # Raise the exception to ensure CI fails if something goes wrong.
+        raise
+    finally:
+        # Cleanup
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+            print(f"Removed temporary file: {zip_path}")
+        if os.path.exists(extracted_dir):
+            # Use shutil for robust directory removal
+            shutil.rmtree(extracted_dir)
+            print(f"Removed temporary directory: {extracted_dir}")
+
 
 def download_wnjpn():
     """Downloads and extracts the Japanese WordNet database."""

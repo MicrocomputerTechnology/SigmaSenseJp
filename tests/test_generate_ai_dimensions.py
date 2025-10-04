@@ -1,6 +1,8 @@
 import unittest
 import json
 from unittest.mock import patch
+import os
+from src.sigmasense.generate_ai_dimensions import generate_dimensions_with_algorithms
 
 class TestGenerateAiDimensions(unittest.TestCase):
 

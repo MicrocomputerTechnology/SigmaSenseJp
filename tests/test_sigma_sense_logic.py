@@ -2,6 +2,8 @@ import unittest
 import numpy as np
 from unittest.mock import MagicMock
 import cv2
+import os
+from sigma_image_engines.engine_opencv import OpenCVEngine
 
 class TestSigmaSenseLogicIntegration(unittest.TestCase):
 
