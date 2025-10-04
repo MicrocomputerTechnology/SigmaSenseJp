@@ -39,3 +39,4 @@ astropy
 pytesseract
 yomitoku
 manga-ocr
+types-PyYAML
