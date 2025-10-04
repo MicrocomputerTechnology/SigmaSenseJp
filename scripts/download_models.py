@@ -113,36 +113,29 @@ def download_ejdict():
     try:
         print(f"Extracting {zip_path}...")
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            # Print all file names in the zip
-            print("Files in zip:", zip_ref.namelist())
             zip_ref.extractall(DATA_DIR)
         print(f"Extracted to {DATA_DIR}.")
+
+        # Generate sqlite3 from text files
+        php_script_path = os.path.join(extracted_dir, "tools", "tosqlite.php")
+        if not os.path.exists(php_script_path):
+            raise FileNotFoundError(f"tosqlite.php not found at {php_script_path}")
+
+        print(f"Running tosqlite.php to generate database...")
+        # The script expects to be run from its directory
+        result = subprocess.run(["php", "tosqlite.php"], cwd=os.path.join(extracted_dir, "tools"), capture_output=True, text=True)
         
-        # Print the directory structure after extraction
-        print("Directory structure after extraction:")
-        for root, dirs, files in os.walk(DATA_DIR):
-            for name in files:
-                print(os.path.join(root, name))
-            for name in dirs:
-                print(os.path.join(root, name))
+        if result.returncode != 0:
+            print("PHP script stdout:", result.stdout)
+            print("PHP script stderr:", result.stderr)
+            raise RuntimeError("Failed to generate ejdict.sqlite3 using tosqlite.php")
 
-        final_db_path_in_zip = os.path.join(extracted_dir, "ejdict.sqlite3")
+        generated_db_path = os.path.join(extracted_dir, "tools", "ejdict.sqlite3")
+        if not os.path.exists(generated_db_path):
+            raise FileNotFoundError("ejdict.sqlite3 not found after running tosqlite.php")
 
-        if not os.path.exists(final_db_path_in_zip):
-            # Fallback: Check if the structure is different (e.g., nested directory)
-            found_db = None
-            for root, _, files in os.walk(extracted_dir):
-                if "ejdict.sqlite3" in files:
-                    found_db = os.path.join(root, "ejdict.sqlite3")
-                    break
-            if found_db:
-                final_db_path_in_zip = found_db
-                print(f"Found database at non-standard path: {found_db}")
-            else:
-                raise FileNotFoundError(f"ejdict.sqlite3 not found in the expected directory after extraction.")
-
-        print(f"Moving {final_db_path_in_zip} to {db_path}...")
-        os.rename(final_db_path_in_zip, db_path)
+        print(f"Moving {generated_db_path} to {db_path}...")
+        os.rename(generated_db_path, db_path)
 
         if not os.path.exists(db_path):
             raise FileNotFoundError(f"Failed to move database to {db_path}")
@@ -151,7 +144,6 @@ def download_ejdict():
 
     except Exception as e:
         print(f"An error occurred during EJDict-hand processing: {e}")
-        # Raise the exception to ensure CI fails if something goes wrong.
         raise
     finally:
         # Cleanup
@@ -159,7 +151,6 @@ def download_ejdict():
             os.remove(zip_path)
             print(f"Removed temporary file: {zip_path}")
         if os.path.exists(extracted_dir):
-            # Use shutil for robust directory removal
             shutil.rmtree(extracted_dir)
             print(f"Removed temporary directory: {extracted_dir}")
 
