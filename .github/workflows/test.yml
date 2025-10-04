@@ -45,7 +45,7 @@ jobs:
       run: ruff check .
 
     - name: Run Mypy Type Checker
-      run: mypy src/
+      run: mypy --package src
 
     - name: Test with pytest
       run: PYTHONPATH=.:src pytest --cov=src --cov-report=xml
