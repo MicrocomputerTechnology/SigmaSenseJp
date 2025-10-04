@@ -1,15 +1,18 @@
-
 from typing import Optional
 import json
 import random
 import os
+
+def print_header(title):
+    bar = "="*60
+    print(f"\n{bar}\n=== {title.upper()} ===\n{bar}")
 
 class PsycheLogger:
     def __init__(self, config: Optional[dict] = None, output_path: Optional[str] = None):
         if config is None:
             config = {}
 
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
         log_dir = os.path.join(project_root, "sigma_logs")
         
         self.output_path = output_path or os.path.join(log_dir, "psyche_log.jsonl")
