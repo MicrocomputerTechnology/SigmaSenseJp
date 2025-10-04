@@ -4,10 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       script_to_run:
-        description: 'Script to run (e.g., run_benchmark, run_sigma, or all). Use "all" to run all scripts.'
+        description: 'Script to run (e.g., run_benchmark, run_sigma, or all)'
         required: true
         default: 'all'
-        type: string
 
 jobs:
   integration-check:
