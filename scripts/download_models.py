@@ -4,7 +4,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import zipfile
 import requests
-import shutil
+
 
 # --- Configuration ---
 MODEL_DIR = "models"
