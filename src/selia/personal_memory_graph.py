@@ -2,7 +2,7 @@
 
 import uuid
 import datetime
-from src.hoho.knowledge_store_base import KnowledgeStoreBase
+from hoho.knowledge_store_base import KnowledgeStoreBase
 
 class PersonalMemoryGraph:
     """

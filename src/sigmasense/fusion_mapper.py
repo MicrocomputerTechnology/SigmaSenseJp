@@ -1,5 +1,5 @@
 import os
-from src.sigmasense.config_loader import ConfigLoader
+from sigmasense.config_loader import ConfigLoader
 
 from typing import Optional
 

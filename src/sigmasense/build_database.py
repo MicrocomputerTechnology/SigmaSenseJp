@@ -11,10 +11,10 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.insert(0, project_root)
 sys.path.insert(0, os.path.join(project_root, 'src'))
 
-from src.hoho.sqlite_knowledge_store import SQLiteStore  # noqa: E402
-from src.sigmasense.correction_applicator import CorrectionApplicator  # noqa: E402
-from src.sigmasense.dimension_generator_local import DimensionGenerator  # noqa: E402
-from src.sigmasense.dimension_loader import DimensionLoader  # noqa: E402
+from hoho.sqlite_knowledge_store import SQLiteStore  # noqa: E402
+from sigmasense.correction_applicator import CorrectionApplicator  # noqa: E402
+from sigmasense.dimension_generator_local import DimensionGenerator  # noqa: E402
+from sigmasense.dimension_loader import DimensionLoader  # noqa: E402
 
 
 # --- NumPyデータ型をJSONに変換するためのカスタムエンコーダ ---

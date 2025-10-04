@@ -1,5 +1,5 @@
 import json
-from src.hoho.pocket_library.database_handler import DatabaseHandler
+from hoho.pocket_library.database_handler import DatabaseHandler
 
 class ExternalMembersDB(DatabaseHandler):
     def __init__(self, db_path: str = "data/external_members.sqlite3"):

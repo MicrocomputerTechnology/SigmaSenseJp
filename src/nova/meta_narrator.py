@@ -1,6 +1,6 @@
 # === 第十五次実験 実装ファイル ===
 
-from src.selia.personal_memory_graph import PersonalMemoryGraph
+from selia.personal_memory_graph import PersonalMemoryGraph
 from src.sigmasense.config_loader import ConfigLoader
 from collections import defaultdict
 

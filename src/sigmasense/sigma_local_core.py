@@ -2,11 +2,11 @@
 import numpy as np
 import os
 from .dimension_generator_local import DimensionGenerator
-from src.saphiel.dimension_suggester import DimensionSuggester
+from saphiel.dimension_suggester import DimensionSuggester
 from .match_predictor import FastMatchPredictor as MatchPredictor
-from src.nova.narrative_hint_generator import NarrativeHintGenerator
-from src.leila.psyche_modulator import PsycheModulator
-from src.vetra.vetra_llm_core import VetraLLMCore
+from nova.narrative_hint_generator import NarrativeHintGenerator
+from leila.psyche_modulator import PsycheModulator
+from vetra.vetra_llm_core import VetraLLMCore
 
 class SigmaLocalCore:
     """

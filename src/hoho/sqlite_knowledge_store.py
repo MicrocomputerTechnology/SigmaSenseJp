@@ -2,7 +2,7 @@ import sqlite3
 import json
 import os
 from datetime import datetime, UTC
-from src.hoho.knowledge_store_base import KnowledgeStoreBase
+from hoho.knowledge_store_base import KnowledgeStoreBase
 
 class SQLiteStore(KnowledgeStoreBase):
     """SQLite-backed implementation of the KnowledgeStore."""

@@ -2,7 +2,7 @@
 
 import os
 
-from src.selia.personal_memory_graph import PersonalMemoryGraph
+from selia.personal_memory_graph import PersonalMemoryGraph
 from collections import defaultdict
 
 class TemporalReasoning:
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     import time
     import uuid
     import datetime
-    from src.hoho.sqlite_knowledge_store import SQLiteStore
+    from hoho.sqlite_knowledge_store import SQLiteStore
 
     print("--- TemporalReasoning Self-Test --- ")
     test_db_path = 'tr_test.sqlite'

@@ -1,5 +1,5 @@
 import os
-from src.hoho.sqlite_knowledge_store import SQLiteStore
+from hoho.sqlite_knowledge_store import SQLiteStore
 
 def load_sigma_database(db_path):
     """

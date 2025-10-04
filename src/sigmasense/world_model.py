@@ -1,6 +1,6 @@
 import os
-from src.hoho.sqlite_knowledge_store import SQLiteStore
-from src.hoho.proper_noun_store import ProperNounStore
+from hoho.sqlite_knowledge_store import SQLiteStore
+from hoho.proper_noun_store import ProperNounStore
 
 class WorldModel:
     """

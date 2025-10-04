@@ -3,7 +3,7 @@
 import os
 
 from .world_model import WorldModel
-from src.selia.personal_memory_graph import PersonalMemoryGraph
+from selia.personal_memory_graph import PersonalMemoryGraph
 from .config_loader import ConfigLoader
 from collections import defaultdict
 
@@ -98,7 +98,7 @@ class CausalDiscovery:
 
 # --- 自己テスト用のサンプルコード ---
 if __name__ == '__main__':
-    from src.hoho.sqlite_knowledge_store import SQLiteStore
+    from hoho.sqlite_knowledge_store import SQLiteStore
 
     print("--- CausalDiscovery Self-Test --- ")
     # 1. モックと設定の準備

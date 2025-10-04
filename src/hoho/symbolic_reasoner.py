@@ -4,7 +4,7 @@ import os
 import json
 import unicodedata
 import spacy
-from src.sigmasense.world_model import WorldModel
+from sigmasense.world_model import WorldModel
 from .pocket_library.dictionary_service import DictionaryService
 
 def _normalize_str(s: str) -> str:

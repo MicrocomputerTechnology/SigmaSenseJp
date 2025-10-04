@@ -1,4 +1,4 @@
-from src.hoho.knowledge_store_base import KnowledgeStoreBase
+from hoho.knowledge_store_base import KnowledgeStoreBase
 from typing import Optional
 
 class NebulaGraphStore(KnowledgeStoreBase):

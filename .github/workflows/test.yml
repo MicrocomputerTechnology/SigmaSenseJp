@@ -45,7 +45,7 @@ jobs:
       run: ruff check .
 
     - name: Run Mypy Type Checker
-      run: mypy --package src
+      run: mypy --package src.aegis --package src.data --package src.dog_of_sigmasense --package src.hoho --package src.knowledge --package src.learning --package src.leila --package src.metacontrol --package src.nlp --package src.nova --package src.organization --package src.orient --package src.planning --package src.pocket_library --package src.saphiel --package src.selia --package src.sigmasense --package src.theory --package src.vetra
 
     - name: Test with pytest
       run: PYTHONPATH=.:src pytest --cov=src --cov-report=xml
